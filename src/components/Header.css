@@ -1,0 +1,25 @@
+.header-container {
+  background-color: #f3f4f6;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.header-logo {
+  width: 40px;
+  margin-right: 10px;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #1f2937;
+}
