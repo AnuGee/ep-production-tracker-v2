@@ -25,6 +25,11 @@ export default function Header() {
   const [notifications, setNotifications] = useState([]);
   const [showNoti, setShowNoti] = useState(false);
 
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/login");
+  };
+
   useEffect(() => {
     if (!role) return;
 
@@ -103,19 +108,21 @@ export default function Header() {
   };
 
   const grouped = groupByDate(notifications);
+
   const menus = [
-  { label: "🏠 Home", path: "/" },
-  {
-    label: `📊 Dashboard${unreadCount > 0 ? ` (${unreadCount})` : ""}`,
-    path: "/dashboard",
-  },
-  { label: "📄 Sales", path: "/sales" },
-  { label: "🏭 Warehouse", path: "/warehouse" },
-  { label: "🧪 Production", path: "/production" },
-  { label: "🧬 QC", path: "/qc" },
-  { label: "💰 Account", path: "/account" },
-];
-return (
+    { label: "🏠 Home", path: "/" },
+    {
+      label: `📊 Dashboard${unreadCount > 0 ? ` (${unreadCount})` : ""}`,
+      path: "/dashboard",
+    },
+    { label: "📄 Sales", path: "/sales" },
+    { label: "🏭 Warehouse", path: "/warehouse" },
+    { label: "🧪 Production", path: "/production" },
+    { label: "🧬 QC", path: "/qc" },
+    { label: "💰 Account", path: "/account" },
+  ];
+
+  return (
     <div
       style={{
         backgroundColor: "#f3f4f6",
@@ -245,6 +252,7 @@ return (
           )}
         </div>
       </div>
+
       {/* Menu */}
       <div
         style={{
@@ -271,6 +279,7 @@ return (
           </button>
         ))}
       </div>
+
       {/* Login / Logout */}
       <div
         style={{
