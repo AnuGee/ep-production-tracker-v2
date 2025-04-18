@@ -149,3 +149,13 @@ select {
 .submit-btn:hover {
   background-color: #1d4ed8;
 }
+
+/* ✅ Responsive Scrollable Table Wrapper */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.job-table {
+  min-width: 600px;
+}
