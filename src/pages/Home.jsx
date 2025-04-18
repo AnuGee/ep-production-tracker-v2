@@ -271,6 +271,7 @@ export default function Home() {
         </button>
       </div>
 
+      <div className="table-wrapper">
       <table className="job-table">
         <thead>
           <tr>
@@ -310,6 +311,7 @@ export default function Home() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {selectedJob && (
         <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
