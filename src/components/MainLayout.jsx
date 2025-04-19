@@ -1,4 +1,5 @@
 // src/components/MainLayout.jsx
+import "../styles/AppTheme.css";
 import React from "react";
 import Header from "./Header";
 
