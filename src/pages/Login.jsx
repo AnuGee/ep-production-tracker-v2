@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase";
 import "../styles/Responsive.css";
 
@@ -19,6 +19,20 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      alert("กรุณากรอกอีเมลก่อน");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("📩 ระบบได้ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว");
+    } catch (error) {
+      console.error(error);
+      alert("❌ ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้");
     }
   };
 
@@ -64,16 +78,32 @@ export default function Login() {
         <button type="submit" className="submit-btn full-span">
           ✅ เข้าสู่ระบบ
         </button>
-		<p style={{ textAlign: "center", marginTop: "1rem" }}>
-  ยังไม่มีบัญชี?{" "}
-  <span
-    style={{ color: "#2563eb", cursor: "pointer", fontWeight: "bold" }}
-    onClick={() => navigate("/register")}
-  >
-    สมัครสมาชิก
-  </span>
-</p>
 
+        {/* 🔁 ลืมรหัสผ่าน */}
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            cursor: "pointer",
+            marginTop: "6px",
+            textDecoration: "underline",
+          }}
+        >
+          🔁 ลืมรหัสผ่าน?
+        </button>
+
+        <p style={{ textAlign: "center", marginTop: "1rem" }}>
+          ยังไม่มีบัญชี?{" "}
+          <span
+            style={{ color: "#2563eb", cursor: "pointer", fontWeight: "bold" }}
+            onClick={() => navigate("/register")}
+          >
+            สมัครสมาชิก
+          </span>
+        </p>
       </form>
     </div>
   );
