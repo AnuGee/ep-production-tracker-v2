@@ -159,3 +159,42 @@ select {
 .job-table {
   min-width: 600px;
 }
+
+/* ✅ ป้องกันเบราว์เซอร์แทรก Dark Mode อัตโนมัติ */
+input,
+select,
+textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #ccc !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #888 !important;
+}
+
+.clear-button {
+  background-color: #22c55e !important;
+  color: white !important;
+}
+
+/* ✅ Fix ปุ่ม search, dropdown, input ให้ไม่กลืนใน Dark Mode */
+.filter-bar input,
+.filter-bar select {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #ccc !important;
+}
+
+/* ✅ ปรับ Table Header ให้อ่านง่ายใน Dark Mode */
+.job-table thead {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* ✅ Badge ใน Table ให้คงสีเดิม */
+.status-badge {
+  background-color: inherit;
+  color: inherit;
+}
