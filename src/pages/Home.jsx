@@ -176,6 +176,38 @@ export default function Home() {
     saveAs(blob, "EP_Production_Jobs.xlsx");
   };
 
+  const exportAllToExcel = async () => {
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const allData = snapshot.docs.map((doc, index) => {
+      const job = doc.data();
+      return {
+        "No.": index + 1,
+        "Batch No": job.batch_no || "–",
+        "Product": job.product_name || "–",
+        "Customer": job.customer || "–",
+        "Volume (KG)": job.volume || "–",
+        "Delivery Date": job.delivery_date || "–",
+        "Current Step": job.currentStep || "–",
+        "Sales": job.status?.sales || "",
+        "Warehouse": job.status?.warehouse || "",
+        "Production": job.status?.production || "",
+        "QC": `${job.status?.qc_inspection || ""} / ${job.status?.qc_coa || ""}`,
+        "Account": job.status?.account || "",
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(allData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "All Jobs");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, `EP_All_Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div className="page-container">
       <h2>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
@@ -266,51 +298,56 @@ export default function Home() {
           🔄 แสดงสถานะแบบละเอียด
         </label>
 
-        <button onClick={exportToExcel} className="submit-btn">
-          📥 Export Excel
-        </button>
+        <div>
+          <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
+            📥 Export Excel (ตามตัวกรอง)
+          </button>
+          <button onClick={exportAllToExcel} className="submit-btn">
+            📦 Export ข้อมูลทั้งหมด
+          </button>
+        </div>
       </div>
 
       <div className="table-wrapper">
-      <table className="job-table">
-        <thead>
-          <tr>
-            <th>Batch No</th>
-            <th>Product</th>
-            <th>Current Step</th>
-            <th>Status</th>
-            <th>Customer</th>
-            <th>Volume</th>
-            <th>Delivery Date</th>
-            <th>Last Update</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredJobs.map((job) => (
-            <tr key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
-              <td>{job.batch_no || "–"}</td>
-              <td>{job.product_name || "–"}</td>
-              <td>{job.currentStep || "–"}</td>
-              <td className="status-cell">
-                {showAllStatus ? (
-                  <>
-                    {renderStatusBadge("SL", "กรอกแล้ว")}
-                    {renderStatusBadge("WH", job.status?.warehouse)}
-                    {renderStatusBadge("PD", job.status?.production)}
-                    {renderStatusBadge("QC", job.status?.qc_inspection)}
-                    {renderStatusBadge("COA", job.status?.qc_coa)}
-                    {renderStatusBadge("AC", job.status?.account)}
-                  </>
-                ) : extractCurrentStatus(job)}
-              </td>
-              <td>{job.customer || "–"}</td>
-              <td>{job.volume || "–"}</td>
-              <td>{job.delivery_date || "–"}</td>
-              <td>{renderLastUpdate(job)}</td>
+        <table className="job-table">
+          <thead>
+            <tr>
+              <th>Batch No</th>
+              <th>Product</th>
+              <th>Current Step</th>
+              <th>Status</th>
+              <th>Customer</th>
+              <th>Volume</th>
+              <th>Delivery Date</th>
+              <th>Last Update</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredJobs.map((job) => (
+              <tr key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
+                <td>{job.batch_no || "–"}</td>
+                <td>{job.product_name || "–"}</td>
+                <td>{job.currentStep || "–"}</td>
+                <td className="status-cell">
+                  {showAllStatus ? (
+                    <>
+                      {renderStatusBadge("SL", "กรอกแล้ว")}
+                      {renderStatusBadge("WH", job.status?.warehouse)}
+                      {renderStatusBadge("PD", job.status?.production)}
+                      {renderStatusBadge("QC", job.status?.qc_inspection)}
+                      {renderStatusBadge("COA", job.status?.qc_coa)}
+                      {renderStatusBadge("AC", job.status?.account)}
+                    </>
+                  ) : extractCurrentStatus(job)}
+                </td>
+                <td>{job.customer || "–"}</td>
+                <td>{job.volume || "–"}</td>
+                <td>{job.delivery_date || "–"}</td>
+                <td>{renderLastUpdate(job)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {selectedJob && (
