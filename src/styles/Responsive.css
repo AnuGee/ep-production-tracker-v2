@@ -198,3 +198,39 @@ textarea::placeholder {
   background-color: inherit;
   color: inherit;
 }
+
+/* ✨ Fix for Dark Mode */
+body {
+  background-color: #f9fafb; /* พื้นหลังสีอ่อน */
+  color: #111827; /* สีตัวอักษรเข้ม */
+}
+
+.page-container,
+select,
+input,
+.job-table,
+.clear-button {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* 🔁 ปรับสีฟอนต์ของ Label และหัวข้อในหน้า */
+label,
+h1, h2, h3, h4, h5, h6,
+strong,
+.filter-bar label,
+.job-table th {
+  color: #111827 !important;
+}
+
+/* 🔒 ปุ่ม Login */
+button {
+  color: #111827;
+}
+
+/* 🔹 ป้องกันข้อความสีขาวบนพื้นขาว */
+input::placeholder,
+select option,
+.job-table td {
+  color: #111827 !important;
+}
