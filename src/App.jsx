@@ -1,4 +1,5 @@
 // src/App.jsx
+import AdminUser from "./pages/AdminUser";
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./components/MainLayout";
@@ -64,6 +65,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["Admin", "Account"]}>
                 <MainLayout><Account /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <MainLayout><AdminUser /></MainLayout>
               </ProtectedRoute>
             }
           />
