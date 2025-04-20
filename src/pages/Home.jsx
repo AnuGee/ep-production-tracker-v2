@@ -255,20 +255,17 @@ export default function Home() {
   </div>
 
   {/* ✅ ช่องค้นหา */}
-  <div style={{ marginTop: "12px" }}>
+  <div style={{ marginTop: "12px", display: "flex", alignItems: "center" }}>
     <input
       type="text"
       placeholder="🔍 ค้นหา Product, Customer, Batch No"
       value={searchText}
       onChange={(e) => setSearchText(e.target.value)}
       className="input-box"
-      style={{ width: "100%", maxWidth: "400px" }}
+      style={{ flexGrow: 1, maxWidth: "400px" }}
     />
-  </div>
-
-  {/* ✅ ปุ่ม Reset */}
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", marginTop: "8px" }}>
-    <button className="clear-button" onClick={handleClearFilters}>
+    {/* ✅ ปุ่ม Reset */}
+    <button className="clear-button" onClick={handleClearFilters} style={{ marginLeft: "12px" }}>
       ♻️ Reset
     </button>
   </div>
