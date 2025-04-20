@@ -268,32 +268,6 @@ export default function Home() {
     ♻️ Reset
   </button>
 </div>
-
-{/* ✅ Search + Clear Filter in 1 row */}
-<div style={{ display: "flex", gap: "12px", marginBottom: "1rem" }}>
-  <input
-    type="text"
-    placeholder="🔍 ค้นหา Product, Customer, Batch No"
-    value={searchText}
-    onChange={(e) => setSearchText(e.target.value)}
-    className="input-box"
-    style={{ flexGrow: 1 }}
-  />
-  <button className="clear-button" onClick={handleClearFilters}>
-    ♻️ ล้างตัวกรอง
-  </button>
-</div>
-
-
-      <input
-        type="text"
-        placeholder="🔍 ค้นหา Product, Customer, Batch No"
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        className="input-box"
-        style={{ marginBottom: "1rem", width: "100%" }}
-      />
-
       <h3>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
 
       <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
