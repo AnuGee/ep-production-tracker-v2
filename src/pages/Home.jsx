@@ -232,42 +232,46 @@ export default function Home() {
         )}
       </div>
 
-{/* 🎛 Filter + Search + Clear */}
-<div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
-  <label>📆 ปี:</label>
-  <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-    {years.map((year) => <option key={year}>{year}</option>)}
-  </select>
+<div className="filter-bar" style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1rem" }}>
+  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+    <label>📆 ปี:</label>
+    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+      {years.map((year) => <option key={year}>{year}</option>)}
+    </select>
 
-  <label>🗓 เดือน:</label>
-  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-    <option>ทั้งหมด</option>
-    {months.map((month) => <option key={month}>{month}</option>)}
-  </select>
+    <label>🗓 เดือน:</label>
+    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+      <option>ทั้งหมด</option>
+      {months.map((month) => <option key={month}>{month}</option>)}
+    </select>
 
-  <label>🎯 สถานะ:</label>
-  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-    <option>ทั้งหมด</option>
-    <option>ยังไม่ถึง</option>
-    <option>กำลังทำ</option>
-    <option>เสร็จแล้ว</option>
-  </select>
+    <label>🎯 สถานะ:</label>
+    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+      <option>ทั้งหมด</option>
+      <option>ยังไม่ถึง</option>
+      <option>กำลังทำ</option>
+      <option>เสร็จแล้ว</option>
+    </select>
+  </div>
 
   {/* ✅ ช่องค้นหา */}
-  <input
-    type="text"
-    placeholder="🔍 ค้นหา Product, Customer, Batch No"
-    value={searchText}
-    onChange={(e) => setSearchText(e.target.value)}
-    className="input-box"
-    style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }}
-  />
+  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+    <input
+      type="text"
+      placeholder="🔍 ค้นหา Product, Customer, Batch No"
+      value={searchText}
+      onChange={(e) => setSearchText(e.target.value)}
+      className="input-box"
+      style={{ flexGrow: 1 }}
+    />
 
-  {/* ✅ ปุ่มล้างตัวกรอง */}
-  <button className="clear-button" onClick={handleClearFilters}>
-    ♻️ Reset
-  </button>
+    {/* ✅ ปุ่มล้างตัวกรอง */}
+    <button className="clear-button" onClick={handleClearFilters}>
+      ♻️ Reset
+    </button>
+  </div>
 </div>
+      
       <h3>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
 
       <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
