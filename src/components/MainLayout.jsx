@@ -13,7 +13,6 @@ export default function MainLayout({ children }) {
           justifyContent: "center",
           width: "100%",
           backgroundColor: "#f9fafb",
-          paddingTop: "0rem", // เว้นที่ให้ Header
           minHeight: "100vh",
         }}
       >
