@@ -233,7 +233,7 @@ export default function Home() {
       </div>
 
 {/* 🎛 Filter + Search + Clear */}
-<div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center" }}>
+<div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
   <label>📆 ปี:</label>
   <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
     {years.map((year) => <option key={year}>{year}</option>)}
@@ -253,17 +253,19 @@ export default function Home() {
     <option>เสร็จแล้ว</option>
   </select>
 
+  {/* ✅ ช่องค้นหา */}
   <input
     type="text"
     placeholder="🔍 ค้นหา Product, Customer, Batch No"
     value={searchText}
     onChange={(e) => setSearchText(e.target.value)}
     className="input-box"
-    style={{ flexGrow: 1, minWidth: "220px" }}
+    style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }}
   />
 
+  {/* ✅ ปุ่มล้างตัวกรอง */}
   <button className="clear-button" onClick={handleClearFilters}>
-    ♻️ ล้างตัวกรอง
+    ♻️ Reset
   </button>
 </div>
 
