@@ -1,25 +1,26 @@
 .header-container {
-  background-color: #f3f4f6;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #e5e7eb;
+    background-color: #f3f4f6;
+    padding: 1rem 20px;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    /* margin-bottom: 1.5rem; */ /* ลบหรือ Comment บรรทัดนี้ */
+    max-width: 1200px; /* เพิ่ม max-width */
+    margin: 0 auto; /* เพิ่ม margin: 0 auto; เพื่อจัด Header ให้อยู่ตรงกลาง */
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
+.menu-container {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-.header-logo {
-  width: 40px;
-  margin-right: 10px;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #1f2937;
+.menu-button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background-color: #e5e7eb;
+    cursor: pointer;
+    font-weight: bold;
 }
