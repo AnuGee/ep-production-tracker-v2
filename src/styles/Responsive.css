@@ -2,7 +2,9 @@
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0rem;
+  padding: 2rem;
+  padding-top: 0rem;
+  margin-top: 0rem;
   font-family: "Segoe UI", sans-serif;
   box-sizing: border-box;
 }
