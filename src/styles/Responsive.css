@@ -2,7 +2,7 @@
 .page-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem 2rem 2rem 2rem; /* บน 1rem, ซ้าย-ขวา 2rem, ล่าง 2rem */
+  padding: 0 2rem 2rem 2rem;  /* แก้ padding-top: 2rem ➜ 0 */
   font-family: "Segoe UI", sans-serif;
   box-sizing: border-box;
 }
