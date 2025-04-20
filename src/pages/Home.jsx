@@ -232,28 +232,43 @@ export default function Home() {
         )}
       </div>
 
-      {/* 🎛 Filter + Search */}
-      <div className="filter-bar">
-        <label>📆 ปี:</label>
-        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-          {years.map((year) => <option key={year}>{year}</option>)}
-        </select>
-        <label>🗓 เดือน:</label>
-        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-          <option>ทั้งหมด</option>
-          {months.map((month) => <option key={month}>{month}</option>)}
-        </select>
-        <label>🎯 สถานะ:</label>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option>ทั้งหมด</option>
-          <option>ยังไม่ถึง</option>
-          <option>กำลังทำ</option>
-          <option>เสร็จแล้ว</option>
-        </select>
-        <button className="clear-button" onClick={handleClearFilters}>
-          ♻️ ล้างตัวกรอง
-        </button>
-      </div>
+{/* 🎛 Filter + Search */}
+<div className="filter-bar">
+  <label>📆 ปี:</label>
+  <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+    {years.map((year) => <option key={year}>{year}</option>)}
+  </select>
+
+  <label>🗓 เดือน:</label>
+  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+    <option>ทั้งหมด</option>
+    {months.map((month) => <option key={month}>{month}</option>)}
+  </select>
+
+  <label>🎯 สถานะ:</label>
+  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+    <option>ทั้งหมด</option>
+    <option>ยังไม่ถึง</option>
+    <option>กำลังทำ</option>
+    <option>เสร็จแล้ว</option>
+  </select>
+</div>
+
+{/* ✅ Search + Clear Filter in 1 row */}
+<div style={{ display: "flex", gap: "12px", marginBottom: "1rem" }}>
+  <input
+    type="text"
+    placeholder="🔍 ค้นหา Product, Customer, Batch No"
+    value={searchText}
+    onChange={(e) => setSearchText(e.target.value)}
+    className="input-box"
+    style={{ flexGrow: 1 }}
+  />
+  <button className="clear-button" onClick={handleClearFilters}>
+    ♻️ ล้างตัวกรอง
+  </button>
+</div>
+
 
       <input
         type="text"
