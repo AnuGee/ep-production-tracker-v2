@@ -19,7 +19,7 @@ export default function MainLayout({ children }) {
         <div style={{
           maxWidth: "1200px",
           width: "100%",
-          padding: "0 20px",
+          padding: "0 2rem", // ✅ ใช้หน่วยเดียวกันกับ Header
           margin: "0 auto" // ✅ ทำให้เนื้อหากลางจอจริงๆ
         }}>
           {children}
