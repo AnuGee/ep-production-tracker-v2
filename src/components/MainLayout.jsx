@@ -16,13 +16,16 @@ export default function MainLayout({ children }) {
           minHeight: "100vh",
         }}
       >
-        <div style={{
-          maxWidth: "1200px",
-          width: "100%",
-          padding: "0 20px",  // ✅ เปลี่ยนกลับจาก 2rem → 20px
-          margin: "0 auto" // ✅ ทำให้เนื้อหากลางจอจริงๆ
-        }}>
-          {children}
+        <div
+          style={{
+            maxWidth: "1200px",
+            width: "100%",
+            padding: "0 2rem",
+            margin: "0 auto",
+            boxSizing: "border-box",
+          }}
+        >
+          <div style={{ marginTop: "1rem" }}>{children}</div>
         </div>
       </div>
     </>
