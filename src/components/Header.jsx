@@ -126,7 +126,6 @@ export default function Header() {
     <div
       style={{
         backgroundColor: "#f3f4f6",
-        padding: "1rem 2rem",
         width: "100%",
         zIndex: 1000,
         boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
