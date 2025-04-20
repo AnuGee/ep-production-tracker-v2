@@ -1,12 +1,11 @@
 .header-container {
     background-color: #f3f4f6;
     padding: 1rem 20px;
-    width: 100%;
+    width: 100%; /* สำคัญ: ให้ Header กว้าง 100% ของ Container */
     z-index: 1000;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    /* margin-bottom: 1.5rem; */ /* ลบหรือ Comment บรรทัดนี้ */
-    max-width: 1200px; /* เพิ่ม max-width */
-    margin: 0 auto; /* เพิ่ม margin: 0 auto; เพื่อจัด Header ให้อยู่ตรงกลาง */
+    max-width: 1200px; /* จำกัดความกว้างสูงสุด */
+    margin: 0 auto; /* จัดให้อยู่ตรงกลาง */
 }
 
 .menu-container {
