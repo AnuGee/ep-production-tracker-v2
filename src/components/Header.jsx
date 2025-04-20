@@ -127,10 +127,6 @@ export default function Header() {
       style={{
         backgroundColor: "#f3f4f6",
         padding: "1rem 2rem",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
         width: "100%",
         zIndex: 1000,
         boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
