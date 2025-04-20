@@ -232,8 +232,8 @@ export default function Home() {
         )}
       </div>
 
-{/* 🎛 Filter + Search */}
-<div className="filter-bar">
+{/* 🎛 Filter + Search + Clear */}
+<div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center" }}>
   <label>📆 ปี:</label>
   <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
     {years.map((year) => <option key={year}>{year}</option>)}
@@ -252,6 +252,19 @@ export default function Home() {
     <option>กำลังทำ</option>
     <option>เสร็จแล้ว</option>
   </select>
+
+  <input
+    type="text"
+    placeholder="🔍 ค้นหา Product, Customer, Batch No"
+    value={searchText}
+    onChange={(e) => setSearchText(e.target.value)}
+    className="input-box"
+    style={{ flexGrow: 1, minWidth: "220px" }}
+  />
+
+  <button className="clear-button" onClick={handleClearFilters}>
+    ♻️ ล้างตัวกรอง
+  </button>
 </div>
 
 {/* ✅ Search + Clear Filter in 1 row */}
