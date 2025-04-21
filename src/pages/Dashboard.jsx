@@ -8,6 +8,7 @@ import {
   query,
   orderBy,
   where,
+  limit,
 } from "firebase/firestore";
 import {
   BarChart,
@@ -19,12 +20,11 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import toast from "react-hot-toast";
-import { useAuth } from "../context/AuthContext";  // ดึง role ผู้ใช้
+import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
 
 export default function Dashboard() {
-  const { role } = useAuth(); // ใช้ role ผู้ใช้งาน
-
+  const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedYears, setSelectedYears] = useState(["2025"]);
@@ -36,32 +36,27 @@ export default function Dashboard() {
     "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
   ];
 
-useEffect(() => {
-  fetchJobs();
+  useEffect(() => {
+    fetchJobs();
 
-  // 🔥 Real-time Notification Listener เฉพาะแผนกตัวเอง + Global
-  const q = query(
-    collection(db, "notifications"),
-    where("department", "==", role),
-    orderBy("createdAt", "desc")
-  );
+    const q = query(
+      collection(db, "notifications"),
+      where("department", "==", role),
+      orderBy("timestamp", "desc"),
+      limit(5)
+    );
 
-  const unsub = onSnapshot(q, (snapshot) => {
-    const data = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setNotifications(data);
+      const latest = data[0];
+      if (latest) {
+        toast(`🚨 ${latest.message}`, { icon: "🔔" });
+      }
+    });
 
-    setNotifications(data);
-
-    const latest = data[0];
-    if (latest) {
-      toast(`🚨 ${latest.message}`, { icon: "🔔" });
-    }
-  });
-
-  return () => unsub();
-}, [role]);
+    return () => unsub();
+  }, [role]);
 
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
