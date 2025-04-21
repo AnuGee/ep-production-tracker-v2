@@ -12,6 +12,8 @@ import {
   onSnapshot,
   query,
   orderBy,
+  where,
+  limit,
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -37,8 +39,11 @@ export default function Home() {
 
     const q = query(
       collection(db, "notifications"),
-      orderBy("createdAt", "desc") // ✅ เปลี่ยนตรงนี้ให้ใช้ createdAt
+      where("department", "==", "All"),
+      orderBy("timestamp", "desc"),
+      limit(5)
     );
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
