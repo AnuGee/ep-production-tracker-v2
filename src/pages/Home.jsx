@@ -158,66 +158,26 @@ export default function Home() {
     return null;
   };
 
-  const exportToExcel = () => {
-    const dataToExport = filteredJobs.map((job) => ({
-      "Batch No": job.batch_no || "–",
-      "Product": job.product_name || "–",
-      "Current Step": job.currentStep || "–",
-      "Customer": job.customer || "–",
-      "Volume (KG)": job.volume || "–",
-      "Delivery Date": job.delivery_date || "–",
-      "Last Update": renderLastUpdate(job),
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, "EP_Production_Jobs.xlsx");
+  const stepStatus = {
+    Sales: (job) => job.currentStep !== "Sales",
+    Warehouse: (job) => job.status?.warehouse === "เบิกเสร็จ",
+    Production: (job) => job.status?.production === "ผลิตเสร็จ",
+    QC: (job) => job.status?.qc_inspection === "ตรวจผ่านแล้ว" && job.status?.qc_coa === "เตรียมพร้อมแล้ว",
+    Account: (job) => job.status?.account === "Invoice ออกแล้ว",
   };
 
-  const exportAllToExcel = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const allData = snapshot.docs.map((doc, index) => {
-      const job = doc.data();
-      return {
-        "No.": index + 1,
-        "Batch No": job.batch_no || "–",
-        "Product": job.product_name || "–",
-        "Customer": job.customer || "–",
-        "Volume (KG)": job.volume || "–",
-        "Delivery Date": job.delivery_date || "–",
-        "Current Step": job.currentStep || "–",
-        "Sales": job.status?.sales || "",
-        "Warehouse": job.status?.warehouse || "",
-        "Production": job.status?.production || "",
-        "QC": `${job.status?.qc_inspection || ""} / ${job.status?.qc_coa || ""}`,
-        "Account": job.status?.account || "",
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(allData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "All Jobs");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, `EP_All_Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  };
+  const summaryPerStep = steps.map((step) => {
+    const notStarted = filteredJobs.filter((j) => steps.indexOf(j.currentStep) > steps.indexOf(step)).length;
+    const doing = filteredJobs.filter((j) => j.currentStep === step).length;
+    const done = filteredJobs.filter((j) => stepStatus[step](j)).length;
+    return { name: step, notStarted, doing, done };
+  });
 
   return (
     <div className="page-container">
       <h2 style={{ marginTop: "0" }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
+      <hr style={{ margin: "1.5rem 0" }} />
 
-      <hr style={{ margin: "1rem 0" }} />
       <h3>🔔 การแจ้งเตือนล่าสุด</h3>
       <div style={{ marginBottom: "1rem" }}>
         {notifications.length === 0 ? (
@@ -283,12 +243,7 @@ export default function Home() {
       <hr style={{ margin: "2rem 0" }} />
       <h3>📊 สรุปสถานะงานรายแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
-        <BarChart layout="vertical" data={steps.map((step) => ({
-          name: step,
-          notStarted: filteredJobs.filter(j => steps.indexOf(j.currentStep) > steps.indexOf(step)).length,
-          doing: filteredJobs.filter(j => j.currentStep === step).length,
-          done: filteredJobs.filter(j => steps.indexOf(j.currentStep) < steps.indexOf(step)).length,
-        }))}>
+        <BarChart layout="vertical" data={summaryPerStep}>
           <XAxis type="number" />
           <YAxis dataKey="name" type="category" width={100} />
           <Tooltip content={<CustomTooltip />} />
