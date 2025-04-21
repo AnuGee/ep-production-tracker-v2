@@ -7,7 +7,7 @@ import {
   getDocs,
   serverTimestamp,
 } from "firebase/firestore";
-import toast from "react-hot-toast"; // ✅ Toast แจ้งเตือน
+import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
 export default function Sales() {
@@ -46,7 +46,6 @@ export default function Sales() {
     }
 
     try {
-      // ✅ บันทึก production_workflow
       await addDoc(collection(db, "production_workflow"), {
         product_name,
         volume,
@@ -73,16 +72,6 @@ export default function Sales() {
           },
         ],
       });
-
-      // ✅ เพิ่ม In-app Notification เข้า Firestore
-
-      // ✅ คงไว้เฉพาะอันนี้
-await addDoc(collection(db, "notifications"), {
-  message: `Sales เพิ่มงาน ${form.product_name} ของลูกค้า ${form.customer} เรียบร้อย รอเบิกวัตถุดิบที่แผนก Warehouse`,
-  department: "All", // ให้ทุกคนเห็น
-  timestamp: serverTimestamp(),
-  read: false,
-});
 
       toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
 
