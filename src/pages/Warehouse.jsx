@@ -8,9 +8,8 @@ import {
   updateDoc,
   serverTimestamp,
   arrayUnion,
-  addDoc,
 } from "firebase/firestore";
-import toast from "react-hot-toast"; // ✅ เพิ่ม Toast
+import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
 export default function Warehouse() {
@@ -35,12 +34,11 @@ export default function Warehouse() {
 
   const handleSubmit = async () => {
     if (!selectedJob) {
-      alert("กรุณาเลือกรายการก่อน");
+      toast.error("กรุณาเลือกรายการก่อน");
       return;
     }
 
     const jobRef = doc(db, "production_workflow", selectedJob.id);
-
     const newStep = step === "เบิกเสร็จ" ? "Production" : "Warehouse";
 
     await updateDoc(jobRef, {
@@ -57,18 +55,11 @@ export default function Warehouse() {
       }),
     });
 
-    // ✅ เพิ่ม Notification เข้า Firestore
-    if (newStep === "Production") {
-  await addDoc(collection(db, "notifications"), {
-    message: `Warehouse เบิกวัตถุดิบ ${selectedJob.product_name} ของ ${selectedJob.customer} เสร็จแล้ว รอผลิตที่แผนก Production`,
-    department: "Production",
-    createdAt: serverTimestamp(),
-    read: false,
-  });
-}
+    toast.success(
+      `✅ อัปเดตเรียบร้อยแล้ว${newStep === "Production" ? " และส่งต่อไปยัง Production" : ""}`
+    );
 
-    toast.success("✅ อัปเดตเรียบร้อยแล้ว" + (newStep === "Production" ? " และส่งต่อไปยัง Production" : ""));
-
+    // Reset form
     setSelectedJob(null);
     setStock("มี");
     setStep("ยังไม่เบิก");
