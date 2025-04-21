@@ -75,13 +75,14 @@ export default function Sales() {
       });
 
       // ✅ เพิ่ม In-app Notification เข้า Firestore
+
+      // ✅ คงไว้เฉพาะอันนี้
 await addDoc(collection(db, "notifications"), {
-  message: `Sales เพิ่ม ${product_name} ของ ${customer} เรียบร้อย รอเบิกวัตถุดิบที่แผนก Warehouse`,
-  department: "Warehouse",
-  createdAt: serverTimestamp(),
+  message: `Sales เพิ่มงาน ${form.product_name} ของลูกค้า ${form.customer} เรียบร้อย รอเบิกวัตถุดิบที่แผนก Warehouse`,
+  department: "All", // ให้ทุกคนเห็น
+  timestamp: serverTimestamp(),
   read: false,
 });
-
 
       toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
 
