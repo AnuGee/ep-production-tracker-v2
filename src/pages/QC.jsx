@@ -4,20 +4,20 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  doc,
   updateDoc,
+  doc,
   serverTimestamp,
-  arrayUnion,
   addDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
 export default function QC() {
   const [jobs, setJobs] = useState([]);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [qcInspection, setQcInspection] = useState("ยังไม่ได้ตรวจ");
-  const [qcCoa, setQcCoa] = useState("ยังไม่เตรียม");
+  const [selectedJobId, setSelectedJobId] = useState("");
+  const [inspection, setInspection] = useState("ยังไม่ได้ตรวจ");
+  const [coa, setCoa] = useState("ยังไม่เตรียม");
   const [remark, setRemark] = useState("");
 
   useEffect(() => {
@@ -30,98 +30,98 @@ export default function QC() {
     setJobs(data.filter((job) => job.currentStep === "QC"));
   };
 
-  const handleSubmit = async () => {
-    if (!selectedJob) {
-      toast.error("❌ กรุณาเลือกรายการก่อน");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedJobId) {
+      toast.error("กรุณาเลือกงานก่อนบันทึก");
       return;
     }
 
-    const jobRef = doc(db, "production_workflow", selectedJob.id);
-    let nextStep = "QC";
-
-    const passBoth =
-      qcInspection === "ตรวจผ่านแล้ว" && qcCoa === "เตรียมพร้อมแล้ว";
-
-    if (passBoth) {
-      nextStep = "Production";
-    }
+    const passed = inspection === "ตรวจผ่านแล้ว" && coa === "เตรียมพร้อมแล้ว";
+    const newStep = passed ? "Production" : "QC";
 
     try {
+      const jobRef = doc(db, "production_workflow", selectedJobId);
+
       await updateDoc(jobRef, {
-        currentStep: nextStep,
-        "status.qc_inspection": qcInspection,
-        "status.qc_coa": qcCoa,
-        "remarks.qc": remark || "",
+        "status.qc_inspection": inspection,
+        "status.qc_coa": coa,
+        "remarks.qc": remark,
         Timestamp_QC: serverTimestamp(),
+        currentStep: newStep,
         audit_logs: arrayUnion(
           {
             step: "QC",
             field: "status.qc_inspection",
-            value: qcInspection,
-            remark: remark || "",
+            value: inspection,
+            remark,
             timestamp: new Date().toISOString(),
           },
           {
             step: "QC",
             field: "status.qc_coa",
-            value: qcCoa,
-            remark: remark || "",
+            value: coa,
+            remark,
             timestamp: new Date().toISOString(),
           }
-        ),
+        )
       });
 
-      if (passBoth) {
+      const job = jobs.find((j) => j.id === selectedJobId);
+      if (job && passed) {
+        const msg = `QC ตรวจผ่านงาน ${job.product_name} ของลูกค้า ${job.customer} เรียบร้อย ส่งกลับไปยัง Production`;
         await addDoc(collection(db, "notifications"), {
-          message: `QC ตรวจสอบ ${selectedJob.product_name} ของ ${selectedJob.customer} ผ่านแล้ว ส่งกลับไปที่ Production เพื่อดำเนินการต่อ`,
+          message: msg,
           department: "Production",
-          createdAt: serverTimestamp(),
+          timestamp: serverTimestamp(),
+          read: false,
+        });
+        await addDoc(collection(db, "notifications"), {
+          message: msg,
+          department: "All",
+          timestamp: serverTimestamp(),
           read: false,
         });
       }
 
-      toast.success("✅ บันทึกผลการตรวจสอบเรียบร้อยแล้ว");
-      setSelectedJob(null);
-      setQcInspection("ยังไม่ได้ตรวจ");
-      setQcCoa("ยังไม่เตรียม");
+      toast.success("✅ อัปเดตสถานะ QC เรียบร้อยแล้ว");
+      setSelectedJobId("");
+      setInspection("ยังไม่ได้ตรวจ");
+      setCoa("ยังไม่เตรียม");
       setRemark("");
       fetchJobs();
     } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
-      console.error("QC Submit Error:", error);
+      toast.error("เกิดข้อผิดพลาดในการอัปเดต");
     }
   };
 
   return (
     <div className="page-container">
-      <h2>🧪 <strong>QC - ตรวจสอบคุณภาพ</strong></h2>
+      <h2>🧬 QC - ตรวจคุณภาพ</h2>
 
-      <div className="form-grid">
+      <form onSubmit={handleSubmit} className="form-grid">
         <div>
-          <label>📋 เลือกรายการ</label>
+          <label>🧪 เลือกงาน</label>
           <select
+            value={selectedJobId}
+            onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
-            value={selectedJob?.id || ""}
-            onChange={(e) => {
-              const job = jobs.find((j) => j.id === e.target.value);
-              setSelectedJob(job);
-            }}
           >
-            <option value="">-- เลือกงาน --</option>
+            <option value="">-- เลือก --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} - {job.customer}
+                {job.product_name} ({job.customer})
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label>🔍 การตรวจสอบสินค้า</label>
+          <label>🔍 สถานะการตรวจ</label>
           <select
+            value={inspection}
+            onChange={(e) => setInspection(e.target.value)}
             className="input-box"
-            value={qcInspection}
-            onChange={(e) => setQcInspection(e.target.value)}
           >
             <option>ยังไม่ได้ตรวจ</option>
             <option>กำลังตรวจ (รอปรับ)</option>
@@ -131,11 +131,11 @@ export default function QC() {
         </div>
 
         <div>
-          <label>📄 การเตรียม COA</label>
+          <label>📄 COA</label>
           <select
+            value={coa}
+            onChange={(e) => setCoa(e.target.value)}
             className="input-box"
-            value={qcCoa}
-            onChange={(e) => setQcCoa(e.target.value)}
           >
             <option>ยังไม่เตรียม</option>
             <option>กำลังเตรียม</option>
@@ -147,17 +147,17 @@ export default function QC() {
           <label>📝 หมายเหตุ</label>
           <input
             type="text"
-            className="input-box"
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
+            className="input-box"
             placeholder="ใส่หมายเหตุถ้ามี"
           />
         </div>
 
-        <button className="submit-btn full-span" onClick={handleSubmit}>
-          ✅ บันทึกผลการตรวจสอบ
+        <button type="submit" className="submit-btn full-span">
+          ✅ บันทึกสถานะ QC
         </button>
-      </div>
+      </form>
     </div>
   );
 }
