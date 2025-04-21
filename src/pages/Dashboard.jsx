@@ -42,7 +42,7 @@ useEffect(() => {
   // 🔥 Real-time Notification Listener เฉพาะแผนกตัวเอง + Global
   const q = query(
     collection(db, "notifications"),
-    where("department", "in", ["All", role]),
+    where("department", "==", role),
     orderBy("createdAt", "desc")
   );
 
