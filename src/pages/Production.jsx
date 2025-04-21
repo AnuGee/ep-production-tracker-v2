@@ -4,10 +4,9 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  updateDoc,
   doc,
+  updateDoc,
   serverTimestamp,
-  addDoc,
   arrayUnion,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
@@ -15,9 +14,9 @@ import "../styles/Responsive.css";
 
 export default function Production() {
   const [jobs, setJobs] = useState([]);
-  const [selectedJobId, setSelectedJobId] = useState("");
-  const [status, setStatus] = useState("ยังไม่เริ่มผลิต");
+  const [selectedJob, setSelectedJob] = useState(null);
   const [batchNo, setBatchNo] = useState("");
+  const [status, setStatus] = useState("ยังไม่เริ่มผลิต");
   const [remark, setRemark] = useState("");
 
   useEffect(() => {
@@ -26,111 +25,96 @@ export default function Production() {
 
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     setJobs(data.filter((job) => job.currentStep === "Production"));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedJobId) {
-      toast.error("กรุณาเลือกงานก่อนบันทึก");
+  const handleSubmit = async () => {
+    if (!selectedJob) {
+      toast.error("กรุณาเลือกรายการก่อน");
       return;
     }
 
-    try {
-      const job = jobs.find((j) => j.id === selectedJobId);
-      const jobRef = doc(db, "production_workflow", selectedJobId);
-      const nextStep = status === "รอผลตรวจ" ? "QC" : status === "ผลิตเสร็จ" ? "Account" : "Production";
-
-      await updateDoc(jobRef, {
-        batch_no: batchNo,
-        currentStep: nextStep,
-        "status.production": status,
-        "remarks.production": remark || "",
-        Timestamp_Production: serverTimestamp(),
-        audit_logs: arrayUnion({
-          step: "Production",
-          field: "status.production",
-          value: status,
-          remark: remark || "",
-          timestamp: new Date().toISOString(),
-        }),
-      });
-
-      // 🔔 เพิ่ม Notification ไปยังแผนกถัดไป
-      let message = "";
-      let department = "";
-      if (nextStep === "QC") {
-        message = `Production ผลิต ${job.product_name} ของลูกค้า ${job.customer} เสร็จแล้ว รอตรวจสอบโดย QC`;
-        department = "QC";
-      } else if (nextStep === "Account") {
-        message = `Production ผลิต ${job.product_name} ของลูกค้า ${job.customer} เสร็จแล้ว ส่งต่อไปยังบัญชี`;
-        department = "Account";
-      }
-
-      if (department) {
-        await addDoc(collection(db, "notifications"), {
-          message,
-          department,
-          timestamp: serverTimestamp(),
-          read: false,
-        });
-
-        await addDoc(collection(db, "notifications"), {
-          message,
-          department: "All",
-          timestamp: serverTimestamp(),
-          read: false,
-        });
-      }
-
-      toast.success("✅ บันทึกสถานะเรียบร้อยแล้ว");
-      setSelectedJobId("");
-      setStatus("ยังไม่เริ่มผลิต");
-      setBatchNo("");
-      setRemark("");
-      fetchJobs();
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+    if (!batchNo) {
+      toast.error("กรุณากรอกหมายเลข Batch No");
+      return;
     }
+
+    const jobRef = doc(db, "production_workflow", selectedJob.id);
+
+    let newStep = "Production";
+    if (status === "รอผลตรวจ") newStep = "QC";
+    if (status === "ผลิตเสร็จ") newStep = "Account";
+
+    await updateDoc(jobRef, {
+      batch_no: batchNo,
+      currentStep: newStep,
+      "status.production": status,
+      "remarks.production": remark || "",
+      Timestamp_Production: serverTimestamp(),
+      audit_logs: arrayUnion({
+        step: "Production",
+        field: "status.production",
+        value: status,
+        remark: remark || "",
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    toast.success(
+      `✅ อัปเดตเรียบร้อยแล้ว${newStep !== "Production" ? ` และส่งต่อไปยัง ${newStep}` : ""}`
+    );
+
+    setSelectedJob(null);
+    setBatchNo("");
+    setStatus("ยังไม่เริ่มผลิต");
+    setRemark("");
+    fetchJobs();
   };
 
   return (
     <div className="page-container">
-      <h2>🏫 Production - สถานะการผลิต</h2>
-      <form onSubmit={handleSubmit} className="form-grid">
+      <h2>🧪 <strong>Production - สถานะการผลิต</strong></h2>
+
+      <div className="form-grid">
         <div>
-          <label>เลือกงาน</label>
+          <label>📋 เลือกรายการ</label>
           <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
+            value={selectedJob?.id || ""}
+            onChange={(e) => {
+              const job = jobs.find((j) => j.id === e.target.value);
+              setSelectedJob(job);
+            }}
           >
-            <option value="">-- เลือก --</option>
+            <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} ({job.customer})
+                {job.product_name} - {job.customer}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label>เลข Batch</label>
+          <label>🔢 Batch No</label>
           <input
             type="text"
+            className="input-box"
             value={batchNo}
             onChange={(e) => setBatchNo(e.target.value)}
-            className="input-box"
           />
         </div>
 
         <div>
-          <label>สถานะการผลิต</label>
+          <label>🔄 สถานะการผลิต</label>
           <select
+            className="input-box"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="input-box"
           >
             <option>ยังไม่เริ่มผลิต</option>
             <option>กำลังผลิต</option>
@@ -141,19 +125,20 @@ export default function Production() {
         </div>
 
         <div className="full-span">
-          <label>หมายเหตุ</label>
+          <label>📝 หมายเหตุ</label>
           <input
             type="text"
+            className="input-box"
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            className="input-box"
+            placeholder="ใส่หมายเหตุถ้ามี"
           />
         </div>
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกและส่งต่อ
+        <button className="submit-btn full-span" onClick={handleSubmit}>
+          ✅ บันทึกสถานะการผลิต
         </button>
-      </form>
+      </div>
     </div>
   );
 }
