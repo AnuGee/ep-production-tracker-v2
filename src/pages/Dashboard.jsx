@@ -4,11 +4,6 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  limit,
 } from "firebase/firestore";
 import {
   BarChart,
@@ -19,14 +14,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import toast from "react-hot-toast";
-import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
 
 export default function Dashboard() {
-  const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [selectedYears, setSelectedYears] = useState(["2025"]);
   const [selectedMonths, setSelectedMonths] = useState(["เม.ย."]);
 
@@ -38,25 +29,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchJobs();
-
-    const q = query(
-      collection(db, "notifications"),
-      where("department", "==", role),
-      orderBy("timestamp", "desc"),
-      limit(5)
-    );
-
-    const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setNotifications(data);
-      const latest = data[0];
-      if (latest) {
-        toast(`🚨 ${latest.message}`, { icon: "🔔" });
-      }
-    });
-
-    return () => unsub();
-  }, [role]);
+  }, []);
 
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
@@ -64,7 +37,6 @@ export default function Dashboard() {
     setJobs(data);
   };
 
-  // นับงาน Today / Week / Finish / Not Finish
   const today = new Date();
   const todayStr = today.toISOString().split("T")[0];
   const startOfWeek = new Date(today);
@@ -82,7 +54,6 @@ export default function Dashboard() {
   const countFinished = jobs.filter((job) => job.currentStep === "Completed").length;
   const countNotFinished = jobs.filter((job) => job.currentStep !== "Completed").length;
 
-  // Monthly Count
   const monthlyCountsByYear = {};
   for (let year of allYears) {
     monthlyCountsByYear[year] = new Array(12).fill(0);
@@ -143,28 +114,6 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <h2>📊 Dashboard – ภาพรวมการผลิต</h2>
 
-      {/* 🔔 Notification List */}
-      <div style={{
-        background: "#fef3c7",
-        padding: "10px",
-        marginBottom: "1rem",
-        borderRadius: "8px"
-      }}>
-        <h3>🔔 การแจ้งเตือนเฉพาะแผนก {role}</h3>
-        {notifications.length === 0 ? (
-          <div>ไม่มีการแจ้งเตือน</div>
-        ) : (
-          <ul style={{ margin: 0, padding: "0 1rem" }}>
-            {notifications.map((n) => (
-              <li key={n.id} style={{ marginBottom: "4px" }}>
-                {n.message}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Summary Card */}
       <div className="summary-cards-grid">
         <div className="summary-card">📅 วันนี้: <strong>{countToday}</strong> งาน</div>
         <div className="summary-card">🗓 สัปดาห์นี้: <strong>{countThisWeek}</strong> งาน</div>
@@ -172,7 +121,6 @@ export default function Dashboard() {
         <div className="summary-card">✅ เสร็จแล้ว: <strong>{countFinished}</strong> งาน</div>
       </div>
 
-      {/* Chart เปรียบเทียบ */}
       <h3>📌 เลือกเดือนและปีที่ต้องการเปรียบเทียบ</h3>
       <div className="filter-bar">
         <div>
@@ -206,7 +154,7 @@ export default function Dashboard() {
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={comparisonData}>
           <XAxis dataKey="month" />
-          <YAxis />
+          <YAxis tick={false} axisLine={false} />
           <Tooltip />
           <Legend />
           {selectedYears.map((y, i) => (
@@ -215,29 +163,26 @@ export default function Dashboard() {
         </BarChart>
       </ResponsiveContainer>
 
-      {/* งานค้าง */}
       <h3>⏳ งานที่ค้างในแต่ละแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={pendingPerDept}>
           <XAxis dataKey="name" />
-          <YAxis />
+          <YAxis tick={false} axisLine={false} />
           <Tooltip />
           <Bar dataKey="count" fill="#f97316" />
         </BarChart>
       </ResponsiveContainer>
 
-      {/* ลูกค้างานเยอะ */}
       <h3>🏆 ลูกค้าที่มีงานเยอะที่สุด</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={topCustomers}>
           <XAxis dataKey="name" />
-          <YAxis />
+          <YAxis tick={false} axisLine={false} />
           <Tooltip />
           <Bar dataKey="count" fill="#8b5cf6" />
         </BarChart>
       </ResponsiveContainer>
 
-      {/* งานใกล้วันส่ง */}
       <h3>⏰ งานที่ใกล้วันส่ง (7 วัน)</h3>
       <table className="job-table">
         <thead>
