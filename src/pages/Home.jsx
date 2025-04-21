@@ -253,7 +253,7 @@ export default function Home() {
       <h3>📊 สรุปสถานะงานรายแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart layout="vertical" data={summaryPerStep}>
-          <XAxis type="number" />
+          <XAxis type="number" hide={true} />
           <YAxis dataKey="name" type="category" width={100} />
           <Tooltip content={<CustomTooltip />} />
           <Bar dataKey="notStarted" stackId="a" fill="#d1d5db" />
