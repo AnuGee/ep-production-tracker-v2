@@ -37,7 +37,7 @@ export default function Home() {
 
     const q = query(
       collection(db, "notifications"),
-      orderBy("timestamp", "desc")
+      orderBy("createdAt", "desc") // ✅ เปลี่ยนตรงนี้ให้ใช้ createdAt
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
