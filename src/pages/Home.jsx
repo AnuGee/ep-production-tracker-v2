@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "./JobDetailModal";
@@ -9,8 +8,6 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  query,
-  orderBy,
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -118,7 +115,13 @@ export default function Home() {
     if (active && payload && payload.length) {
       const dataMap = { notStarted: "ยังไม่ถึง", doing: "กำลังทำ", done: "เสร็จแล้ว" };
       return (
-        <div style={{ background: "white", border: "1px solid #ccc", borderRadius: "6px", padding: "10px", fontSize: "14px" }}>
+        <div style={{
+          background: "white",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          padding: "10px",
+          fontSize: "14px"
+        }}>
           <strong>{label}</strong>
           <ul style={{ listStyle: "none", paddingLeft: 0, margin: 0 }}>
             {payload.map((entry, index) => (
@@ -194,6 +197,7 @@ export default function Home() {
   return (
     <div className="page-container">
       <h2 style={{ marginTop: "0" }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
+
       <hr style={{ margin: "2rem 0" }} />
       <h3>🎛 ตัวกรอง</h3>
       <div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
@@ -201,11 +205,13 @@ export default function Home() {
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
           {years.map((year) => <option key={year}>{year}</option>)}
         </select>
+
         <label>🗓 เดือน:</label>
         <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
           <option>ทั้งหมด</option>
           {months.map((month) => <option key={month}>{month}</option>)}
         </select>
+
         <label>🎯 สถานะ:</label>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option>ทั้งหมด</option>
@@ -213,6 +219,7 @@ export default function Home() {
           <option>กำลังทำ</option>
           <option>เสร็จแล้ว</option>
         </select>
+
         <input
           type="text"
           placeholder="🔍 ค้นหา Product, Customer, Batch No"
@@ -221,13 +228,19 @@ export default function Home() {
           className="input-box"
           style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }}
         />
-        <button className="clear-button" onClick={handleClearFilters}>♻️ Reset</button>
+
+        <button className="clear-button" onClick={handleClearFilters}>
+          ♻️ Reset
+        </button>
       </div>
+
       <hr style={{ margin: "2rem 0" }} />
       <h3>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
+
       <hr style={{ margin: "2rem 0" }} />
       <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
       <ProgressBoard jobs={filteredJobs} />
+
       <hr style={{ margin: "2rem 0" }} />
       <h3>📊 สรุปสถานะงานรายแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
@@ -240,6 +253,7 @@ export default function Home() {
           <Bar dataKey="done" stackId="a" fill="#4ade80" />
         </BarChart>
       </ResponsiveContainer>
+
       <hr style={{ margin: "2rem 0" }} />
       <h3>📋 รายการงานทั้งหมด</h3>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
@@ -252,6 +266,7 @@ export default function Home() {
           />
           🔄 แสดงสถานะแบบละเอียด
         </label>
+
         <div>
           <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
             📥 Export Excel (ตามตัวกรอง)
@@ -261,6 +276,7 @@ export default function Home() {
           </button>
         </div>
       </div>
+
       <div className="table-wrapper">
         <table className="job-table">
           <thead>
@@ -302,6 +318,7 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+
       {selectedJob && (
         <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
       )}
