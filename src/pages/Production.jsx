@@ -4,10 +4,10 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  doc,
   updateDoc,
-  addDoc,
+  doc,
   serverTimestamp,
+  addDoc,
   arrayUnion,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
@@ -15,9 +15,9 @@ import "../styles/Responsive.css";
 
 export default function Production() {
   const [jobs, setJobs] = useState([]);
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [batchNo, setBatchNo] = useState("");
+  const [selectedJobId, setSelectedJobId] = useState("");
   const [status, setStatus] = useState("ยังไม่เริ่มผลิต");
+  const [batchNo, setBatchNo] = useState("");
   const [remark, setRemark] = useState("");
 
   useEffect(() => {
@@ -30,115 +30,107 @@ export default function Production() {
     setJobs(data.filter((job) => job.currentStep === "Production"));
   };
 
-  const handleSubmit = async () => {
-    if (!selectedJob) {
-      alert("กรุณาเลือกรายการก่อน");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedJobId) {
+      toast.error("กรุณาเลือกงานก่อนบันทึก");
       return;
     }
 
-    const jobRef = doc(db, "production_workflow", selectedJob.id);
+    try {
+      const job = jobs.find((j) => j.id === selectedJobId);
+      const jobRef = doc(db, "production_workflow", selectedJobId);
+      const nextStep = status === "รอผลตรวจ" ? "QC" : status === "ผลิตเสร็จ" ? "Account" : "Production";
 
-    // เงื่อนไขเปลี่ยนขั้นตอน
-    let nextStep = "Production";
-    let notifyMessage = "";
-    let notifyDepartment = "";
+      await updateDoc(jobRef, {
+        batch_no: batchNo,
+        currentStep: nextStep,
+        "status.production": status,
+        "remarks.production": remark || "",
+        Timestamp_Production: serverTimestamp(),
+        audit_logs: arrayUnion({
+          step: "Production",
+          field: "status.production",
+          value: status,
+          remark: remark || "",
+          timestamp: new Date().toISOString(),
+        }),
+      });
 
-    if (status === "รอผลตรวจ") {
-      nextStep = "QC";
-      notifyMessage = "Production ผลิตเสร็จแล้ว ขณะนี้รอการตรวจสอบในแผนก QC";
-      notifyDepartment = "QC";
-    } else if (status === "ผลิตเสร็จ") {
-      nextStep = "Account";
-      notifyMessage = "Production ผลิตเสร็จแล้ว ขณะนี้รอการออก Invoice ในแผนก Account";
-      notifyDepartment = "Account";
+      // 🔔 เพิ่ม Notification ไปยังแผนกถัดไป
+      let message = "";
+      let department = "";
+      if (nextStep === "QC") {
+        message = `Production ผลิต ${job.product_name} ของลูกค้า ${job.customer} เสร็จแล้ว รอตรวจสอบโดย QC`;
+        department = "QC";
+      } else if (nextStep === "Account") {
+        message = `Production ผลิต ${job.product_name} ของลูกค้า ${job.customer} เสร็จแล้ว ส่งต่อไปยังบัญชี`;
+        department = "Account";
+      }
+
+      if (department) {
+        await addDoc(collection(db, "notifications"), {
+          message,
+          department,
+          timestamp: serverTimestamp(),
+          read: false,
+        });
+
+        await addDoc(collection(db, "notifications"), {
+          message,
+          department: "All",
+          timestamp: serverTimestamp(),
+          read: false,
+        });
+      }
+
+      toast.success("✅ บันทึกสถานะเรียบร้อยแล้ว");
+      setSelectedJobId("");
+      setStatus("ยังไม่เริ่มผลิต");
+      setBatchNo("");
+      setRemark("");
+      fetchJobs();
+    } catch (error) {
+      toast.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
     }
-
-    await updateDoc(jobRef, {
-      batch_no: batchNo || selectedJob.batch_no || "",
-      currentStep: nextStep,
-      "status.production": status,
-      "remarks.production": remark || "",
-      Timestamp_Production: serverTimestamp(),
-
-      audit_logs: arrayUnion({
-        step: "Production",
-        field: "status.production",
-        value: status,
-        remark: remark || "",
-        timestamp: new Date().toISOString(),
-      }),
-    });
-
-    // เพิ่ม Notification ถ้ามี nextStep ที่เปลี่ยน
-    if (nextStep === "QC") {
-  await addDoc(collection(db, "notifications"), {
-    message: `Production ผลิต ${selectedJob.product_name} ของ ${selectedJob.customer} เสร็จ รอตรวจสอบที่แผนก QC`,
-    department: "QC",
-    createdAt: serverTimestamp(),
-    read: false,
-  });
-}
-
-if (newStep === "Account") {
-  await addDoc(collection(db, "notifications"), {
-    message: `Production ผลิต ${selectedJob.product_name} ของ ${selectedJob.customer} เสร็จ รอออก Invoice ที่แผนก Account`,
-    department: "Account",
-    createdAt: serverTimestamp(),
-    read: false,
-  });
-}
-
-
-    toast.success("✅ บันทึกสถานะการผลิตแล้ว");
-
-    setSelectedJob(null);
-    setBatchNo("");
-    setStatus("ยังไม่เริ่มผลิต");
-    setRemark("");
-    fetchJobs();
   };
 
   return (
     <div className="page-container">
-      <h2>🏭 <strong>Production - ผลิตสินค้า</strong></h2>
-
-      <div className="form-grid">
+      <h2>🏫 Production - สถานะการผลิต</h2>
+      <form onSubmit={handleSubmit} className="form-grid">
         <div>
-          <label>📋 เลือกรายการ</label>
+          <label>เลือกงาน</label>
           <select
+            value={selectedJobId}
+            onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
-            value={selectedJob?.id || ""}
-            onChange={(e) => {
-              const job = jobs.find((j) => j.id === e.target.value);
-              setSelectedJob(job);
-              setBatchNo(job?.batch_no || "");
-            }}
           >
-            <option value="">-- เลือกงาน --</option>
+            <option value="">-- เลือก --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} - {job.customer}
+                {job.product_name} ({job.customer})
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label>🔢 Batch Number</label>
+          <label>เลข Batch</label>
           <input
             type="text"
-            className="input-box"
             value={batchNo}
             onChange={(e) => setBatchNo(e.target.value)}
+            className="input-box"
           />
         </div>
 
         <div>
-          <label>⚙️ สถานะการผลิต</label>
+          <label>สถานะการผลิต</label>
           <select
-            className="input-box"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
+            className="input-box"
           >
             <option>ยังไม่เริ่มผลิต</option>
             <option>กำลังผลิต</option>
@@ -149,20 +141,19 @@ if (newStep === "Account") {
         </div>
 
         <div className="full-span">
-          <label>📝 หมายเหตุ</label>
+          <label>หมายเหตุ</label>
           <input
             type="text"
-            className="input-box"
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            placeholder="ใส่หมายเหตุถ้ามี"
+            className="input-box"
           />
         </div>
 
-        <button className="submit-btn full-span" onClick={handleSubmit}>
-          ✅ บันทึกสถานะการผลิต
+        <button type="submit" className="submit-btn full-span">
+          ✅ บันทึกและส่งต่อ
         </button>
-      </div>
+      </form>
     </div>
   );
 }
