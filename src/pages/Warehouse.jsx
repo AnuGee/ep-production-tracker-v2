@@ -4,19 +4,21 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  updateDoc,
   doc,
+  updateDoc,
   serverTimestamp,
+  arrayUnion,
   addDoc,
 } from "firebase/firestore";
-import toast from "react-hot-toast";
+import toast from "react-hot-toast"; // ✅ เพิ่ม Toast
 import "../styles/Responsive.css";
 
 export default function Warehouse() {
   const [jobs, setJobs] = useState([]);
-  const [selectedJobId, setSelectedJobId] = useState("");
-  const [stock, setStock] = useState("ไม่มี");
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [stock, setStock] = useState("มี");
   const [step, setStep] = useState("ยังไม่เบิก");
+  const [remark, setRemark] = useState("");
 
   useEffect(() => {
     fetchJobs();
@@ -24,103 +26,120 @@ export default function Warehouse() {
 
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     setJobs(data.filter((job) => job.currentStep === "Warehouse"));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedJobId) {
-      toast.error("กรุณาเลือกงานก่อนบันทึก");
+  const handleSubmit = async () => {
+    if (!selectedJob) {
+      alert("กรุณาเลือกรายการก่อน");
       return;
     }
-    try {
-      const jobRef = doc(db, "production_workflow", selectedJobId);
-      await updateDoc(jobRef, {
-        "status.warehouse": step,
-        Timestamp_Warehouse: serverTimestamp(),
-        currentStep: "Production",
-      });
 
-      // 🔔 เพิ่ม Notification ไปยัง Production
-      const job = jobs.find((j) => j.id === selectedJobId);
-      if (job) {
-        await addDoc(collection(db, "notifications"), {
-          message: `Warehouse อัปเดตงาน ${job.product_name} ของลูกค้า ${job.customer} เรียบร้อย ส่งต่อไปยัง Production`,
-          department: "Production",
-          timestamp: serverTimestamp(),
-          read: false,
-        });
+    const jobRef = doc(db, "production_workflow", selectedJob.id);
 
-        // 🔔 เพิ่ม Global Notification
-        await addDoc(collection(db, "notifications"), {
-          message: `Warehouse อัปเดตงาน ${job.product_name} ของลูกค้า ${job.customer} เรียบร้อย ส่งต่อไปยัง Production`,
-          department: "All",
-          timestamp: serverTimestamp(),
-          read: false,
-        });
-      }
+    const newStep = step === "เบิกเสร็จ" ? "Production" : "Warehouse";
 
-      toast.success("✅ อัปเดตสถานะเรียบร้อยแล้ว");
-      setSelectedJobId("");
-      setStock("ไม่มี");
-      setStep("ยังไม่เบิก");
-      fetchJobs();
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการอัปเดต");
-    }
+    await updateDoc(jobRef, {
+      currentStep: newStep,
+      "status.warehouse": step,
+      "remarks.warehouse": remark || "",
+      Timestamp_Warehouse: serverTimestamp(),
+      audit_logs: arrayUnion({
+        step: "Warehouse",
+        field: "status.warehouse",
+        value: step,
+        remark: remark || "",
+        timestamp: new Date().toISOString(),
+      }),
+    });
+
+    // ✅ เพิ่ม Notification เข้า Firestore
+    if (newStep === "Production") {
+  await addDoc(collection(db, "notifications"), {
+    message: `Warehouse เบิกวัตถุดิบ ${selectedJob.product_name} ของ ${selectedJob.customer} เสร็จแล้ว รอผลิตที่แผนก Production`,
+    department: "Production",
+    createdAt: serverTimestamp(),
+    read: false,
+  });
+}
+
+    toast.success("✅ อัปเดตเรียบร้อยแล้ว" + (newStep === "Production" ? " และส่งต่อไปยัง Production" : ""));
+
+    setSelectedJob(null);
+    setStock("มี");
+    setStep("ยังไม่เบิก");
+    setRemark("");
+    fetchJobs();
   };
 
   return (
     <div className="page-container">
-      <h2>🏭 Warehouse - จัดการวัตถุดิบ</h2>
+      <h2>📦 <strong>Warehouse - เบิกวัตถุดิบ</strong></h2>
 
-      <form onSubmit={handleSubmit} className="form-grid">
+      <div className="form-grid">
         <div>
-          <label>📦 เลือกงาน</label>
+          <label>📋 เลือกรายการ</label>
           <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
+            value={selectedJob?.id || ""}
+            onChange={(e) => {
+              const job = jobs.find((j) => j.id === e.target.value);
+              setSelectedJob(job);
+            }}
           >
-            <option value="">-- เลือก --</option>
+            <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} ({job.customer})
+                {job.product_name} - {job.customer}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label>📦 สต๊อก</label>
+          <label>📦 สต๊อกวัตถุดิบ</label>
           <select
+            className="input-box"
             value={stock}
             onChange={(e) => setStock(e.target.value)}
-            className="input-box"
           >
-            <option value="มี">มี</option>
-            <option value="ไม่มี">ไม่มี</option>
+            <option>มี</option>
+            <option>ไม่มี</option>
           </select>
         </div>
 
         <div>
-          <label>🚚 ขั้นตอน</label>
+          <label>🔄 สถานะ</label>
           <select
+            className="input-box"
             value={step}
             onChange={(e) => setStep(e.target.value)}
-            className="input-box"
           >
-            <option value="ยังไม่เบิก">ยังไม่เบิก</option>
-            <option value="Pending">Pending</option>
-            <option value="เบิกเสร็จ">เบิกเสร็จ</option>
+            <option>ยังไม่เบิก</option>
+            <option>Pending</option>
+            <option>เบิกเสร็จ</option>
           </select>
         </div>
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกสถานะและส่งต่อ Production
+        <div className="full-span">
+          <label>📝 หมายเหตุ</label>
+          <input
+            type="text"
+            className="input-box"
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            placeholder="ใส่หมายเหตุถ้ามี"
+          />
+        </div>
+
+        <button className="submit-btn full-span" onClick={handleSubmit}>
+          ✅ บันทึกสถานะคลังสินค้า
         </button>
-      </form>
+      </div>
     </div>
   );
 }
