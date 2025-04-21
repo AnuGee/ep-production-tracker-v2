@@ -4,10 +4,9 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  updateDoc,
   doc,
+  updateDoc,
   serverTimestamp,
-  addDoc,
   arrayUnion,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
@@ -15,7 +14,7 @@ import "../styles/Responsive.css";
 
 export default function Account() {
   const [jobs, setJobs] = useState([]);
-  const [selectedJobId, setSelectedJobId] = useState("");
+  const [selectedJob, setSelectedJob] = useState(null);
   const [status, setStatus] = useState("Invoice ยังไม่ออก");
   const [remark, setRemark] = useState("");
 
@@ -25,83 +24,76 @@ export default function Account() {
 
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
     setJobs(data.filter((job) => job.currentStep === "Account"));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedJobId) {
-      toast.error("กรุณาเลือกงานก่อนบันทึก");
+  const handleSubmit = async () => {
+    if (!selectedJob) {
+      toast.error("กรุณาเลือกรายการก่อน");
       return;
     }
 
-    try {
-      const jobRef = doc(db, "production_workflow", selectedJobId);
-      const currentStep = status === "Invoice ออกแล้ว" ? "Completed" : "Account";
+    const jobRef = doc(db, "production_workflow", selectedJob.id);
+    const newStep = status === "Invoice ออกแล้ว" ? "Completed" : "Account";
 
-      await updateDoc(jobRef, {
-        "status.account": status,
-        "remarks.account": remark,
-        currentStep,
-        Timestamp_Account: serverTimestamp(),
-        audit_logs: arrayUnion({
-          step: "Account",
-          field: "status.account",
-          value: status,
-          remark,
-          timestamp: new Date().toISOString(),
-        }),
-      });
+    await updateDoc(jobRef, {
+      currentStep: newStep,
+      "status.account": status,
+      "remarks.account": remark || "",
+      Timestamp_Account: serverTimestamp(),
+      audit_logs: arrayUnion({
+        step: "Account",
+        field: "status.account",
+        value: status,
+        remark: remark || "",
+        timestamp: new Date().toISOString(),
+      }),
+    });
 
-      const job = jobs.find((j) => j.id === selectedJobId);
+    toast.success(
+      `✅ อัปเดตสถานะบัญชีเรียบร้อย${newStep === "Completed" ? " และส่งสถานะเป็นเสร็จสมบูรณ์" : ""}`
+    );
 
-      if (job && status === "Invoice ออกแล้ว") {
-        await addDoc(collection(db, "notifications"), {
-          message: `Account อัปเดตงาน ${job.product_name} ของลูกค้า ${job.customer} เรียบร้อย เสร็จสิ้นกระบวนการผลิต`,
-          department: "All",
-          timestamp: serverTimestamp(),
-          read: false,
-        });
-      }
-
-      toast.success("✅ บันทึกเรียบร้อยแล้ว");
-      setSelectedJobId("");
-      setStatus("Invoice ยังไม่ออก");
-      setRemark("");
-      fetchJobs();
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการอัปเดตข้อมูล");
-    }
+    setSelectedJob(null);
+    setStatus("Invoice ยังไม่ออก");
+    setRemark("");
+    fetchJobs();
   };
 
   return (
     <div className="page-container">
-      <h2>💰 Account - ตรวจสอบบัญชี</h2>
+      <h2>💰 <strong>Account - จัดการสถานะใบแจ้งหนี้</strong></h2>
 
-      <form onSubmit={handleSubmit} className="form-grid">
+      <div className="form-grid">
         <div>
-          <label>📦 เลือกงาน</label>
+          <label>📋 เลือกรายการ</label>
           <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
+            value={selectedJob?.id || ""}
+            onChange={(e) => {
+              const job = jobs.find((j) => j.id === e.target.value);
+              setSelectedJob(job);
+            }}
           >
-            <option value="">-- เลือก --</option>
+            <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} ({job.customer})
+                {job.product_name} - {job.customer}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label>📄 สถานะ</label>
+          <label>🧾 สถานะใบแจ้งหนี้</label>
           <select
+            className="input-box"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="input-box"
           >
             <option>Invoice ยังไม่ออก</option>
             <option>Invoice ออกแล้ว</option>
@@ -112,17 +104,17 @@ export default function Account() {
           <label>📝 หมายเหตุ</label>
           <input
             type="text"
+            className="input-box"
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            className="input-box"
-            placeholder="ระบุหมายเหตุถ้ามี"
+            placeholder="ใส่หมายเหตุถ้ามี"
           />
         </div>
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกและอัปเดตสถานะ
+        <button className="submit-btn full-span" onClick={handleSubmit}>
+          ✅ บันทึกสถานะบัญชี
         </button>
-      </form>
+      </div>
     </div>
   );
 }
