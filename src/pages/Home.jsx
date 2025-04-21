@@ -139,13 +139,7 @@ export default function Home() {
     if (active && payload && payload.length) {
       const dataMap = { notStarted: "ยังไม่ถึง", doing: "กำลังทำ", done: "เสร็จแล้ว" };
       return (
-        <div style={{
-          background: "white",
-          border: "1px solid #ccc",
-          borderRadius: "6px",
-          padding: "10px",
-          fontSize: "14px"
-        }}>
+        <div style={{ background: "white", border: "1px solid #ccc", borderRadius: "6px", padding: "10px", fontSize: "14px" }}>
           <strong>{label}</strong>
           <ul style={{ listStyle: "none", paddingLeft: 0, margin: 0 }}>
             {payload.map((entry, index) => (
@@ -173,30 +167,61 @@ export default function Home() {
     return { name: step, notStarted, doing, done };
   });
 
+  const exportToExcel = () => {
+    const dataToExport = filteredJobs.map((job) => ({
+      "Batch No": job.batch_no || "–",
+      "Product": job.product_name || "–",
+      "Current Step": job.currentStep || "–",
+      "Customer": job.customer || "–",
+      "Volume (KG)": job.volume || "–",
+      "Delivery Date": job.delivery_date || "–",
+      "Last Update": renderLastUpdate(job),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, "EP_Production_Jobs.xlsx");
+  };
+
+  const exportAllToExcel = async () => {
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const allData = snapshot.docs.map((doc, index) => {
+      const job = doc.data();
+      return {
+        "No.": index + 1,
+        "Batch No": job.batch_no || "–",
+        "Product": job.product_name || "–",
+        "Customer": job.customer || "–",
+        "Volume (KG)": job.volume || "–",
+        "Delivery Date": job.delivery_date || "–",
+        "Current Step": job.currentStep || "–",
+        "Sales": job.status?.sales || "",
+        "Warehouse": job.status?.warehouse || "",
+        "Production": job.status?.production || "",
+        "QC": `${job.status?.qc_inspection || ""} / ${job.status?.qc_coa || ""}`,
+        "Account": job.status?.account || "",
+      };
+    });
+    const worksheet = XLSX.utils.json_to_sheet(allData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "All Jobs");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, `EP_All_Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div className="page-container">
       <h2 style={{ marginTop: "0" }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
       <hr style={{ margin: "1.5rem 0" }} />
-
       <h3>🔔 การแจ้งเตือนล่าสุด</h3>
       <div style={{ marginBottom: "1rem" }}>
-        {notifications.length === 0 ? (
-          <div>ไม่มีการแจ้งเตือน</div>
-        ) : (
-          notifications.map((noti) => (
-            <div key={noti.id} style={{
-              background: "#fef3c7",
-              padding: "10px",
-              borderRadius: "6px",
-              marginBottom: "6px",
-              fontSize: "14px",
-            }}>
-              🚨 {noti.message}
-            </div>
-          ))
-        )}
+        {notifications.length === 0 ? <div>ไม่มีการแจ้งเตือน</div> : notifications.map((noti) => (
+          <div key={noti.id} style={{ background: "#fef3c7", padding: "10px", borderRadius: "6px", marginBottom: "6px", fontSize: "14px" }}>🚨 {noti.message}</div>
+        ))}
       </div>
-
       <hr style={{ margin: "2rem 0" }} />
       <h3>🎛 ตัวกรอง</h3>
       <div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
@@ -204,13 +229,11 @@ export default function Home() {
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
           {years.map((year) => <option key={year}>{year}</option>)}
         </select>
-
         <label>🗓 เดือน:</label>
         <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
           <option>ทั้งหมด</option>
           {months.map((month) => <option key={month}>{month}</option>)}
         </select>
-
         <label>🎯 สถานะ:</label>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option>ทั้งหมด</option>
@@ -218,28 +241,14 @@ export default function Home() {
           <option>กำลังทำ</option>
           <option>เสร็จแล้ว</option>
         </select>
-
-        <input
-          type="text"
-          placeholder="🔍 ค้นหา Product, Customer, Batch No"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="input-box"
-          style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }}
-        />
-
-        <button className="clear-button" onClick={handleClearFilters}>
-          ♻️ Reset
-        </button>
+        <input type="text" placeholder="🔍 ค้นหา Product, Customer, Batch No" value={searchText} onChange={(e) => setSearchText(e.target.value)} className="input-box" style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }} />
+        <button className="clear-button" onClick={handleClearFilters}>♻️ Reset</button>
       </div>
-
       <hr style={{ margin: "2rem 0" }} />
       <h3>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
-
       <hr style={{ margin: "2rem 0" }} />
       <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
       <ProgressBoard jobs={filteredJobs} />
-
       <hr style={{ margin: "2rem 0" }} />
       <h3>📊 สรุปสถานะงานรายแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
@@ -252,20 +261,13 @@ export default function Home() {
           <Bar dataKey="done" stackId="a" fill="#4ade80" />
         </BarChart>
       </ResponsiveContainer>
-
       <hr style={{ margin: "2rem 0" }} />
       <h3>📋 รายการงานทั้งหมด</h3>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
         <label>
-          <input
-            type="checkbox"
-            checked={showAllStatus}
-            onChange={(e) => setShowAllStatus(e.target.checked)}
-            style={{ marginRight: "8px" }}
-          />
+          <input type="checkbox" checked={showAllStatus} onChange={(e) => setShowAllStatus(e.target.checked)} style={{ marginRight: "8px" }} />
           🔄 แสดงสถานะแบบละเอียด
         </label>
-
         <div>
           <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
             📥 Export Excel (ตามตัวกรอง)
@@ -275,7 +277,6 @@ export default function Home() {
           </button>
         </div>
       </div>
-
       <div className="table-wrapper">
         <table className="job-table">
           <thead>
@@ -317,7 +318,6 @@ export default function Home() {
           </tbody>
         </table>
       </div>
-
       {selectedJob && (
         <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
       )}
