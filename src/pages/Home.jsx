@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "./JobDetailModal";
@@ -8,12 +9,16 @@ import { db } from "../firebase";
 import {
   collection,
   getDocs,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "../styles/Responsive.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
+  const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [selectedYear, setSelectedYear] = useState("ทั้งหมด");
   const [selectedMonth, setSelectedMonth] = useState("ทั้งหมด");
@@ -149,6 +154,27 @@ export default function Home() {
     return { name: step, notStarted, doing, done };
   });
 
+  const exportAuditLogs = () => {
+    const rows = jobs.flatMap((job) =>
+      (job.audit_logs || []).map((log, idx) => ({
+        "No.": idx + 1,
+        "Product": job.product_name,
+        "Customer": job.customer,
+        "Step": log.step,
+        "Field": log.field,
+        "Value": log.value,
+        "Remark": log.remark,
+        "Timestamp": new Date(log.timestamp).toLocaleString("th-TH"),
+      }))
+    );
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Audit Logs");
+    const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    saveAs(blob, "EP_Audit_Logs.xlsx");
+  };
+
   const exportToExcel = () => {
     const dataToExport = filteredJobs.map((job) => ({
       "Batch No": job.batch_no || "–",
@@ -205,13 +231,11 @@ export default function Home() {
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
           {years.map((year) => <option key={year}>{year}</option>)}
         </select>
-
         <label>🗓 เดือน:</label>
         <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
           <option>ทั้งหมด</option>
           {months.map((month) => <option key={month}>{month}</option>)}
         </select>
-
         <label>🎯 สถานะ:</label>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option>ทั้งหมด</option>
@@ -219,19 +243,8 @@ export default function Home() {
           <option>กำลังทำ</option>
           <option>เสร็จแล้ว</option>
         </select>
-
-        <input
-          type="text"
-          placeholder="🔍 ค้นหา Product, Customer, Batch No"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="input-box"
-          style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }}
-        />
-
-        <button className="clear-button" onClick={handleClearFilters}>
-          ♻️ Reset
-        </button>
+        <input type="text" placeholder="🔍 ค้นหา Product, Customer, Batch No" value={searchText} onChange={(e) => setSearchText(e.target.value)} className="input-box" style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }} />
+        <button className="clear-button" onClick={handleClearFilters}>♻️ Reset</button>
       </div>
 
       <hr style={{ margin: "2rem 0" }} />
@@ -271,9 +284,14 @@ export default function Home() {
           <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
             📥 Export Excel (ตามตัวกรอง)
           </button>
-          <button onClick={exportAllToExcel} className="submit-btn">
+          <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
             📦 Export ข้อมูลทั้งหมด
           </button>
+          {role === "Admin" && (
+            <button onClick={exportAuditLogs} className="submit-btn" style={{ backgroundColor: "#6366f1" }}>
+              🕓 Export Audit Logs (Admin)
+            </button>
+          )}
         </div>
       </div>
 
