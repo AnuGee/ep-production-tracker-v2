@@ -32,17 +32,18 @@ export default function Production() {
     setJobs(data.filter((job) => job.currentStep === "Production"));
   };
 
-  const handleJobSelect = (id) => {
-    const job = jobs.find((j) => j.id === id);
-    setSelectedJob(job);
+const handleJobSelect = (id) => {
+  const job = jobs.find((j) => j.id === id);
+  setSelectedJob(job);
 
-    // ถ้ามี batch_no อยู่แล้ว → preload
-    if (job?.batch_no) {
-      setBatchNo(job.batch_no);
-    } else {
-      setBatchNo("");
-    }
-  };
+  // ตรวจว่า batch_no มีอยู่จริงและไม่ใช่ค่าว่าง
+  if (job?.batch_no && typeof job.batch_no === "string" && job.batch_no.trim() !== "") {
+    setBatchNo(job.batch_no);
+  } else {
+    setBatchNo("");
+  }
+};
+
 
   const handleSubmit = async () => {
     if (!selectedJob) {
