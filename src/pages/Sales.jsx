@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { db, serverTimestamp } from "../firebase";
+import { db } from "../firebase";
+import { serverTimestamp } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
 
