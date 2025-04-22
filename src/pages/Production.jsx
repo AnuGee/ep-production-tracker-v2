@@ -16,7 +16,7 @@ export default function Production() {
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [batchNo, setBatchNo] = useState("");
-  const [status, setStatus] = useState("ยังไม่เริ่มผลิต");
+  const [status, setStatus] = useState("");
   const [remark, setRemark] = useState("");
 
   useEffect(() => {
@@ -32,6 +32,18 @@ export default function Production() {
     setJobs(data.filter((job) => job.currentStep === "Production"));
   };
 
+  const handleJobSelect = (id) => {
+    const job = jobs.find((j) => j.id === id);
+    setSelectedJob(job);
+
+    // ถ้ามี batch_no อยู่แล้ว → preload
+    if (job?.batch_no) {
+      setBatchNo(job.batch_no);
+    } else {
+      setBatchNo("");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedJob) {
       toast.error("กรุณาเลือกรายการก่อน");
@@ -43,12 +55,22 @@ export default function Production() {
       return;
     }
 
-    const jobRef = doc(db, "production_workflow", selectedJob.id);
+    // ห้ามเลือก "กำลังบรรจุ" ถ้า QC ยังไม่ "ตรวจผ่านแล้ว"
+    if (
+      status === "กำลังบรรจุ" &&
+      selectedJob?.status?.qc_inspection !== "ตรวจผ่านแล้ว"
+    ) {
+      toast.error("ไม่สามารถเลือก 'กำลังบรรจุ' ได้จนกว่า QC จะตรวจผ่านแล้ว");
+      return;
+    }
 
+    // กำหนด step ถัดไปตาม logic
     let newStep = "Production";
-    if (status === "รอผลตรวจ") newStep = "QC";
-    if (status === "ผลิตเสร็จ") newStep = "Account";
+    if (status === "รอผลตรวจ" || status === "ผลิตเสร็จ") {
+      newStep = "QC";
+    }
 
+    const jobRef = doc(db, "production_workflow", selectedJob.id);
     await updateDoc(jobRef, {
       batch_no: batchNo,
       currentStep: newStep,
@@ -65,12 +87,13 @@ export default function Production() {
     });
 
     toast.success(
-      `✅ อัปเดตเรียบร้อยแล้ว${newStep !== "Production" ? ` และส่งต่อไปยัง ${newStep}` : ""}`
+      `✅ บันทึกสถานะสำเร็จ${newStep !== "Production" ? ` และส่งต่อไปยัง ${newStep}` : ""}`
     );
 
+    // Reset
     setSelectedJob(null);
     setBatchNo("");
-    setStatus("ยังไม่เริ่มผลิต");
+    setStatus("");
     setRemark("");
     fetchJobs();
   };
@@ -85,15 +108,12 @@ export default function Production() {
           <select
             className="input-box"
             value={selectedJob?.id || ""}
-            onChange={(e) => {
-              const job = jobs.find((j) => j.id === e.target.value);
-              setSelectedJob(job);
-            }}
+            onChange={(e) => handleJobSelect(e.target.value)}
           >
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} - {job.customer}
+                {job.po_number} - {job.customer} - {job.product_name}
               </option>
             ))}
           </select>
@@ -116,6 +136,7 @@ export default function Production() {
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
+            <option value="">-- เลือกสถานะ --</option>
             <option>ยังไม่เริ่มผลิต</option>
             <option>กำลังผลิต</option>
             <option>รอผลตรวจ</option>
