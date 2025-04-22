@@ -1,13 +1,9 @@
+// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  onSnapshot,
-  query,
-  orderBy,
-  where,
-  limit,
 } from "firebase/firestore";
 import {
   BarChart,
@@ -18,15 +14,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import toast from "react-hot-toast";
-import { useAuth } from "../context/AuthContext";
-import { exportAllWithAuditForAdmin } from "../utils/Dashboard_Addon_ExportFunction";
 import "./Dashboard.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Dashboard() {
   const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
-  const [notifications, setNotifications] = useState([]);
   const [selectedYears, setSelectedYears] = useState(["2025"]);
   const [selectedMonths, setSelectedMonths] = useState(["เม.ย."]);
 
@@ -38,25 +31,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchJobs();
-
-    const q = query(
-      collection(db, "notifications"),
-      where("department", "==", role),
-      orderBy("timestamp", "desc"),
-      limit(5)
-    );
-
-    const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setNotifications(data);
-      const latest = data[0];
-      if (latest) {
-        toast(`🚨 ${latest.message}`, { icon: "🔔" });
-      }
-    });
-
-    return () => unsub();
-  }, [role]);
+  }, []);
 
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
@@ -70,7 +45,8 @@ export default function Dashboard() {
   startOfWeek.setDate(today.getDate() - today.getDay());
 
   const countToday = jobs.filter(
-    (job) => job.Timestamp_Sales?.toDate?.().toISOString().split("T")[0] === todayStr
+    (job) =>
+      job.Timestamp_Sales?.toDate?.().toISOString().split("T")[0] === todayStr
   ).length;
 
   const countThisWeek = jobs.filter((job) => {
@@ -78,8 +54,12 @@ export default function Dashboard() {
     return ts && ts >= startOfWeek && ts <= today;
   }).length;
 
-  const countFinished = jobs.filter((job) => job.currentStep === "Completed").length;
-  const countNotFinished = jobs.filter((job) => job.currentStep !== "Completed").length;
+  const countFinished = jobs.filter(
+    (job) => job.currentStep === "Completed"
+  ).length;
+  const countNotFinished = jobs.filter(
+    (job) => job.currentStep !== "Completed"
+  ).length;
 
   const monthlyCountsByYear = {};
   for (let year of allYears) {
@@ -121,15 +101,17 @@ export default function Dashboard() {
     })
     .sort((a, b) => new Date(a.delivery_date) - new Date(b.delivery_date));
 
-  const comparisonData = allMonths.map((month, mIdx) => {
-    const entry = { month };
-    for (let y of selectedYears) {
-      if (selectedMonths.includes(month)) {
-        entry[y] = monthlyCountsByYear[y][mIdx];
+  const comparisonData = allMonths
+    .map((month, mIdx) => {
+      const entry = { month };
+      for (let y of selectedYears) {
+        if (selectedMonths.includes(month)) {
+          entry[y] = monthlyCountsByYear[y][mIdx];
+        }
       }
-    }
-    return entry;
-  }).filter((d) => Object.values(d).some((v, i) => i > 0));
+      return entry;
+    })
+    .filter((d) => Object.values(d).some((v, i) => i > 0));
 
   const toggleSelection = (list, value, setList) => {
     setList((prev) =>
@@ -140,27 +122,6 @@ export default function Dashboard() {
   return (
     <div className="dashboard-container">
       <h2>📊 Dashboard – ภาพรวมการผลิต</h2>
-
-      {/* 🔔 Notification List */}
-      <div style={{
-        background: "#fef3c7",
-        padding: "10px",
-        marginBottom: "1rem",
-        borderRadius: "8px"
-      }}>
-        <h3>🔔 การแจ้งเตือนเฉพาะแผนก {role}</h3>
-        {notifications.length === 0 ? (
-          <div>ไม่มีการแจ้งเตือน</div>
-        ) : (
-          <ul style={{ margin: 0, padding: "0 1rem" }}>
-            {notifications.map((n) => (
-              <li key={n.id} style={{ marginBottom: "4px" }}>
-                {n.message}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
       {/* Summary Card */}
       <div className="summary-cards-grid">
@@ -180,7 +141,9 @@ export default function Dashboard() {
               <input
                 type="checkbox"
                 checked={selectedMonths.includes(m)}
-                onChange={() => toggleSelection(selectedMonths, m, setSelectedMonths)}
+                onChange={() =>
+                  toggleSelection(selectedMonths, m, setSelectedMonths)
+                }
               />{" "}
               {m}
             </label>
@@ -212,15 +175,6 @@ export default function Dashboard() {
           ))}
         </BarChart>
       </ResponsiveContainer>
-
-      {/* Export ปุ่ม Admin */}
-      {role === "Admin" && (
-        <div style={{ margin: "1rem 0" }}>
-          <button onClick={exportAllWithAuditForAdmin} className="submit-btn">
-            🛠 Export Excel แบบละเอียด (Admin)
-          </button>
-        </div>
-      )}
 
       {/* งานค้าง */}
       <h3>⏳ งานที่ค้างในแต่ละแผนก</h3>
