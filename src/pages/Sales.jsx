@@ -1,156 +1,133 @@
-// src/pages/Sales.jsx
-import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  serverTimestamp,
-} from "firebase/firestore";
+import React, { useState } from "react";
+import { db, serverTimestamp } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
-import "../styles/Responsive.css";
 
 export default function Sales() {
-  const [form, setForm] = useState({
-    product_name: "",
-    volume: "",
-    customer: "",
-    delivery_date: "",
-    remark: "",
-  });
-
-  const [jobs, setJobs] = useState([]);
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  const fetchJobs = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setJobs(data.filter((job) => job.currentStep === "Sales"));
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const [poDate, setPoDate] = useState(new Date().toISOString().split("T")[0]);
+  const [poNumber, setPoNumber] = useState("");
+  const [product, setProduct] = useState("");
+  const [volume, setVolume] = useState("");
+  const [customer, setCustomer] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [remark, setRemark] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { product_name, volume, customer, delivery_date, remark } = form;
 
-    if (!product_name || !volume || !customer || !delivery_date) {
-      toast.error("❌ กรุณากรอกข้อมูลให้ครบทุกช่อง");
+    if (!poNumber || !product || !volume || !customer || !deliveryDate) {
+      toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
       return;
     }
 
-    try {
-      await addDoc(collection(db, "production_workflow"), {
-        product_name,
-        volume,
-        customer,
-        delivery_date,
-        batch_no: "",
-        currentStep: "Warehouse",
-        status: {},
-        remarks: {
-          sales: remark || "",
-          warehouse: "",
-          production: "",
-          qc: "",
-          account: "",
+    const jobData = {
+      po_date: poDate,
+      po_number: poNumber,
+      product_name: product,
+      volume_kg: volume,
+      customer_name: customer,
+      delivery_date: deliveryDate,
+      sales_remark: remark || "",
+      currentStep: "Warehouse",
+      created_at: serverTimestamp(),
+      audit_logs: [
+        {
+          step: "Sales",
+          field: "Create Job",
+          value: `PO: ${poNumber}, Product: ${product}`,
+          timestamp: serverTimestamp(),
         },
-        Timestamp_Sales: serverTimestamp(),
-        audit_logs: [
-          {
-            step: "Sales",
-            field: "currentStep",
-            value: "Warehouse",
-            remark: remark || "",
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
+      ],
+    };
 
-      toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
+    try {
+      await addDoc(collection(db, "production_workflow"), jobData);
 
-      setForm({
-        product_name: "",
-        volume: "",
-        customer: "",
-        delivery_date: "",
-        remark: "",
-      });
-      fetchJobs();
+      toast.success("บันทึกข้อมูลเรียบร้อยแล้ว 🎉");
+
+      // Reset form
+      setPoDate(new Date().toISOString().split("T")[0]);
+      setPoNumber("");
+      setProduct("");
+      setVolume("");
+      setCustomer("");
+      setDeliveryDate("");
+      setRemark("");
     } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
+      console.error("Error adding document: ", error);
+      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
 
   return (
-    <div className="page-container">
-      <h2>📝 <strong>Sales - กรอกข้อมูลเริ่มต้น</strong></h2>
-
-      <form onSubmit={handleSubmit} className="form-grid">
-        <div>
-          <label>📦 <strong>Product Name</strong></label>
-          <input
-            type="text"
-            name="product_name"
-            value={form.product_name}
-            onChange={handleChange}
-            className="input-box"
-          />
-        </div>
-
-        <div>
-          <label>⚖️ <strong>Volume (KG.)</strong></label>
-          <input
-            type="number"
-            name="volume"
-            value={form.volume}
-            onChange={handleChange}
-            className="input-box"
-          />
-        </div>
-
-        <div>
-          <label>🧑‍💼 <strong>Customer Name</strong></label>
-          <input
-            type="text"
-            name="customer"
-            value={form.customer}
-            onChange={handleChange}
-            className="input-box"
-          />
-        </div>
-
-        <div>
-          <label>🚚 <strong>Delivery Date</strong></label>
+    <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+      <h2>📝 กรอกข้อมูลใบสั่งผลิต (Sales)</h2>
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "10px" }}>
+        <label>
+          📅 PO Date:
           <input
             type="date"
-            name="delivery_date"
-            value={form.delivery_date}
-            onChange={handleChange}
-            className="input-box"
+            value={poDate}
+            onChange={(e) => setPoDate(e.target.value)}
           />
-        </div>
+        </label>
 
-        <div className="full-span">
-          <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
+        <label>
+          📄 PO Number:
           <input
             type="text"
-            name="remark"
-            value={form.remark}
-            onChange={handleChange}
-            className="input-box"
-            placeholder="ระบุหมายเหตุหากมี"
+            value={poNumber}
+            onChange={(e) => setPoNumber(e.target.value)}
+            placeholder="เช่น PO-12345"
           />
-        </div>
+        </label>
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกข้อมูล และส่งต่อไปยัง Warehouse
+        <label>
+          📦 Product Name:
+          <input
+            type="text"
+            value={product}
+            onChange={(e) => setProduct(e.target.value)}
+          />
+        </label>
+
+        <label>
+          ⚖️ Volume (KG.):
+          <input
+            type="number"
+            value={volume}
+            onChange={(e) => setVolume(e.target.value)}
+          />
+        </label>
+
+        <label>
+          🧑‍💼 Customer Name:
+          <input
+            type="text"
+            value={customer}
+            onChange={(e) => setCustomer(e.target.value)}
+          />
+        </label>
+
+        <label>
+          🚚 Delivery Date:
+          <input
+            type="date"
+            value={deliveryDate}
+            onChange={(e) => setDeliveryDate(e.target.value)}
+          />
+        </label>
+
+        <label>
+          📝 หมายเหตุ (ถ้ามี):
+          <textarea
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+          />
+        </label>
+
+        <button type="submit" className="submit-btn">
+          ✅ บันทึกข้อมูล
         </button>
       </form>
     </div>
