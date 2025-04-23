@@ -183,7 +183,8 @@ export default function Home() {
     <div className="page-container">
       <h2 style={{ marginTop: 0 }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
 
-      <h3>🎛 ตัวกรอง</h3>
+      <hr style={{ margin: '2rem 0' }} />
+<h3>🎛 ตัวกรอง</h3>
       <div className="filter-bar">
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
           {years.map((y) => <option key={y}>{y}</option>)}
@@ -202,12 +203,15 @@ export default function Home() {
         <button onClick={handleClearFilters}>รีเซ็ต</button>
       </div>
 
-      <h3>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
+      <hr style={{ margin: '2rem 0' }} />
+<h3 style={{ color: '#1f2937', fontSize: '1.5rem', backgroundColor: '#e0f2fe', padding: '0.5rem 1rem', borderRadius: '8px' }}>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
 
-      <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
+      <hr style={{ margin: '2rem 0' }} />
+<h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
       <ProgressBoard jobs={filteredJobs} />
 
-      <h3>📊 สรุปสถานะงานรายแผนก</h3>
+      <hr style={{ margin: '2rem 0' }} />
+<h3>📊 สรุปสถานะงานรายแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart layout="vertical" data={summaryPerStep}>
           <XAxis type="number" hide />
@@ -235,7 +239,8 @@ export default function Home() {
         </div>
       </div>
 
-      <h3>📋 รายการงานทั้งหมด</h3>
+      <hr style={{ margin: '2rem 0' }} />
+<h3>📋 รายการงานทั้งหมด</h3>
       <div className="table-wrapper">
         <table className="job-table">
           <thead>
