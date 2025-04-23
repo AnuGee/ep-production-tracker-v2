@@ -329,7 +329,13 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
         </table>
       </div>
 
-      {selectedJob && <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
+{selectedJob && (
+  <div className="overlay" onClick={() => setSelectedJob(null)}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+    </div>
+  </div>
+)}
     </div>
   );
 }
