@@ -109,7 +109,6 @@ export default function Home() {
     if (sortDirection === "asc") return valA > valB ? 1 : -1;
     return valA < valB ? 1 : -1;
   });
-    const valB = b[sortColumn.toLowerCase()] || "";
     if (sortDirection === "asc") return valA > valB ? 1 : -1;
     return valA < valB ? 1 : -1;
   });
