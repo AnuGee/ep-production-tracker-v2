@@ -100,15 +100,19 @@ export default function Home() {
   };
 
   const sortedJobs = [...filteredJobs].sort((a, b) => {
-  const getValue = (job, col) => {
-    if (col === "delivery_date") return new Date(job[col] || "");
-    return (job[col] || "").toString().toLowerCase();
-  };
-  const valA = getValue(a, sortColumn);
-  const valB = getValue(b, sortColumn);
-  if (sortDirection === "asc") return valA > valB ? 1 : -1;
-  return valA < valB ? 1 : -1;
-});
+    const getValue = (job, col) => {
+      if (col === "delivery_date") return new Date(job[col] || "");
+      return (job[col] || "").toString().toLowerCase();
+    };
+    const valA = getValue(a, sortColumn);
+    const valB = getValue(b, sortColumn);
+    if (sortDirection === "asc") return valA > valB ? 1 : -1;
+    return valA < valB ? 1 : -1;
+  });
+    const valB = b[sortColumn.toLowerCase()] || "";
+    if (sortDirection === "asc") return valA > valB ? 1 : -1;
+    return valA < valB ? 1 : -1;
+  });
 
   const getTotalVolume = () => {
     return filteredJobs.reduce((sum, job) => {
@@ -196,41 +200,28 @@ export default function Home() {
     <div className="page-container">
       <h2 style={{ marginTop: 0 }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
 
-      <hr style={{ margin: '2rem 0' }} />
-<h3>🎛 ตัวกรอง</h3>
-<div className="filter-bar" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-  <label>📅 ปี
-    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-      {years.map((y) => <option key={y}>{y}</option>)}
-    </select>
-  </label>
-  <label>📆 เดือน
-    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-      <option>ทั้งหมด</option>
-      {months.map((m) => <option key={m}>{m}</option>)}
-    </select>
-  </label>
-  <label>🛠 ขั้นตอน
-    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-      <option>ทั้งหมด</option>
-      <option>ยังไม่ถึง</option>
-      <option>กำลังทำ</option>
-      <option>เสร็จแล้ว</option>
-    </select>
-  </label>
-  <input 
-    value={searchText} 
-    onChange={(e) => setSearchText(e.target.value)} 
-    placeholder="🔍 ค้นหา..."
-    style={{ borderRadius: '999px', padding: '0.4rem 1rem', border: '1px solid #ccc', flex: '1' }}
-  />
-  <button 
-    onClick={handleClearFilters} 
-    style={{ backgroundColor: '#ef4444', color: '#fff', borderRadius: '999px', border: 'none', padding: '0.5rem 1rem' }}
-  >
-    ❌ รีเซ็ต
-  </button>
-</div>
+      <hr style={{ margin: "2rem 0" }} />
+      <h3>🎛 ตัวกรอง</h3>
+      <div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+        <label>📆 ปี:</label>
+        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+          {years.map((year) => <option key={year}>{year}</option>)}
+        </select>
+        <label>🗓 เดือน:</label>
+        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+          <option>ทั้งหมด</option>
+          {months.map((month) => <option key={month}>{month}</option>)}
+        </select>
+        <label>🎯 สถานะ:</label>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option>ทั้งหมด</option>
+          <option>ยังไม่ถึง</option>
+          <option>กำลังทำ</option>
+          <option>เสร็จแล้ว</option>
+        </select>
+        <input type="text" placeholder="🔍 ค้นหา Product, Customer, Batch No" value={searchText} onChange={(e) => setSearchText(e.target.value)} className="input-box" style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }} />
+        <button className="clear-button" onClick={handleClearFilters}>♻️ Reset</button>
+      </div>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3 style={{ color: '#1f2937', fontSize: '1.5rem', backgroundColor: '#e0f2fe', padding: '0.5rem 1rem', borderRadius: '8px' }}>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
@@ -251,22 +242,6 @@ export default function Home() {
           <Bar dataKey="done" stackId="a" fill="#4ade80" />
         </BarChart>
       </ResponsiveContainer>
-
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "1rem 0" }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={showAllStatus}
-            onChange={(e) => setShowAllStatus(e.target.checked)}
-            style={{ marginRight: "8px" }}
-          />
-          🔄 แสดงสถานะแบบละเอียด
-        </label>
-        <div>
-          <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
-          <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
-        </div>
-      </div>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📋 รายการงานทั้งหมด</h3>
@@ -289,23 +264,23 @@ export default function Home() {
         <table className="job-table">
           <thead>
             <tr>
-              <th onClick={() => handleSort("customer")}>Customer {sortColumn === "customer" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th onClick={() => handleSort("po_number")}>PO {sortColumn === "po_number" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th>BN WH1</th>
-              <th>BN WH2</th>
-              <th>BN WH3</th>
-              <th onClick={() => handleSort("batch_no_production")}>BN PD {sortColumn === "batch_no_production" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th onClick={() => handleSort("product_name")}>Product {sortColumn === "product_name" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th onClick={() => handleSort("currentStep")}>Current Step {sortColumn === "currentStep" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th>Status</th>
-              <th onClick={() => handleSort("volume")}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th onClick={() => handleSort("delivery_date")}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-              <th>Last Update</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>Customer {sortColumn === "customer" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>PO {sortColumn === "po_number" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("bn_wh1")} style={{ cursor: "pointer" }}>BN WH1 {sortColumn === "bn_wh1" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("bn_wh2")} style={{ cursor: "pointer" }}>BN WH2 {sortColumn === "bn_wh2" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("bn_wh3")} style={{ cursor: "pointer" }}>BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>BN PD {sortColumn === "batch_no_production" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>Product {sortColumn === "product_name" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>Current Step {sortColumn === "currentStep" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>Status {sortColumn === "status" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("$1")} style={{ cursor: "pointer" }}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+              <th onClick={() => handleSort("last_update")} style={{ cursor: "pointer" }}>Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
             </tr>
           </thead>
           <tbody>
             {sortedJobs.map((job) => (
-              <tr key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
+              <tr key={job.id} onClick={() => setSelectedJob(job)}>
                 <td>{job.customer || "–"}</td>
                 <td>{job.po_number || "–"}</td>
                 <td>{getBatchNoWH(job, 0)}</td>
