@@ -234,13 +234,6 @@ export default function Home() {
             onChange={(e) => setShowAllStatus(e.target.checked)}
             style={{ marginRight: "8px" }}
           />
-          🔄 แสดงสถานะแบบละเอียด
-        </label>
-        <div>
-          <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
-          <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
-        </div>
-      </div>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📋 รายการงานทั้งหมด</h3>
