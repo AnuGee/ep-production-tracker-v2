@@ -104,6 +104,21 @@ export default function Home() {
     }, 0);
   };
 
+  const stepStatus = {
+    Sales: (job) => job.currentStep !== "Sales",
+    Warehouse: (job) => job.status?.warehouse === "เบิกเสร็จ",
+    Production: (job) => job.status?.production === "ผลิตเสร็จ",
+    QC: (job) => job.status?.qc_inspection === "ตรวจผ่านแล้ว" && job.status?.qc_coa === "เตรียมพร้อมแล้ว",
+    Account: (job) => job.status?.account === "Invoice ออกแล้ว",
+  };
+
+  const summaryPerStep = steps.map((step) => {
+    const notStarted = filteredJobs.filter((j) => steps.indexOf(j.currentStep) > steps.indexOf(step)).length;
+    const doing = filteredJobs.filter((j) => j.currentStep === step).length;
+    const done = filteredJobs.filter((j) => stepStatus[step](j)).length;
+    return { name: step, notStarted, doing, done };
+  });
+
   const renderStatusBadge = (label, value) => {
     let badgeClass = "status-badge pending";
     if (!value || value === "") value = "-";
