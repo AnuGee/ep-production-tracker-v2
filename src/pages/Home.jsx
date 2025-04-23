@@ -226,15 +226,6 @@ export default function Home() {
         </BarChart>
       </ResponsiveContainer>
 
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "1rem 0" }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={showAllStatus}
-            onChange={(e) => setShowAllStatus(e.target.checked)}
-            style={{ marginRight: "8px" }}
-          />
-
       <hr style={{ margin: '2rem 0' }} />
 <h3>📋 รายการงานทั้งหมด</h3>
 <div style={{ display: "flex", justifyContent: "space-between", margin: "1rem 0" }}>
