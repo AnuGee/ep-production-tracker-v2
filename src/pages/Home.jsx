@@ -100,18 +100,15 @@ export default function Home() {
   };
 
   const sortedJobs = [...filteredJobs].sort((a, b) => {
-    const getValue = (job, col) => {
-      if (col === "delivery_date") return new Date(job[col] || "");
-      return (job[col] || "").toString().toLowerCase();
-    };
-    const valA = getValue(a, sortColumn);
-    const valB = getValue(b, sortColumn);
-    if (sortDirection === "asc") return valA > valB ? 1 : -1;
-    return valA < valB ? 1 : -1;
-  });
-    if (sortDirection === "asc") return valA > valB ? 1 : -1;
-    return valA < valB ? 1 : -1;
-  });
+  const getValue = (job, col) => {
+    if (col === "delivery_date") return new Date(job[col] || "");
+    return (job[col] || "").toString().toLowerCase();
+  };
+  const valA = getValue(a, sortColumn);
+  const valB = getValue(b, sortColumn);
+  if (sortDirection === "asc") return valA > valB ? 1 : -1;
+  return valA < valB ? 1 : -1;
+});
 
   const getTotalVolume = () => {
     return filteredJobs.reduce((sum, job) => {
