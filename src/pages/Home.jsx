@@ -99,20 +99,23 @@ export default function Home() {
     }
   };
 
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
-    const getValue = (job, col) => {
-      if (col === "delivery_date") return new Date(job[col] || "");
-      return (job[col] || "").toString().toLowerCase();
-    };
-    const valA = getValue(a, sortColumn);
-    const valB = getValue(b, sortColumn);
-    if (sortDirection === "asc") return valA > valB ? 1 : -1;
-    return valA < valB ? 1 : -1;
-  });
-    const valB = b[sortColumn.toLowerCase()] || "";
-    if (sortDirection === "asc") return valA > valB ? 1 : -1;
-    return valA < valB ? 1 : -1;
-  });
+const sortedJobs = [...filteredJobs].sort((a, b) => {
+  const getValue = (job, col) => {
+    if (col === "delivery_date") return new Date(job[col] || "");
+    if (col === "bn_wh1") return job.batch_no_warehouse?.[0] || "";
+    if (col === "bn_wh2") return job.batch_no_warehouse?.[1] || "";
+    if (col === "bn_wh3") return job.batch_no_warehouse?.[2] || "";
+    if (col === "status") return job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "";
+    if (col === "last_update") return new Date(job.audit_logs?.at(-1)?.timestamp || 0);
+    return (job[col] || "").toString().toLowerCase();
+  };
+
+  const valA = getValue(a, sortColumn);
+  const valB = getValue(b, sortColumn);
+  if (sortDirection === "asc") return valA > valB ? 1 : -1;
+  return valA < valB ? 1 : -1;
+});
+
 
   const getTotalVolume = () => {
     return filteredJobs.reduce((sum, job) => {
