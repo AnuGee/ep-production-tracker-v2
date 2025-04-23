@@ -1,4 +1,5 @@
 // src/pages/Home.jsx
+// ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "./JobDetailModal";
@@ -6,12 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { db } from "../firebase";
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-} from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "../styles/Responsive.css";
@@ -20,12 +16,14 @@ import { useAuth } from "../context/AuthContext";
 export default function Home() {
   const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [selectedYear, setSelectedYear] = useState("ทั้งหมด");
   const [selectedMonth, setSelectedMonth] = useState("ทั้งหมด");
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [searchText, setSearchText] = useState("");
   const [showAllStatus, setShowAllStatus] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [sortColumn, setSortColumn] = useState("Delivery Date");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -33,13 +31,27 @@ export default function Home() {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
   useEffect(() => {
+    const fetchJobs = async () => {
+      const snapshot = await getDocs(collection(db, "production_workflow"));
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setJobs(data);
+    };
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setJobs(data);
+  const getBatchNoWH = (job, index) => {
+    return job.batch_no_warehouse?.[index] || "–";
+  };
+
+  const renderLastUpdate = (job) => {
+    const logs = job.audit_logs;
+    if (!logs || logs.length === 0) return "-";
+    const lastLog = logs[logs.length - 1];
+    const timeStr = new Date(lastLog.timestamp).toLocaleString("th-TH", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+    return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
   };
 
   const handleClearFilters = () => {
@@ -69,11 +81,21 @@ export default function Home() {
 
   const filteredJobs = jobs
     .filter(filterJobs)
-    .filter((job) =>
-      job.product_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-      job.customer?.toLowerCase().includes(searchText.toLowerCase()) ||
-      job.batch_no?.toLowerCase().includes(searchText.toLowerCase())
-    );
+    .filter((job) => {
+      const search = searchText.toLowerCase();
+      return (
+        job.product_name?.toLowerCase().includes(search) ||
+        job.customer?.toLowerCase().includes(search) ||
+        job.batch_no_production?.toLowerCase().includes(search)
+      );
+    });
+
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    const valA = a[sortColumn.toLowerCase()] || "";
+    const valB = b[sortColumn.toLowerCase()] || "";
+    if (sortDirection === "asc") return valA > valB ? 1 : -1;
+    return valA < valB ? 1 : -1;
+  });
 
   const getTotalVolume = () => {
     return filteredJobs.reduce((sum, job) => {
@@ -93,95 +115,18 @@ export default function Home() {
     return <span className={badgeClass}>{label}: {value}</span>;
   };
 
-  const extractCurrentStatus = (job) => {
-    switch (job.currentStep) {
-      case "Account": return renderStatusBadge("AC", job.status?.account);
-      case "QC": return renderStatusBadge("QC", job.status?.qc_inspection);
-      case "Production": return renderStatusBadge("PD", job.status?.production);
-      case "Warehouse": return renderStatusBadge("WH", job.status?.warehouse);
-      case "Sales": return renderStatusBadge("SL", "กรอกแล้ว");
-      case "Completed": return renderStatusBadge("✅", "เสร็จสมบูรณ์");
-      default: return "-";
-    }
-  };
-
-  const renderLastUpdate = (job) => {
-    const logs = job.audit_logs;
-    if (!logs || logs.length === 0) return "-";
-    const lastLog = logs[logs.length - 1];
-    const timeStr = new Date(lastLog.timestamp).toLocaleString("th-TH", {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
-    return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
-  };
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const dataMap = { notStarted: "ยังไม่ถึง", doing: "กำลังทำ", done: "เสร็จแล้ว" };
-      return (
-        <div style={{
-          background: "white",
-          border: "1px solid #ccc",
-          borderRadius: "6px",
-          padding: "10px",
-          fontSize: "14px"
-        }}>
-          <strong>{label}</strong>
-          <ul style={{ listStyle: "none", paddingLeft: 0, margin: 0 }}>
-            {payload.map((entry, index) => (
-              <li key={index}>{dataMap[entry.dataKey]}: {entry.value}</li>
-            ))}
-          </ul>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const stepStatus = {
-    Sales: (job) => job.currentStep !== "Sales",
-    Warehouse: (job) => job.status?.warehouse === "เบิกเสร็จ",
-    Production: (job) => job.status?.production === "ผลิตเสร็จ",
-    QC: (job) => job.status?.qc_inspection === "ตรวจผ่านแล้ว" && job.status?.qc_coa === "เตรียมพร้อมแล้ว",
-    Account: (job) => job.status?.account === "Invoice ออกแล้ว",
-  };
-
-  const summaryPerStep = steps.map((step) => {
-    const notStarted = filteredJobs.filter((j) => steps.indexOf(j.currentStep) > steps.indexOf(step)).length;
-    const doing = filteredJobs.filter((j) => j.currentStep === step).length;
-    const done = filteredJobs.filter((j) => stepStatus[step](j)).length;
-    return { name: step, notStarted, doing, done };
-  });
-
-  const exportAuditLogs = () => {
-    const rows = jobs.flatMap((job) =>
-      (job.audit_logs || []).map((log, idx) => ({
-        "No.": idx + 1,
-        "Product": job.product_name,
-        "Customer": job.customer,
-        "Step": log.step,
-        "Field": log.field,
-        "Value": log.value,
-        "Remark": log.remark,
-        "Timestamp": new Date(log.timestamp).toLocaleString("th-TH"),
-      }))
-    );
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Audit Logs");
-    const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([buffer], { type: "application/octet-stream" });
-    saveAs(blob, "EP_Audit_Logs.xlsx");
-  };
-
   const exportToExcel = () => {
     const dataToExport = filteredJobs.map((job) => ({
-      "Batch No": job.batch_no || "–",
+      "Customer": job.customer || "–",
+      "PO": job.po_number || "–",
+      "WH1": getBatchNoWH(job, 0),
+      "WH2": getBatchNoWH(job, 1),
+      "WH3": getBatchNoWH(job, 2),
+      "PD": job.batch_no_production || "–",
       "Product": job.product_name || "–",
       "Current Step": job.currentStep || "–",
-      "Customer": job.customer || "–",
-      "Volume (KG)": job.volume || "–",
+      "Status": job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–",
+      "Volume": job.volume || "–",
       "Delivery Date": job.delivery_date || "–",
       "Last Update": renderLastUpdate(job),
     }));
@@ -199,7 +144,6 @@ export default function Home() {
       const job = doc.data();
       return {
         "No.": index + 1,
-        "Batch No": job.batch_no || "–",
         "Product": job.product_name || "–",
         "Customer": job.customer || "–",
         "Volume (KG)": job.volume || "–",
@@ -222,54 +166,45 @@ export default function Home() {
 
   return (
     <div className="page-container">
-      <h2 style={{ marginTop: "0" }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
+      <h2 style={{ marginTop: 0 }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
 
-      <hr style={{ margin: "2rem 0" }} />
       <h3>🎛 ตัวกรอง</h3>
-      <div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
-        <label>📆 ปี:</label>
+      <div className="filter-bar">
         <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-          {years.map((year) => <option key={year}>{year}</option>)}
+          {years.map((y) => <option key={y}>{y}</option>)}
         </select>
-        <label>🗓 เดือน:</label>
         <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
           <option>ทั้งหมด</option>
-          {months.map((month) => <option key={month}>{month}</option>)}
+          {months.map((m) => <option key={m}>{m}</option>)}
         </select>
-        <label>🎯 สถานะ:</label>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option>ทั้งหมด</option>
           <option>ยังไม่ถึง</option>
           <option>กำลังทำ</option>
           <option>เสร็จแล้ว</option>
         </select>
-        <input type="text" placeholder="🔍 ค้นหา Product, Customer, Batch No" value={searchText} onChange={(e) => setSearchText(e.target.value)} className="input-box" style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }} />
-        <button className="clear-button" onClick={handleClearFilters}>♻️ Reset</button>
+        <input value={searchText} onChange={(e) => setSearchText(e.target.value)} placeholder="ค้นหา..." />
+        <button onClick={handleClearFilters}>รีเซ็ต</button>
       </div>
 
-      <hr style={{ margin: "2rem 0" }} />
       <h3>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
 
-      <hr style={{ margin: "2rem 0" }} />
       <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
       <ProgressBoard jobs={filteredJobs} />
 
-      <hr style={{ margin: "2rem 0" }} />
       <h3>📊 สรุปสถานะงานรายแผนก</h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart layout="vertical" data={summaryPerStep}>
-          <XAxis type="number" tick={false} axisLine={false} />
+          <XAxis type="number" hide />
           <YAxis dataKey="name" type="category" width={100} />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip />
           <Bar dataKey="notStarted" stackId="a" fill="#d1d5db" />
           <Bar dataKey="doing" stackId="a" fill="#facc15" />
           <Bar dataKey="done" stackId="a" fill="#4ade80" />
         </BarChart>
       </ResponsiveContainer>
 
-      <hr style={{ margin: "2rem 0" }} />
-      <h3>📋 รายการงานทั้งหมด</h3>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "1rem 0" }}>
         <label>
           <input
             type="checkbox"
@@ -279,43 +214,43 @@ export default function Home() {
           />
           🔄 แสดงสถานะแบบละเอียด
         </label>
-
         <div>
-          <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
-            📥 Export Excel (ตามตัวกรอง)
-          </button>
-          <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>
-            📦 Export ข้อมูลทั้งหมด
-          </button>
-          {role === "Admin" && (
-            <button onClick={exportAuditLogs} className="submit-btn" style={{ backgroundColor: "#6366f1" }}>
-              🕓 Export Audit Logs (Admin)
-            </button>
-          )}
+          <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
+          <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
         </div>
       </div>
 
+      <h3>📋 รายการงานทั้งหมด</h3>
       <div className="table-wrapper">
         <table className="job-table">
           <thead>
             <tr>
-              <th>Batch No</th>
+              <th>Customer</th>
+              <th>PO</th>
+              <th>Batch No WH1</th>
+              <th>Batch No WH2</th>
+              <th>Batch No WH3</th>
+              <th>Batch No PD</th>
               <th>Product</th>
               <th>Current Step</th>
               <th>Status</th>
-              <th>Customer</th>
               <th>Volume</th>
               <th>Delivery Date</th>
               <th>Last Update</th>
             </tr>
           </thead>
           <tbody>
-            {filteredJobs.map((job) => (
+            {sortedJobs.map((job) => (
               <tr key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
-                <td>{job.batch_no || "–"}</td>
+                <td>{job.customer || "–"}</td>
+                <td>{job.po_number || "–"}</td>
+                <td>{getBatchNoWH(job, 0)}</td>
+                <td>{getBatchNoWH(job, 1)}</td>
+                <td>{getBatchNoWH(job, 2)}</td>
+                <td>{job.batch_no_production || "–"}</td>
                 <td>{job.product_name || "–"}</td>
                 <td>{job.currentStep || "–"}</td>
-                <td className="status-cell">
+                <td>
                   {showAllStatus ? (
                     <>
                       {renderStatusBadge("SL", "กรอกแล้ว")}
@@ -325,9 +260,10 @@ export default function Home() {
                       {renderStatusBadge("COA", job.status?.qc_coa)}
                       {renderStatusBadge("AC", job.status?.account)}
                     </>
-                  ) : extractCurrentStatus(job)}
+                  ) : (
+                    renderStatusBadge("STEP", job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–")
+                  )}
                 </td>
-                <td>{job.customer || "–"}</td>
                 <td>{job.volume || "–"}</td>
                 <td>{job.delivery_date || "–"}</td>
                 <td>{renderLastUpdate(job)}</td>
@@ -337,9 +273,7 @@ export default function Home() {
         </table>
       </div>
 
-      {selectedJob && (
-        <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
-      )}
+      {selectedJob && <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
     </div>
   );
 }
