@@ -32,18 +32,18 @@ export default function Production() {
     setJobs(data.filter((job) => job.currentStep === "Production"));
   };
 
-const handleJobSelect = (id) => {
-  const job = jobs.find((j) => j.id === id);
-  setSelectedJob(job);
+  const handleJobSelect = (id) => {
+    const job = jobs.find((j) => j.id === id);
+    setSelectedJob(job);
 
-  // ตรวจว่า batch_no มีอยู่จริงและไม่ใช่ค่าว่าง
-  if (job?.batch_no && typeof job.batch_no === "string" && job.batch_no.trim() !== "") {
-    setBatchNo(job.batch_no);
-  } else {
-    setBatchNo("");
-  }
-};
-
+    if (job?.batch_no_production) {
+      setBatchNo(job.batch_no_production);
+    } else if (job?.batch_no_warehouse?.length > 0) {
+      setBatchNo(job.batch_no_warehouse.filter(Boolean).join(" / "));
+    } else {
+      setBatchNo("");
+    }
+  };
 
   const handleSubmit = async () => {
     if (!selectedJob) {
@@ -56,16 +56,14 @@ const handleJobSelect = (id) => {
       return;
     }
 
-    // ห้ามเลือก "กำลังบรรจุ" ถ้า QC ยังไม่ "ตรวจผ่านแล้ว"
     if (
       status === "กำลังบรรจุ" &&
-      selectedJob?.status?.qc_inspection !== "ตรวจผ่านแล้ว"
+      selectedJob?.status?.qc_inspection !== "ตรวจผ่าน"
     ) {
-      toast.error("ไม่สามารถเลือก 'กำลังบรรจุ' ได้จนกว่า QC จะตรวจผ่านแล้ว");
+      toast.error("ไม่สามารถเลือก 'กำลังบรรจุ' ได้จนกว่า QC จะตรวจผ่าน");
       return;
     }
 
-    // กำหนด step ถัดไปตาม logic
     let newStep = "Production";
     if (status === "รอผลตรวจ" || status === "ผลิตเสร็จ") {
       newStep = "QC";
@@ -73,7 +71,7 @@ const handleJobSelect = (id) => {
 
     const jobRef = doc(db, "production_workflow", selectedJob.id);
     await updateDoc(jobRef, {
-      batch_no: batchNo,
+      batch_no_production: batchNo,
       currentStep: newStep,
       "status.production": status,
       "remarks.production": remark || "",
@@ -91,7 +89,6 @@ const handleJobSelect = (id) => {
       `✅ บันทึกสถานะสำเร็จ${newStep !== "Production" ? ` และส่งต่อไปยัง ${newStep}` : ""}`
     );
 
-    // Reset
     setSelectedJob(null);
     setBatchNo("");
     setStatus("");
