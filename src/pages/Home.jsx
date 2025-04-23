@@ -244,16 +244,31 @@ export default function Home() {
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📋 รายการงานทั้งหมด</h3>
+<div style={{ display: "flex", justifyContent: "space-between", margin: "1rem 0" }}>
+  <label>
+    <input
+      type="checkbox"
+      checked={showAllStatus}
+      onChange={(e) => setShowAllStatus(e.target.checked)}
+      style={{ marginRight: "8px" }}
+    />
+    🔄 แสดงสถานะแบบละเอียด
+  </label>
+  <div>
+    <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
+    <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
+  </div>
+</div>
       <div className="table-wrapper">
         <table className="job-table">
           <thead>
             <tr>
               <th>Customer</th>
               <th>PO</th>
-              <th>Batch No WH1</th>
-              <th>Batch No WH2</th>
-              <th>Batch No WH3</th>
-              <th>Batch No PD</th>
+              <th>BN WH1</th>
+              <th>BN WH2</th>
+              <th>BN WH3</th>
+              <th>BN PD</th>
               <th>Product</th>
               <th>Current Step</th>
               <th>Status</th>
