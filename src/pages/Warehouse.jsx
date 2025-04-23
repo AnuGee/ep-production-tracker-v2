@@ -39,12 +39,14 @@ export default function Warehouse() {
       return;
     }
 
-    if ((stock === "มีครบตามจำนวน" || stock === "มีบางส่วน") && batchNoList.every((b) => !b)) {
+    const hasBatch = stock === "มีครบตามจำนวน" || stock === "มีบางส่วน";
+
+    if (hasBatch && batchNoList.every((b) => !b)) {
       toast.error("กรุณากรอกอย่างน้อย 1 Batch No");
       return;
     }
 
-    if (stock !== "มีครบตามจำนวน" && !step) {
+    if (!hasBatch && !step) {
       toast.error("กรุณาเลือกสถานะ");
       return;
     }
@@ -56,7 +58,7 @@ export default function Warehouse() {
       currentStep: newStep,
       "status.warehouse": step || "เบิกเสร็จ",
       "remarks.warehouse": remark || "",
-      batch_no: batchNoList.filter(Boolean).join(" / "), // ใช้ “ / ” คั่น WH1/WH2/WH3
+      batch_no_warehouse: hasBatch ? batchNoList : [],
       Timestamp_Warehouse: serverTimestamp(),
       audit_logs: arrayUnion({
         step: "Warehouse",
