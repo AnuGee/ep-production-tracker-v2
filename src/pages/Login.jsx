@@ -37,7 +37,7 @@ export default function Login() {
   };
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem" }}>
+    <div className="page-container">
       {/* 🔐 Title */}
       <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>
         🔐 เข้าสู่ระบบ
