@@ -183,41 +183,28 @@ export default function Home() {
     <div className="page-container">
       <h2 style={{ marginTop: 0 }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
 
-      <hr style={{ margin: '2rem 0' }} />
-<h3>🎛 ตัวกรอง</h3>
-<div className="filter-bar" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-  <label>📅 ปี
-    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-      {years.map((y) => <option key={y}>{y}</option>)}
-    </select>
-  </label>
-  <label>📆 เดือน
-    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-      <option>ทั้งหมด</option>
-      {months.map((m) => <option key={m}>{m}</option>)}
-    </select>
-  </label>
-  <label>🛠 ขั้นตอน
-    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-      <option>ทั้งหมด</option>
-      <option>ยังไม่ถึง</option>
-      <option>กำลังทำ</option>
-      <option>เสร็จแล้ว</option>
-    </select>
-  </label>
-  <input 
-    value={searchText} 
-    onChange={(e) => setSearchText(e.target.value)} 
-    placeholder="🔍 ค้นหา..."
-    style={{ borderRadius: '999px', padding: '0.4rem 1rem', border: '1px solid #ccc', flex: '1' }}
-  />
-  <button 
-    onClick={handleClearFilters} 
-    style={{ backgroundColor: '#ef4444', color: '#fff', borderRadius: '999px', border: 'none', padding: '0.5rem 1rem' }}
-  >
-    ❌ รีเซ็ต
-  </button>
-</div>
+      <hr style={{ margin: "2rem 0" }} />
+      <h3>🎛 ตัวกรอง</h3>
+      <div className="filter-bar" style={{ flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
+        <label>📆 ปี:</label>
+        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+          {years.map((year) => <option key={year}>{year}</option>)}
+        </select>
+        <label>🗓 เดือน:</label>
+        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+          <option>ทั้งหมด</option>
+          {months.map((month) => <option key={month}>{month}</option>)}
+        </select>
+        <label>🎯 สถานะ:</label>
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option>ทั้งหมด</option>
+          <option>ยังไม่ถึง</option>
+          <option>กำลังทำ</option>
+          <option>เสร็จแล้ว</option>
+        </select>
+        <input type="text" placeholder="🔍 ค้นหา Product, Customer, Batch No" value={searchText} onChange={(e) => setSearchText(e.target.value)} className="input-box" style={{ flexGrow: 1, minWidth: "200px", maxWidth: "400px" }} />
+        <button className="clear-button" onClick={handleClearFilters}>♻️ Reset</button>
+      </div>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3 style={{ color: '#1f2937', fontSize: '1.5rem', backgroundColor: '#e0f2fe', padding: '0.5rem 1rem', borderRadius: '8px' }}>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
