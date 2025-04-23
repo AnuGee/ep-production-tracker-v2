@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-// ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์
+// ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "./JobDetailModal";
@@ -24,6 +24,20 @@ export default function Home() {
   const [showAllStatus, setShowAllStatus] = useState(false);
   const [sortColumn, setSortColumn] = useState("Delivery Date");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .job-table thead th.sorted {
+        background-color: #fef9c3;
+      }
+      .job-table tbody tr:hover {
+        background-color: #f3f4f6;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
