@@ -293,79 +293,79 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
   </div>
 </div>
-      <div className="table-wrapper">
-        <table className="job-table">
-          <thead>
-  <tr>
-    <th onClick={() => handleSort("customer")} style={{ cursor: "pointer" }}>Customer {sortColumn === "customer" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("po_number")} style={{ cursor: "pointer" }}>PO {sortColumn === "po_number" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("bn_wh1")} style={{ cursor: "pointer" }}>BN WH1 {sortColumn === "bn_wh1" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("bn_wh2")} style={{ cursor: "pointer" }}>BN WH2 {sortColumn === "bn_wh2" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("bn_wh3")} style={{ cursor: "pointer" }}>BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("batch_no_production")} style={{ cursor: "pointer" }}>BN PD {sortColumn === "batch_no_production" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("product_name")} style={{ cursor: "pointer" }}>Product {sortColumn === "product_name" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("currentStep")} style={{ cursor: "pointer" }}>Current Step {sortColumn === "currentStep" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>Status {sortColumn === "status" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("volume")} style={{ cursor: "pointer" }}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("delivery_date")} style={{ cursor: "pointer" }}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th onClick={() => handleSort("last_update")} style={{ cursor: "pointer" }}>Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th>Delete</th>
-  </tr>
-</thead>
-          <tbody>
-            {sortedJobs.map((job) => (
-              <tr key={job.id} onClick={() => setSelectedJob(job)}>
-                <td>{job.customer || "–"}</td>
-                <td>{job.po_number || "–"}</td>
-                <td>{getBatchNoWH(job, 0)}</td>
-                <td>{getBatchNoWH(job, 1)}</td>
-                <td>{getBatchNoWH(job, 2)}</td>
-                <td>{job.batch_no_production || "–"}</td>
-                <td>{job.product_name || "–"}</td>
-                <td>{job.currentStep || "–"}</td>
-                <td>
-                  {showAllStatus ? (
-                    <>
-                      {renderStatusBadge("SL", "กรอกแล้ว")}
-                      {renderStatusBadge("WH", job.status?.warehouse)}
-                      {renderStatusBadge("PD", job.status?.production)}
-                      {renderStatusBadge("QC", job.status?.qc_inspection)}
-                      {renderStatusBadge("COA", job.status?.qc_coa)}
-                      {renderStatusBadge("AC", job.status?.account)}
-                    </>
-                  ) : (
-                    renderStatusBadge("STEP", job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–")
-                  )}
-                </td>
-                <td>{job.volume || "–"}</td>
-                <td>{job.delivery_date || "–"}</td>
-                <td>{renderLastUpdate(job)}</td>
-                <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-                  {(role === "Admin" || role === "Sales") && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteJob(job.id);
-                      }}
-                      style={{
-                        backgroundColor: "red",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",      // ขอบมน
-                        padding: "6px 16px",      // ขนาดกำลังดี
-                        fontWeight: "bold",
-                        cursor: "pointer"
-                      }}
-                    >
-                      ลบ
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+<div className="table-wrapper" style={{ overflowX: "auto", width: "100%" }}>
+  <table className="job-table">
+    <thead>
+      <tr>
+        <th onClick={() => handleSort("customer")} style={{ cursor: "pointer" }}>Customer {sortColumn === "customer" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("po_number")} style={{ cursor: "pointer" }}>PO {sortColumn === "po_number" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("bn_wh1")} style={{ cursor: "pointer" }}>BN WH1 {sortColumn === "bn_wh1" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("bn_wh2")} style={{ cursor: "pointer" }}>BN WH2 {sortColumn === "bn_wh2" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("bn_wh3")} style={{ cursor: "pointer" }}>BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("batch_no_production")} style={{ cursor: "pointer" }}>BN PD {sortColumn === "batch_no_production" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("product_name")} style={{ cursor: "pointer" }}>Product {sortColumn === "product_name" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("currentStep")} style={{ cursor: "pointer" }}>Current Step {sortColumn === "currentStep" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>Status {sortColumn === "status" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("volume")} style={{ cursor: "pointer" }}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("delivery_date")} style={{ cursor: "pointer" }}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th onClick={() => handleSort("last_update")} style={{ cursor: "pointer" }}>Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+        <th>Delete</th>
+      </tr>
+    </thead>
+    <tbody>
+      {sortedJobs.map((job) => (
+        <tr key={job.id} onClick={() => setSelectedJob(job)}>
+          <td>{job.customer || "–"}</td>
+          <td>{job.po_number || "–"}</td>
+          <td>{getBatchNoWH(job, 0)}</td>
+          <td>{getBatchNoWH(job, 1)}</td>
+          <td>{getBatchNoWH(job, 2)}</td>
+          <td>{job.batch_no_production || "–"}</td>
+          <td>{job.product_name || "–"}</td>
+          <td>{job.currentStep || "–"}</td>
+          <td>
+            {showAllStatus ? (
+              <>
+                {renderStatusBadge("SL", "กรอกแล้ว")}
+                {renderStatusBadge("WH", job.status?.warehouse)}
+                {renderStatusBadge("PD", job.status?.production)}
+                {renderStatusBadge("QC", job.status?.qc_inspection)}
+                {renderStatusBadge("COA", job.status?.qc_coa)}
+                {renderStatusBadge("AC", job.status?.account)}
+              </>
+            ) : (
+              renderStatusBadge("STEP", job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–")
+            )}
+          </td>
+          <td>{job.volume || "–"}</td>
+          <td>{job.delivery_date || "–"}</td>
+          <td>{renderLastUpdate(job)}</td>
+          <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+            {(role === "Admin" || role === "Sales") && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteJob(job.id);
+                }}
+                style={{
+                  backgroundColor: "red",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 16px",
+                  fontWeight: "bold",
+                  cursor: "pointer"
+                }}
+              >
+                ลบ
+              </button>
+            )}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
 {selectedJob && (
   <div className="overlay" onClick={() => setSelectedJob(null)}>
