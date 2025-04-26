@@ -309,6 +309,7 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     <th onClick={() => handleSort("volume")} style={{ cursor: "pointer" }}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
     <th onClick={() => handleSort("delivery_date")} style={{ cursor: "pointer" }}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
     <th onClick={() => handleSort("last_update")} style={{ cursor: "pointer" }}>Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
+    <th>Delete</th>
   </tr>
 </thead>
           <tbody>
