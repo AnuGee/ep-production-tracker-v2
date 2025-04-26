@@ -340,25 +340,27 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
                 <td>{job.volume || "–"}</td>
                 <td>{job.delivery_date || "–"}</td>
                 <td>{renderLastUpdate(job)}</td>
-<td style={{ textAlign: "center" }}>
-  {(role === "Admin" || role === "Sales") && (
-    <button
-      onClick={(e) => {
-        e.stopPropagation();
-        handleDeleteJob(job.id);
-      }}
-      style={{
-        background: "none",
-        border: "none",
-        color: "red",
-        cursor: "pointer",
-        fontSize: "1.2rem"
-      }}
-    >
-      🗑️
-    </button>
-  )}
-</td>
+                <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+                  {(role === "Admin" || role === "Sales") && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteJob(job.id);
+                      }}
+                      style={{
+                        backgroundColor: "red",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",      // ขอบมน
+                        padding: "6px 16px",      // ขนาดกำลังดี
+                        fontWeight: "bold",
+                        cursor: "pointer"
+                      }}
+                    >
+                      ลบ
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
