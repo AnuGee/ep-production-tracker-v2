@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { db } from "../firebase";
 import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import toast from "react-hot-toast";
@@ -135,6 +136,21 @@ export default function Home() {
     Account: (job) => job.status?.account === "Invoice ออกแล้ว",
   };
 
+  const handleDeleteJob = async (id) => {
+  const confirmDelete = window.confirm("❗ ยืนยันต้องการลบงานนี้หรือไม่?");
+  if (!confirmDelete) return;
+  try {
+    await deleteDoc(doc(db, "production_workflow", id));
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setJobs(data);
+    alert("✅ ลบงานเรียบร้อยแล้ว");
+  } catch (error) {
+    console.error(error);
+    alert("❌ ลบงานไม่สำเร็จ");
+  }
+};
+
   const summaryPerStep = steps.map((step) => {
     const notStarted = filteredJobs.filter((j) => steps.indexOf(j.currentStep) > steps.indexOf(step)).length;
     const doing = filteredJobs.filter((j) => j.currentStep === step).length;
@@ -224,56 +240,58 @@ export default function Home() {
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
-            {sortedJobs.map((job) => (
-              <tr key={job.id} onClick={() => setSelectedJob(job)}>
-                <td>{job.customer || "–"}</td>
-                <td>{job.po_number || "–"}</td>
-                <td>{getBatchNoWH(job, 0)}</td>
-                <td>{getBatchNoWH(job, 1)}</td>
-                <td>{getBatchNoWH(job, 2)}</td>
-                <td>{job.batch_no_production || "–"}</td>
-                <td>{job.product_name || "–"}</td>
-                <td>{job.currentStep || "–"}</td>
-                <td>
-                  {showAllStatus ? (
-                    <>
-                      {renderStatusBadge("SL", "กรอกแล้ว")}
-                      {renderStatusBadge("WH", job.status?.warehouse)}
-                      {renderStatusBadge("PD", job.status?.production)}
-                      {renderStatusBadge("QC", job.status?.qc_inspection)}
-                      {renderStatusBadge("COA", job.status?.qc_coa)}
-                      {renderStatusBadge("AC", job.status?.account)}
-                    </>
-                  ) : (
-                    renderStatusBadge("STEP", job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–")
-                  )}
-                </td>
-                <td>{job.volume || "–"}</td>
-                <td>{job.delivery_date || "–"}</td>
-                <td>{renderLastUpdate(job)}</td>
-                <td style={{ textAlign: "center" }}>
-                  {(role === "Admin" || role === "Sales") && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteJob(job.id);
-                      }}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "red",
-                        cursor: "pointer",
-                        fontSize: "1.2rem"
-                      }}
-                    >
-                      🗑️
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
+<tbody>
+{sortedJobs.map((job) => (
+  <tr key={job.id} onClick={() => setSelectedJob(job)}>
+    <td>{job.customer || "–"}</td>
+    <td>{job.po_number || "–"}</td>
+    <td>{getBatchNoWH(job, 0)}</td>
+    <td>{getBatchNoWH(job, 1)}</td>
+    <td>{getBatchNoWH(job, 2)}</td>
+    <td>{job.batch_no_production || "–"}</td>
+    <td>{job.product_name || "–"}</td>
+    <td>{job.currentStep || "–"}</td>
+    <td>
+      {showAllStatus ? (
+        <>
+          {renderStatusBadge("SL", "กรอกแล้ว")}
+          {renderStatusBadge("WH", job.status?.warehouse)}
+          {renderStatusBadge("PD", job.status?.production)}
+          {renderStatusBadge("QC", job.status?.qc_inspection)}
+          {renderStatusBadge("COA", job.status?.qc_coa)}
+          {renderStatusBadge("AC", job.status?.account)}
+        </>
+      ) : (
+        renderStatusBadge("STEP", job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–")
+      )}
+    </td>
+    <td>{job.volume || "–"}</td>
+    <td>{job.delivery_date || "–"}</td>
+    <td>{renderLastUpdate(job)}</td>
+    {/* 🗑️ ปุ่ม Delete อยู่ตรงนี้ */}
+    <td style={{ textAlign: "center" }}>
+      {(role === "Admin" || role === "Sales") && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteJob(job.id);
+          }}
+          style={{
+            background: "none",
+            border: "none",
+            color: "red",
+            cursor: "pointer",
+            fontSize: "1.2rem"
+          }}
+        >
+          🗑️
+        </button>
+      )}
+    </td>
+  </tr>
+))}
+</tbody>
+
         </table>
       </div>
 
