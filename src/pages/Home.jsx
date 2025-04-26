@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "../styles/Responsive.css";
@@ -138,6 +139,21 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     }, 0);
   };
 
+  const handleDeleteJob = async (id) => {
+  const confirmDelete = window.confirm("❗ ยืนยันต้องการลบงานนี้หรือไม่?");
+  if (!confirmDelete) return;
+  try {
+    await deleteDoc(doc(db, "production_workflow", id));
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setJobs(data);
+    alert("✅ ลบงานเรียบร้อยแล้ว");
+  } catch (error) {
+    console.error(error);
+    alert("❌ ลบงานไม่สำเร็จ");
+  }
+};
+  
   const stepStatus = {
     Sales: (job) => job.currentStep !== "Sales",
     Warehouse: (job) => job.status?.warehouse === "เบิกเสร็จ",
@@ -323,6 +339,25 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
                 <td>{job.volume || "–"}</td>
                 <td>{job.delivery_date || "–"}</td>
                 <td>{renderLastUpdate(job)}</td>
+                <td style={{ textAlign: "center" }}>
+        {(role === "Admin" || role === "Sales") && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteJob(job.id);
+            }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "red",
+              cursor: "pointer",
+              fontSize: "1.2rem"
+            }}
+          >
+            🗑️
+          </button>
+        )}
+      </td>
               </tr>
             ))}
           </tbody>
