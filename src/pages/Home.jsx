@@ -309,7 +309,6 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     <th onClick={() => handleSort("volume")} style={{ cursor: "pointer" }}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
     <th onClick={() => handleSort("delivery_date")} style={{ cursor: "pointer" }}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
     <th onClick={() => handleSort("last_update")} style={{ cursor: "pointer" }}>Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-    <th>ลบ</th>
   </tr>
 </thead>
           <tbody>
@@ -340,7 +339,7 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
                 <td>{job.volume || "–"}</td>
                 <td>{job.delivery_date || "–"}</td>
                 <td>{renderLastUpdate(job)}</td>
-<td style={{ textAlign: "center", whiteSpace: "nowrap", minWidth: "40px" }}>
+<td style={{ textAlign: "center" }}>
   {(role === "Admin" || role === "Sales") && (
     <button
       onClick={(e) => {
