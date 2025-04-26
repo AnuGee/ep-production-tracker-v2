@@ -132,6 +132,22 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
 
 
   const getTotalVolume = () => {
+    import { doc, deleteDoc } from "firebase/firestore"; // 📌 ต้อง import เพิ่มที่ด้านบนด้วยนะ
+const handleDeleteJob = async (id) => {
+  const confirmDelete = window.confirm("❗ ยืนยันต้องการลบงานนี้หรือไม่?");
+  if (!confirmDelete) return;
+
+  try {
+    await deleteDoc(doc(db, "production_workflow", id));
+    toast.success("🗑️ ลบงานเรียบร้อยแล้ว");
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setJobs(data); // อัปเดตข้อมูลใหม่
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการลบงาน:", error);
+    toast.error("❌ ลบงานไม่สำเร็จ");
+  }
+};
     return filteredJobs.reduce((sum, job) => {
       const vol = Number(job.volume);
       return sum + (isNaN(vol) ? 0 : vol);
@@ -323,6 +339,25 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
                 <td>{job.volume || "–"}</td>
                 <td>{job.delivery_date || "–"}</td>
                 <td>{renderLastUpdate(job)}</td>
+                <td style={{ textAlign: "center" }}>
+  {(role === "Admin" || role === "Sales") && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation(); // ไม่ให้ Trigger Modal เปิด
+        handleDeleteJob(job.id);
+      }}
+      style={{
+        background: "none",
+        border: "none",
+        color: "red",
+        cursor: "pointer",
+        fontSize: "1.2rem"
+      }}
+    >
+      🗑️
+    </button>
+  )}
+</td>
               </tr>
             ))}
           </tbody>
