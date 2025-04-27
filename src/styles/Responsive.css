@@ -28,6 +28,8 @@ h1, h2, h3, h4, h5, h6 {
 /* 📊 ตารางข้อมูล */
 .job-table {
   width: 100%;
+  min-width: 1000px; /* เพิ่มเข้าไป */
+  table-layout: auto; /* เพิ่มเข้าไป */
   border-collapse: collapse;
   margin-top: 1rem;
   background-color: #fff;
@@ -103,6 +105,12 @@ select {
 
 /* 📱 Responsive */
 @media (max-width: 768px) {
+  .job-table th,
+  .job-table td {
+    font-size: 12px;
+    padding: 8px;
+  }
+  
   .filter-bar {
     flex-direction: column;
     align-items: flex-start;
