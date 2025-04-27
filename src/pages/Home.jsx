@@ -25,6 +25,12 @@ export default function Home() {
   const [showAllStatus, setShowAllStatus] = useState(false);
   const [sortColumn, setSortColumn] = useState("Delivery Date");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [currentPageProgress, setCurrentPageProgress] = useState(1);
+  const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
+  const [currentPageTable, setCurrentPageTable] = useState(1);
+  const [itemsPerPageTable, setItemsPerPageTable] = useState(10);
+
+  const itemsPerPageOptions = [10, 20, 50, 100, "All"];
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -261,7 +267,55 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
-      <ProgressBoard jobs={filteredJobs} />
+      {/* 🔴 เพิ่ม Pagination ใน Progress */}
+<div style={{ marginBottom: "1rem" }}>
+  <label>แสดงงาน: </label>
+  <select
+    value={itemsPerPageProgress}
+    onChange={(e) => {
+      setItemsPerPageProgress(e.target.value === "All" ? "All" : parseInt(e.target.value));
+      setCurrentPageProgress(1);
+    }}
+    style={{ marginLeft: "0.5rem", padding: "4px 8px", borderRadius: "6px" }}
+  >
+    {itemsPerPageOptions.map(option => (
+      <option key={option} value={option}>{option}</option>
+    ))}
+  </select>
+</div>
+
+<ProgressBoard
+  jobs={itemsPerPageProgress === "All"
+    ? filteredJobs
+    : filteredJobs.slice(
+        (currentPageProgress - 1) * itemsPerPageProgress,
+        currentPageProgress * itemsPerPageProgress
+      )
+  }
+/>
+
+{/* 🔴 ปุ่ม Pagination สำหรับ Progress */}
+<div style={{ marginTop: "1rem" }}>
+  {itemsPerPageProgress !== "All" &&
+    Array.from({ length: Math.ceil(filteredJobs.length / itemsPerPageProgress) }, (_, i) => (
+      <button
+        key={i}
+        onClick={() => setCurrentPageProgress(i + 1)}
+        style={{
+          margin: "0 4px",
+          padding: "4px 10px",
+          borderRadius: "6px",
+          backgroundColor: currentPageProgress === (i + 1) ? "#2563eb" : "#d1d5db",
+          color: currentPageProgress === (i + 1) ? "white" : "black",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        {i + 1}
+      </button>
+    ))
+  }
+</div>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📊 สรุปสถานะงานรายแผนก</h3>
@@ -337,7 +391,11 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
       </tr>
     </thead>
     <tbody>
-      {sortedJobs.map((job) => (
+      {(itemsPerPageTable === "All" ? sortedJobs : sortedJobs.slice(
+  (currentPageTable - 1) * itemsPerPageTable,
+  currentPageTable * itemsPerPageTable
+)).map((job) => (
+
         <tr key={job.id} onClick={() => setSelectedJob(job)}>
           <td>{job.customer || "–"}</td>
           <td>{job.po_number || "–"}</td>
@@ -401,3 +459,44 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     </div>
   );
 }
+
+{/* 📋 Pagination Controls for Table */}
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
+  <div>
+    <label>แสดงงาน: </label>
+    <select
+      value={itemsPerPageTable}
+      onChange={(e) => {
+        setItemsPerPageTable(e.target.value === "All" ? "All" : parseInt(e.target.value));
+        setCurrentPageTable(1);
+      }}
+      style={{ marginLeft: "0.5rem", padding: "4px 8px", borderRadius: "6px" }}
+    >
+      {itemsPerPageOptions.map(option => (
+        <option key={option} value={option}>{option}</option>
+      ))}
+    </select>
+  </div>
+
+  <div>
+    {itemsPerPageTable !== "All" &&
+      Array.from({ length: Math.ceil(sortedJobs.length / itemsPerPageTable) }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPageTable(i + 1)}
+          style={{
+            margin: "0 4px",
+            padding: "4px 10px",
+            borderRadius: "6px",
+            backgroundColor: currentPageTable === (i + 1) ? "#2563eb" : "#d1d5db",
+            color: currentPageTable === (i + 1) ? "white" : "black",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          {i + 1}
+        </button>
+      ))
+    }
+  </div>
+</div>
