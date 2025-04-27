@@ -387,7 +387,7 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
         <th onClick={() => handleSort("last_update")} style={{ minWidth: "160px", cursor: "pointer" }}>
           Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}
         </th>
-        <th style={{ minWidth: "60px" }}>ลบ</th>
+        <th style={{ minWidth: "60px" }}>Delete</th>
       </tr>
     </thead>
     <tbody>
