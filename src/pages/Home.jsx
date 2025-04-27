@@ -32,19 +32,31 @@ export default function Home() {
 
   const itemsPerPageOptions = [10, 20, 50, 100, "All"];
 
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.innerHTML = `
-      .job-table thead th.sorted {
-        background-color: #fef9c3;
-      }
-      .job-table tbody tr:hover {
-        background-color: #f3f4f6;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => document.head.removeChild(style);
-  }, []);
+useEffect(() => {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .job-table thead th.sorted {
+      background-color: #fef9c3;
+    }
+    .job-table tbody tr:hover {
+      background-color: #f3f4f6;
+    }
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .job-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .job-table th,
+    .job-table td {
+      white-space: nowrap;
+    }
+  `;
+  document.head.appendChild(style);
+  return () => document.head.removeChild(style);
+}, []);
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
