@@ -26,20 +26,39 @@ export default function Header() {
   ];
 
   return (
-    <div className="header-container">
+    <div className="header-container" style={{ maxWidth: "1200px", margin: "auto", padding: "1rem" }}>
       {/* Logo + System Name */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         <img src="/logo_ep.png" alt="Logo" style={{ height: 50 }} />
         <strong style={{ fontSize: 22 }}>ระบบติดตามสถานะงาน</strong>
       </div>
 
       {/* Menu Buttons */}
-      <div className="menu-container">
+      <div
+        className="menu-container"
+        style={{
+          marginTop: "1rem",
+          display: "flex",
+          flexWrap: "wrap", // <<< เพิ่มตรงนี้
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
         {menus.map((menu) => (
           <button
             key={menu.path}
             onClick={() => navigate(menu.path)}
             className="menu-button"
+            style={{
+              padding: "8px 14px",
+              fontSize: "16px",
+              backgroundColor: "#2563eb",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              flexShrink: 0, // <<< ป้องกันปุ่มหด
+            }}
           >
             {menu.label}
           </button>
@@ -47,10 +66,10 @@ export default function Header() {
       </div>
 
       {/* User Info + Auth Buttons */}
-      <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+      <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         {user ? (
           <>
-            <span style={{ fontWeight: "bold" }}>
+            <span style={{ fontWeight: "bold", textAlign: "center" }}>
               👤 เข้าสู่ระบบในชื่อ: {user.email} (สิทธิ์: {role})
             </span>
             <button
