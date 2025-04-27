@@ -293,23 +293,47 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
   </div>
 </div>
-<div className="table-wrapper" style={{ overflowX: "auto", width: "100%" }}>
+<div className="table-wrapper">
   <table className="job-table">
     <thead>
       <tr>
-        <th onClick={() => handleSort("customer")} style={{ cursor: "pointer" }}>Customer {sortColumn === "customer" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("po_number")} style={{ cursor: "pointer" }}>PO {sortColumn === "po_number" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("bn_wh1")} style={{ cursor: "pointer" }}>BN WH1 {sortColumn === "bn_wh1" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("bn_wh2")} style={{ cursor: "pointer" }}>BN WH2 {sortColumn === "bn_wh2" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("bn_wh3")} style={{ cursor: "pointer" }}>BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("batch_no_production")} style={{ cursor: "pointer" }}>BN PD {sortColumn === "batch_no_production" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("product_name")} style={{ cursor: "pointer" }}>Product {sortColumn === "product_name" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("currentStep")} style={{ cursor: "pointer" }}>Current Step {sortColumn === "currentStep" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>Status {sortColumn === "status" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("volume")} style={{ cursor: "pointer" }}>Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("delivery_date")} style={{ cursor: "pointer" }}>Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th onClick={() => handleSort("last_update")} style={{ cursor: "pointer" }}>Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}</th>
-        <th>Delete</th>
+        <th onClick={() => handleSort("customer")} style={{ minWidth: "100px", cursor: "pointer" }}>
+          Customer {sortColumn === "customer" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("po_number")} style={{ minWidth: "100px", cursor: "pointer" }}>
+          PO {sortColumn === "po_number" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("bn_wh1")} style={{ minWidth: "80px", cursor: "pointer" }}>
+          BN WH1 {sortColumn === "bn_wh1" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("bn_wh2")} style={{ minWidth: "80px", cursor: "pointer" }}>
+          BN WH2 {sortColumn === "bn_wh2" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("bn_wh3")} style={{ minWidth: "80px", cursor: "pointer" }}>
+          BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("batch_no_production")} style={{ minWidth: "80px", cursor: "pointer" }}>
+          BN PD {sortColumn === "batch_no_production" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("product_name")} style={{ minWidth: "120px", cursor: "pointer" }}>
+          Product {sortColumn === "product_name" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("currentStep")} style={{ minWidth: "100px", cursor: "pointer" }}>
+          Current Step {sortColumn === "currentStep" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("status")} style={{ minWidth: "100px", cursor: "pointer" }}>
+          Status {sortColumn === "status" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("volume")} style={{ minWidth: "80px", cursor: "pointer" }}>
+          Volume {sortColumn === "volume" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("delivery_date")} style={{ minWidth: "120px", cursor: "pointer" }}>
+          Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th onClick={() => handleSort("last_update")} style={{ minWidth: "160px", cursor: "pointer" }}>
+          Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "🔼" : "🔽")}
+        </th>
+        <th style={{ minWidth: "60px" }}>ลบ</th>
       </tr>
     </thead>
     <tbody>
