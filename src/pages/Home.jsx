@@ -456,9 +456,6 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     </div>
   </div>
 )}
-    </div>
-  );
-}
 
 {/* 📋 Pagination Controls for Table */}
 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
@@ -500,3 +497,7 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     }
   </div>
 </div>
+      
+    </div>
+  );
+}
