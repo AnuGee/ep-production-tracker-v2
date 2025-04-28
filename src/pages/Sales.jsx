@@ -57,7 +57,14 @@ export default function Sales() {
         delivery_date,
         batch_no: "",
         currentStep: "Warehouse",
-        status: {},
+        status: {
+          sales: "done",
+          warehouse: "notStarted",
+          production: "notStarted",
+          qc_inspection: "notStarted",
+          qc_coa: "notStarted",
+          account: "notStarted",
+        },
         remarks: {
           sales: remark || "",
           warehouse: "",
