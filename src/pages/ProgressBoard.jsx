@@ -2,19 +2,36 @@ import React from "react";
 import "../styles/Responsive.css";
 
 export default function ProgressBoard({ jobs }) {
-  const getStatusColor = (step, currentStep) => {
-    if (step === "Sales") return "#4ade80"; // ✅ Sales = เขียวทันที
-
-    const flow = ["Sales", "Warehouse", "Production", "QC", "Account", "Completed"];
-    const currentIndex = flow.indexOf(currentStep);
-    const stepIndex = flow.indexOf(step);
-
-    if (stepIndex < currentIndex) return "#facc15"; // ผ่านแล้ว = เหลือง
-    if (stepIndex === currentIndex) return "#4ade80"; // current step = เขียว
-    return "#e5e7eb"; // ยังไม่ถึง = เทา
-  };
-
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
+
+  const getStatusColor = (step, job) => {
+    if (!job.status) return "#e5e7eb"; // ถ้าไม่มี status เลย → เทา
+
+    switch (step) {
+      case "Sales":
+        return (job.product_name && job.po_number && job.volume && job.customer)
+          ? "#4ade80" // เขียว
+          : "#facc15"; // เหลือง
+      case "Warehouse":
+        if (job.status.warehouse === "เบิกเสร็จ") return "#4ade80"; // เขียว
+        if (["ยังไม่เบิก", "กำลังเบิก"].includes(job.status.warehouse)) return "#facc15"; // เหลือง
+        return "#e5e7eb"; // เทา
+      case "Production":
+        if (job.status.production === "ผลิตเสร็จ") return "#4ade80"; // เขียว
+        if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(job.status.production)) return "#facc15"; // เหลือง
+        return "#e5e7eb"; // เทา
+      case "QC":
+        if (job.status.qc_inspection === "ตรวจผ่านแล้ว" && job.status.qc_coa === "เตรียมพร้อมแล้ว") return "#4ade80"; // เขียว
+        if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(job.status.qc_inspection)) return "#facc15"; // เหลือง
+        return "#e5e7eb"; // เทา
+      case "Account":
+        if (job.status.account === "Invoice ออกแล้ว") return "#4ade80"; // เขียว
+        if (job.status.account === "Invoice ยังไม่ออก") return "#facc15"; // เหลือง
+        return "#e5e7eb"; // เทา
+      default:
+        return "#e5e7eb"; // Default เทา
+    }
+  };
 
   return (
     <div className="progress-table-wrapper">
@@ -35,12 +52,12 @@ export default function ProgressBoard({ jobs }) {
                 <td key={step}>
                   <div
                     style={{
-                      backgroundColor: getStatusColor(step, job.currentStep),
+                      backgroundColor: getStatusColor(step, job),
                       height: "20px",
                       width: "100px",
                       maxWidth: "100px",
                       borderRadius: "6px",
-                      margin: "auto"
+                      margin: "auto",
                     }}
                   ></div>
                 </td>
