@@ -95,15 +95,18 @@ export default function Login() {
           🔁 ลืมรหัสผ่าน?
         </button>
 
-        <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          ยังไม่มีบัญชี?{" "}
-          <span
-            style={{ color: "#2563eb", cursor: "pointer", fontWeight: "bold" }}
-            onClick={() => navigate("/register")}
-          >
-            สมัครสมาชิก
-          </span>
-        </p>
+{/* 
+<p style={{ textAlign: "center", marginTop: "1rem" }}>
+  ยังไม่มีบัญชี?{" "}
+  <span
+    style={{ color: "#2563eb", cursor: "pointer", fontWeight: "bold" }}
+    onClick={() => navigate("/register")}
+  >
+    สมัครสมาชิก
+  </span>
+</p>
+*/}
+
       </form>
     </div>
   );
