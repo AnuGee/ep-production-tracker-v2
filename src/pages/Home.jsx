@@ -180,12 +180,45 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
     Account: (job) => job.status?.account === "Invoice ออกแล้ว",
   };
 
-  const summaryPerStep = steps.map((step) => {
-    const notStarted = filteredJobs.filter((j) => steps.indexOf(j.currentStep) > steps.indexOf(step)).length;
-    const doing = filteredJobs.filter((j) => j.currentStep === step).length;
-    const done = filteredJobs.filter((j) => stepStatus[step](j)).length;
-    return { name: step, notStarted, doing, done };
+const getDepartmentStatus = (department, job) => {
+  if (!job.status) {
+    return "notStarted";
+  }
+
+  switch (department) {
+    case "Sales":
+      return job.status.sales || "notStarted";
+    case "Warehouse":
+      return job.status.warehouse || "notStarted";
+    case "Production":
+      return job.status.production || "notStarted";
+    case "QC":
+      return job.status.qc_inspection || "notStarted";
+    case "Account":
+      return job.status.account || "notStarted";
+    default:
+      return "notStarted";
+  }
+};
+
+const summaryPerStep = steps.map((step) => {
+  let notStarted = 0;
+  let doing = 0;
+  let done = 0;
+
+  filteredJobs.forEach((job) => {
+    const status = getDepartmentStatus(step, job);
+    if (status === "notStarted") {
+      notStarted++;
+    } else if (status === "doing") {
+      doing++;
+    } else if (status === "done") {
+      done++;
+    }
   });
+
+  return { name: step, notStarted, doing, done };
+});
 
   const renderStatusBadge = (label, value) => {
     let badgeClass = "status-badge pending";
