@@ -68,6 +68,7 @@ const getStepStatus = (job, step) => {
 
   switch (step) {
     case "Sales":
+      if (job.currentStep !== "Sales") return "done"; // เดินพ้น Sales แล้ว = done
       return job.status.sales === "done" ? "done" : "doing";
     case "Warehouse":
       if (job.status.warehouse === "เบิกเสร็จ") return "done";
