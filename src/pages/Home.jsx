@@ -299,7 +299,24 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
-      {/* 🔴 เพิ่ม Pagination ใน Progress */}
+
+{/* 📋 Legend ความหมายสี Progress */}
+<div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem", marginTop: "1rem" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
+    <span>ผ่านแผนกนี้แล้ว</span>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div>
+    <span>กำลังดำเนินการในแผนกนี้</span>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div>
+    <span>ยังไม่เริ่มที่แผนกนี้</span>
+  </div>
+</div>
+
+{/* 🔴 เพิ่ม Pagination ใน Progress */}
 <div style={{ marginBottom: "1rem" }}>
   <label>แสดงงาน: </label>
   <select
