@@ -368,6 +368,23 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📊 สรุปสถานะงานรายแผนก</h3>
+
+{/* 📋 Legend อธิบายสีของกราฟ */}
+<div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
+    <span>ผ่านแผนกนี้แล้ว</span>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div>
+    <span>กำลังดำเนินการในแผนกนี้</span>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div>
+    <span>ยังไม่เริ่มที่แผนกนี้</span>
+  </div>
+</div>
+      
       <ResponsiveContainer width="100%" height={250}>
         <BarChart layout="vertical" data={summaryPerStep}>
           <XAxis type="number" hide />
