@@ -31,8 +31,15 @@ export default function Production() {
   };
 
   const handleSelectJob = (e) => {
-    setSelectedJobId(e.target.value);
-    setForm({ batch_no_production: "", production_status: "", remark: "" });
+    const jobId = e.target.value;
+    setSelectedJobId(jobId);
+    const selectedJob = jobs.find((job) => job.id === jobId);
+    const batchFromWH = selectedJob?.batch_no_warehouse?.join(", ") || "";
+    setForm({
+      batch_no_production: batchFromWH,
+      production_status: "",
+      remark: "",
+    });
   };
 
   const handleSubmit = (e) => {
@@ -53,10 +60,8 @@ export default function Production() {
       Timestamp_Production: new Date().toISOString(),
     };
 
-    if (form.production_status === "รอผลตรวจ") {
+    if (form.production_status === "รอผลตรวจ" || form.production_status === "ผลิตเสร็จ") {
       updates.currentStep = "QC";
-    } else if (form.production_status === "ผลิตเสร็จ") {
-      updates.currentStep = "Account";
     } else {
       updates.currentStep = "Production";
     }
