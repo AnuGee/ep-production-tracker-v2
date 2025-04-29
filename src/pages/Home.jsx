@@ -89,25 +89,6 @@ const getStepStatus = (job, step) => {
       return "notStarted";
   }
 };
-
-  const summaryPerStep = steps.map((step) => {
-  let notStarted = 0;
-  let doing = 0;
-  let done = 0;
-
-  filteredJobs.forEach((job) => {
-    const status = getStepStatus(job, step);
-    if (status === "done") {
-      done++;
-    } else if (status === "doing") {
-      doing++;
-    } else {
-      notStarted++;
-    }
-  });
-
-  return { name: step, notStarted, doing, done };
-});
   
   useEffect(() => {
     const fetchJobs = async () => {
@@ -168,6 +149,25 @@ const getStepStatus = (job, step) => {
         job.batch_no_production?.toLowerCase().includes(search)
       );
     });
+
+  const summaryPerStep = steps.map((step) => {
+  let notStarted = 0;
+  let doing = 0;
+  let done = 0;
+
+  filteredJobs.forEach((job) => {
+    const status = getStepStatus(job, step);
+    if (status === "done") {
+      done++;
+    } else if (status === "doing") {
+      doing++;
+    } else {
+      notStarted++;
+    }
+  });
+
+  return { name: step, notStarted, doing, done };
+});
 
   const handleSort = (column) => {
     if (sortColumn === column) {
