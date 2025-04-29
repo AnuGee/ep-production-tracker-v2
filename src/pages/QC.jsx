@@ -37,9 +37,7 @@ export default function QC() {
 
   const handleFinalInspectionSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedInspectionJobId);
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const job = snapshot.docs.find((doc) => doc.id === selectedInspectionJobId)?.data();
-    const currentCoa = job?.status?.qc_coa || "";
+    const job = jobs.find((job) => job.id === selectedInspectionJobId);
 
     const updates = {
       status: { qc_inspection: inspectionStatus },
@@ -47,7 +45,7 @@ export default function QC() {
       Timestamp_QC: new Date().toISOString(),
     };
 
-    if (inspectionStatus === "ตรวจผ่าน" && currentCoa === "เตรียมพร้อมแล้ว") {
+    if (inspectionStatus === "ตรวจผ่าน" && job?.status?.qc_coa === "เตรียมพร้อมแล้ว") {
       updates.currentStep = "Account";
     } else if (inspectionStatus === "ตรวจผ่าน") {
       updates.currentStep = "Production";
@@ -82,9 +80,7 @@ export default function QC() {
 
   const handleFinalCoaSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const job = snapshot.docs.find((doc) => doc.id === selectedCoaJobId)?.data();
-    const currentInspection = job?.status?.qc_inspection || "";
+    const job = jobs.find((job) => job.id === selectedCoaJobId);
 
     const updates = {
       status: { qc_coa: coaStatus },
@@ -92,7 +88,7 @@ export default function QC() {
       Timestamp_COA: new Date().toISOString(),
     };
 
-    if (currentInspection === "ตรวจผ่าน" && coaStatus === "เตรียมพร้อมแล้ว") {
+    if (job?.status?.qc_inspection === "ตรวจผ่าน" && coaStatus === "เตรียมพร้อมแล้ว") {
       updates.currentStep = "Account";
     } else {
       updates.currentStep = "QC";
@@ -120,19 +116,29 @@ export default function QC() {
         <h3>🔍 ตรวจสอบสินค้า</h3>
         <div className="full-span">
           <label>📋 เลือกรายการ</label>
-          <select value={selectedInspectionJobId} onChange={(e) => setSelectedInspectionJobId(e.target.value)} className="input-box">
+          <select
+            value={selectedInspectionJobId}
+            onChange={(e) => setSelectedInspectionJobId(e.target.value)}
+            className="input-box"
+          >
             <option value="">-- เลือกงาน --</option>
-            {jobs.filter((job) => job.currentStep === "QC").map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-              </option>
-            ))}
+            {jobs
+              .filter((job) => job.currentStep === "QC" && job.waiting_for === "Inspection")
+              .map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+                </option>
+              ))}
           </select>
         </div>
 
         <div>
           <label>🔍 สถานะการตรวจสอบ</label>
-          <select value={inspectionStatus} onChange={(e) => setInspectionStatus(e.target.value)} className="input-box">
+          <select
+            value={inspectionStatus}
+            onChange={(e) => setInspectionStatus(e.target.value)}
+            className="input-box"
+          >
             <option value="">-- เลือกสถานะ --</option>
             <option value="กำลังตรวจ">กำลังตรวจ</option>
             <option value="ตรวจผ่าน">ตรวจผ่าน</option>
@@ -142,7 +148,13 @@ export default function QC() {
 
         <div className="full-span">
           <label>📝 หมายเหตุ (ถ้ามี)</label>
-          <input type="text" value={inspectionRemark} onChange={(e) => setInspectionRemark(e.target.value)} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
+          <input
+            type="text"
+            value={inspectionRemark}
+            onChange={(e) => setInspectionRemark(e.target.value)}
+            className="input-box"
+            placeholder="ระบุหมายเหตุหากมี"
+          />
         </div>
 
         <button type="submit" className="submit-btn full-span">
@@ -172,19 +184,32 @@ export default function QC() {
         <h3>📄 เตรียมเอกสาร COA</h3>
         <div className="full-span">
           <label>📋 เลือกรายการ</label>
-          <select value={selectedCoaJobId} onChange={(e) => setSelectedCoaJobId(e.target.value)} className="input-box">
+          <select
+            value={selectedCoaJobId}
+            onChange={(e) => setSelectedCoaJobId(e.target.value)}
+            className="input-box"
+            disabled={
+              jobs.filter((job) => job.currentStep === "QC" && job.waiting_for === "COA").length === 0
+            }
+          >
             <option value="">-- เลือกรายการ --</option>
-            {jobs.filter((job) => job.currentStep === "QC").map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-              </option>
-            ))}
+            {jobs
+              .filter((job) => job.currentStep === "QC" && job.waiting_for === "COA")
+              .map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+                </option>
+              ))}
           </select>
         </div>
 
         <div>
           <label>📄 สถานะ COA</label>
-          <select value={coaStatus} onChange={(e) => setCoaStatus(e.target.value)} className="input-box">
+          <select
+            value={coaStatus}
+            onChange={(e) => setCoaStatus(e.target.value)}
+            className="input-box"
+          >
             <option value="">-- เลือกสถานะ --</option>
             <option value="ยังไม่เตรียม">ยังไม่เตรียม</option>
             <option value="กำลังเตรียม">กำลังเตรียม</option>
@@ -194,7 +219,13 @@ export default function QC() {
 
         <div className="full-span">
           <label>📝 หมายเหตุ (ถ้ามี)</label>
-          <input type="text" value={coaRemark} onChange={(e) => setCoaRemark(e.target.value)} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
+          <input
+            type="text"
+            value={coaRemark}
+            onChange={(e) => setCoaRemark(e.target.value)}
+            className="input-box"
+            placeholder="ระบุหมายเหตุหากมี"
+          />
         </div>
 
         <button type="submit" className="submit-btn full-span">
