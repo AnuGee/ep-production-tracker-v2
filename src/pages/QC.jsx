@@ -80,7 +80,6 @@ export default function QC() {
 
   const handleFinalCoaSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-    const job = jobs.find((job) => job.id === selectedCoaJobId);
 
     const updates = {
       status: { qc_coa: coaStatus },
@@ -88,7 +87,7 @@ export default function QC() {
       Timestamp_COA: new Date().toISOString(),
     };
 
-    if (job?.status?.qc_inspection === "ตรวจผ่าน" && coaStatus === "เตรียมพร้อมแล้ว") {
+    if (coaStatus === "เตรียมพร้อมแล้ว") {
       updates.currentStep = "Account";
     } else {
       updates.currentStep = "QC";
