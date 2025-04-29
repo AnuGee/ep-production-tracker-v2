@@ -207,16 +207,24 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
   }
 };
   
-  const renderStatusBadge = (label, value) => {
-    let badgeClass = "status-badge pending";
-    if (!value || value === "") value = "-";
-    if (["ผลิตเสร็จ", "ตรวจผ่านแล้ว", "เตรียมพร้อมแล้ว", "Invoice ออกแล้ว"].includes(value)) {
-      badgeClass = "status-badge completed";
-    } else if (value.includes("กำลัง")) {
-      badgeClass = "status-badge working";
-    }
-    return <span className={badgeClass}>{label}: {value}</span>;
-  };
+const renderStatusBadge = (label, step, job) => {
+  if (!job || !job.currentStep) return null;
+
+  const stepOrder = ["Sales", "Warehouse", "Production", "QC", "Account", "Completed"];
+  const currentIndex = stepOrder.indexOf(job.currentStep);
+  const stepIndex = stepOrder.indexOf(step);
+
+  let badgeClass = "status-badge pending"; // เทา
+  let displayText = label;
+
+  if (currentIndex > stepIndex) {
+    badgeClass = "status-badge completed"; // เขียว
+  } else if (currentIndex === stepIndex) {
+    badgeClass = "status-badge working"; // เหลือง
+  }
+
+  return <span className={badgeClass}>{displayText}</span>;
+};
 
   const exportToExcel = () => {
     const dataToExport = filteredJobs.map((job) => ({
@@ -472,18 +480,17 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
           <td>{job.product_name || "–"}</td>
           <td>{job.currentStep || "–"}</td>
           <td>
-            {showAllStatus ? (
-              <>
-                {renderStatusBadge("SL", "กรอกแล้ว")}
-                {renderStatusBadge("WH", job.status?.warehouse)}
-                {renderStatusBadge("PD", job.status?.production)}
-                {renderStatusBadge("QC", job.status?.qc_inspection)}
-                {renderStatusBadge("COA", job.status?.qc_coa)}
-                {renderStatusBadge("AC", job.status?.account)}
-              </>
-            ) : (
-              renderStatusBadge("STEP", job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || "–")
-            )}
+{showAllStatus ? (
+  <>
+    {renderStatusBadge("SL", "Sales", job)}
+    {renderStatusBadge("WH", "Warehouse", job)}
+    {renderStatusBadge("PD", "Production", job)}
+    {renderStatusBadge("QC", "QC", job)}
+    {renderStatusBadge("AC", "Account", job)}
+  </>
+) : (
+  renderStatusBadge("STEP", job.currentStep, job)
+)}
           </td>
           <td>{job.volume || "–"}</td>
           <td>{job.delivery_date || "–"}</td>
