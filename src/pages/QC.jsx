@@ -37,16 +37,24 @@ export default function QC() {
 
   const handleFinalInspectionSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedInspectionJobId);
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const job = snapshot.docs.find((doc) => doc.id === selectedInspectionJobId)?.data();
+    const currentCoa = job?.status?.qc_coa || "";
+
     const updates = {
       status: { qc_inspection: inspectionStatus },
       remarks: { qc: inspectionRemark || "" },
       Timestamp_QC: new Date().toISOString(),
     };
 
-    if (inspectionStatus === "ตรวจผ่าน") {
+    if (inspectionStatus === "ตรวจผ่าน" && currentCoa === "เตรียมพร้อมแล้ว") {
+      updates.currentStep = "Account";
+    } else if (inspectionStatus === "ตรวจผ่าน") {
       updates.currentStep = "Production";
     } else if (inspectionStatus === "ตรวจไม่ผ่าน") {
       updates.currentStep = "Warehouse";
+    } else {
+      updates.currentStep = "QC";
     }
 
     try {
@@ -74,11 +82,21 @@ export default function QC() {
 
   const handleFinalCoaSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedCoaJobId);
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const job = snapshot.docs.find((doc) => doc.id === selectedCoaJobId)?.data();
+    const currentInspection = job?.status?.qc_inspection || "";
+
     const updates = {
       status: { qc_coa: coaStatus },
       remarks: { qc: coaRemark || "" },
       Timestamp_COA: new Date().toISOString(),
     };
+
+    if (currentInspection === "ตรวจผ่าน" && coaStatus === "เตรียมพร้อมแล้ว") {
+      updates.currentStep = "Account";
+    } else {
+      updates.currentStep = "QC";
+    }
 
     try {
       await updateDoc(jobRef, updates);
@@ -104,13 +122,11 @@ export default function QC() {
           <label>📋 เลือกรายการ</label>
           <select value={selectedInspectionJobId} onChange={(e) => setSelectedInspectionJobId(e.target.value)} className="input-box">
             <option value="">-- เลือกงาน --</option>
-{jobs
-  .filter((job) => job.currentStep === "QC")
-  .map((job) => (
-    <option key={job.id} value={job.id}>
-      {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-    </option>
-))}
+            {jobs.filter((job) => job.currentStep === "QC").map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -157,14 +173,12 @@ export default function QC() {
         <div className="full-span">
           <label>📋 เลือกรายการ</label>
           <select value={selectedCoaJobId} onChange={(e) => setSelectedCoaJobId(e.target.value)} className="input-box">
-            <option value="">-- เลือกงาน --</option>
-{jobs
-  .filter((job) => job.currentStep === "QC")
-  .map((job) => (
-    <option key={job.id} value={job.id}>
-      {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-    </option>
-))}
+            <option value="">-- เลือกรายการ --</option>
+            {jobs.filter((job) => job.currentStep === "QC").map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+              </option>
+            ))}
           </select>
         </div>
 
