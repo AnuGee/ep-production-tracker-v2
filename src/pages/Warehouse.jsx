@@ -49,9 +49,16 @@ export default function Warehouse() {
 
   const handleFinalSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedJobId);
+
+    // ✅ Logic: currentStep ไป Production เฉพาะ “มีครบ + เบิกเสร็จ”
+    let nextStep = "Warehouse";
+    if (form.stock === "มีครบตามจำนวน" && form.step === "เบิกเสร็จ") {
+      nextStep = "Production";
+    }
+
     const updates = {
-      status: { warehouse: form.step || "เบิกเสร็จ" },
-      currentStep: form.stock === "ไม่มี" ? "Sales" : "Production",
+      status: { warehouse: form.step || "ยังไม่เบิก" },
+      currentStep: nextStep,
       batch_no_warehouse: [form.batch_no_wh1, form.batch_no_wh2, form.batch_no_wh3].filter(Boolean),
       remarks: {
         warehouse: form.remark || "",
