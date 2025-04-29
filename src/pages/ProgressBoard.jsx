@@ -4,34 +4,37 @@ import "../styles/Responsive.css";
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
-  const getStatusColor = (step, job) => {
-    if (!job.status) return "#e5e7eb"; // ถ้าไม่มี status เลย → เทา
+const getStatusColor = (step, job) => {
+  if (!job.status) return "#e5e7eb"; // เทา
 
-    switch (step) {
-      case "Sales":
-        return (job.product_name && job.po_number && job.volume && job.customer)
-          ? "#4ade80" // เขียว
-          : "#facc15"; // เหลือง
-      case "Warehouse":
-        if (job.status.warehouse === "เบิกเสร็จ") return "#4ade80"; // เขียว
-        if (["ยังไม่เบิก", "กำลังเบิก"].includes(job.status.warehouse)) return "#facc15"; // เหลือง
-        return "#e5e7eb"; // เทา
-      case "Production":
-        if (job.status.production === "ผลิตเสร็จ") return "#4ade80"; // เขียว
-        if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(job.status.production)) return "#facc15"; // เหลือง
-        return "#e5e7eb"; // เทา
-      case "QC":
-        if (job.status.qc_inspection === "ตรวจผ่านแล้ว" && job.status.qc_coa === "เตรียมพร้อมแล้ว") return "#4ade80"; // เขียว
-        if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(job.status.qc_inspection)) return "#facc15"; // เหลือง
-        return "#e5e7eb"; // เทา
-      case "Account":
-        if (job.status.account === "Invoice ออกแล้ว") return "#4ade80"; // เขียว
-        if (job.status.account === "Invoice ยังไม่ออก") return "#facc15"; // เหลือง
-        return "#e5e7eb"; // เทา
-      default:
-        return "#e5e7eb"; // Default เทา
-    }
-  };
+  if (job.currentStep === step) {
+    // งานอยู่ที่แผนกนี้ กำลังทำ
+    return "#facc15"; // เหลือง
+  }
+
+  // งานเดินพ้นแผนกนี้แล้ว ➔ ดูจาก status
+  switch (step) {
+    case "Sales":
+      return (job.product_name && job.po_number && job.volume && job.customer)
+        ? "#4ade80" // เขียว
+        : "#e5e7eb"; // เทา
+    case "Warehouse":
+      if (job.status.warehouse === "เบิกเสร็จ") return "#4ade80"; // เขียว
+      return "#e5e7eb"; // เทา
+    case "Production":
+      if (job.status.production === "ผลิตเสร็จ") return "#4ade80"; // เขียว
+      return "#e5e7eb"; // เทา
+    case "QC":
+      if (job.status.qc_inspection === "ตรวจผ่านแล้ว" && job.status.qc_coa === "เตรียมพร้อมแล้ว") return "#4ade80"; // เขียว
+      return "#e5e7eb"; // เทา
+    case "Account":
+      if (job.status.account === "Invoice ออกแล้ว") return "#4ade80"; // เขียว
+      return "#e5e7eb"; // เทา
+    default:
+      return "#e5e7eb"; // Default เทา
+  }
+};
+
 
   return (
     <div className="progress-table-wrapper">
