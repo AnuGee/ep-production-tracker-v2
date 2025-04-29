@@ -64,30 +64,18 @@ useEffect(() => {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
 const getStepStatus = (job, step) => {
-  if (!job.status) return "notStarted";
+  if (!job || !job.currentStep) return "notStarted";
 
-  switch (step) {
-    case "Sales":
-      if (job.currentStep !== "Sales") return "done"; // เดินพ้น Sales แล้ว = done
-      return job.status.sales === "done" ? "done" : "doing";
-    case "Warehouse":
-      if (job.status.warehouse === "เบิกเสร็จ") return "done";
-      if (["กำลังเบิก", "ยังไม่เบิก"].includes(job.status.warehouse)) return "doing";
-      return "notStarted";
-    case "Production":
-      if (job.status.production === "ผลิตเสร็จ") return "done";
-      if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(job.status.production)) return "doing";
-      return "notStarted";
-    case "QC":
-      if (job.status.qc_inspection === "ตรวจผ่านแล้ว" && job.status.qc_coa === "เตรียมพร้อมแล้ว") return "done";
-      if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(job.status.qc_inspection)) return "doing";
-      return "notStarted";
-    case "Account":
-      if (job.status.account === "Invoice ออกแล้ว") return "done";
-      if (job.status.account === "Invoice ยังไม่ออก") return "doing";
-      return "notStarted";
-    default:
-      return "notStarted";
+  const stepOrder = ["Sales", "Warehouse", "Production", "QC", "Account", "Completed"];
+  const currentIndex = stepOrder.indexOf(job.currentStep);
+  const stepIndex = stepOrder.indexOf(step);
+
+  if (currentIndex > stepIndex) {
+    return "done";         // งานผ่านแผนกนี้แล้ว → เขียว
+  } else if (currentIndex === stepIndex) {
+    return "doing";        // งานอยู่ที่แผนกนี้ → เหลือง
+  } else {
+    return "notStarted";   // งานยังไม่ถึงแผนกนี้ → เทา
   }
 };
   
