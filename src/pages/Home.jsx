@@ -63,6 +63,52 @@ useEffect(() => {
   const years = ["ทั้งหมด", "2025", "2026", "2027", "2028", "2029", "2030"];
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
+const getStepStatus = (job, step) => {
+  if (!job.status) return "notStarted";
+
+  switch (step) {
+    case "Sales":
+      return job.status.sales === "done" ? "done" : "doing";
+    case "Warehouse":
+      if (job.status.warehouse === "เบิกเสร็จ") return "done";
+      if (["กำลังเบิก", "ยังไม่เบิก"].includes(job.status.warehouse)) return "doing";
+      return "notStarted";
+    case "Production":
+      if (job.status.production === "ผลิตเสร็จ") return "done";
+      if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(job.status.production)) return "doing";
+      return "notStarted";
+    case "QC":
+      if (job.status.qc_inspection === "ตรวจผ่านแล้ว" && job.status.qc_coa === "เตรียมพร้อมแล้ว") return "done";
+      if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(job.status.qc_inspection)) return "doing";
+      return "notStarted";
+    case "Account":
+      if (job.status.account === "Invoice ออกแล้ว") return "done";
+      if (job.status.account === "Invoice ยังไม่ออก") return "doing";
+      return "notStarted";
+    default:
+      return "notStarted";
+  }
+};
+
+  const summaryPerStep = steps.map((step) => {
+  let notStarted = 0;
+  let doing = 0;
+  let done = 0;
+
+  filteredJobs.forEach((job) => {
+    const status = getStepStatus(job, step);
+    if (status === "done") {
+      done++;
+    } else if (status === "doing") {
+      doing++;
+    } else {
+      notStarted++;
+    }
+  });
+
+  return { name: step, notStarted, doing, done };
+});
+  
   useEffect(() => {
     const fetchJobs = async () => {
       const snapshot = await getDocs(collection(db, "production_workflow"));
@@ -172,54 +218,6 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
   }
 };
   
-  const stepStatus = {
-    Sales: (job) => job.currentStep !== "Sales",
-    Warehouse: (job) => job.status?.warehouse === "เบิกเสร็จ",
-    Production: (job) => job.status?.production === "ผลิตเสร็จ",
-    QC: (job) => job.status?.qc_inspection === "ตรวจผ่านแล้ว" && job.status?.qc_coa === "เตรียมพร้อมแล้ว",
-    Account: (job) => job.status?.account === "Invoice ออกแล้ว",
-  };
-
-const getDepartmentStatus = (department, job) => {
-  if (!job.status) {
-    return "notStarted";
-  }
-
-  switch (department) {
-    case "Sales":
-      return job.status.sales || "notStarted";
-    case "Warehouse":
-      return job.status.warehouse || "notStarted";
-    case "Production":
-      return job.status.production || "notStarted";
-    case "QC":
-      return job.status.qc_inspection || "notStarted";
-    case "Account":
-      return job.status.account || "notStarted";
-    default:
-      return "notStarted";
-  }
-};
-
-const summaryPerStep = steps.map((step) => {
-  let notStarted = 0;
-  let doing = 0;
-  let done = 0;
-
-  filteredJobs.forEach((job) => {
-    const status = getDepartmentStatus(step, job);
-    if (status === "notStarted") {
-      notStarted++;
-    } else if (status === "doing") {
-      doing++;
-    } else if (status === "done") {
-      done++;
-    }
-  });
-
-  return { name: step, notStarted, doing, done };
-});
-
   const renderStatusBadge = (label, value) => {
     let badgeClass = "status-badge pending";
     if (!value || value === "") value = "-";
