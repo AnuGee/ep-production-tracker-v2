@@ -60,20 +60,25 @@ export default function Production() {
       Timestamp_Production: new Date().toISOString(),
     };
 
-    if (form.production_status === "รอผลตรวจ" || form.production_status === "ผลิตเสร็จ") {
+    if (form.production_status === "รอผลตรวจ") {
       updates.currentStep = "QC";
+      updates.waiting_for = "Inspection"; // ✅ ส่งไปตรวจสอบสินค้า
+    } else if (form.production_status === "ผลิตเสร็จ") {
+      updates.currentStep = "QC";
+      updates.waiting_for = "COA"; // ✅ ส่งไปหมวดเตรียมเอกสาร COA
     } else {
-      updates.currentStep = "Production";
+      updates.currentStep = "Production"; // กำลังผลิต/กำลังบรรจุ
     }
 
     try {
       await updateDoc(jobRef, updates);
-      toast.success("✅ อัปเดตสำเร็จ และส่งงานต่อเรียบร้อย");
+      toast.success("✅ อัปเดตข้อมูล Production สำเร็จ");
       fetchJobs();
       setSelectedJobId("");
       setForm({ batch_no_production: "", production_status: "", remark: "" });
       setShowConfirm(false);
     } catch (error) {
+      console.error(error);
       toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
       setShowConfirm(false);
     }
