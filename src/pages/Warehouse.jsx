@@ -52,7 +52,7 @@ export default function Warehouse() {
 
     // ✅ Logic: currentStep ไป Production เฉพาะ “มีครบ + เบิกเสร็จ”
     let nextStep = "Warehouse";
-    if (form.stock === "มีครบตามจำนวน" && form.step === "เบิกเสร็จ") {
+    if (form.stock === "มีครบตามจำนวน") {
       nextStep = "Production";
     }
 
