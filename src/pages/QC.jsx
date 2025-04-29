@@ -104,11 +104,13 @@ export default function QC() {
           <label>📋 เลือกรายการ</label>
           <select value={selectedInspectionJobId} onChange={(e) => setSelectedInspectionJobId(e.target.value)} className="input-box">
             <option value="">-- เลือกงาน --</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-              </option>
-            ))}
+{jobs
+  .filter((job) => job.currentStep === "QC")
+  .map((job) => (
+    <option key={job.id} value={job.id}>
+      {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+    </option>
+))}
           </select>
         </div>
 
@@ -156,11 +158,13 @@ export default function QC() {
           <label>📋 เลือกรายการ</label>
           <select value={selectedCoaJobId} onChange={(e) => setSelectedCoaJobId(e.target.value)} className="input-box">
             <option value="">-- เลือกงาน --</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-              </option>
-            ))}
+{jobs
+  .filter((job) => job.currentStep === "QC")
+  .map((job) => (
+    <option key={job.id} value={job.id}>
+      {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+    </option>
+))}
           </select>
         </div>
 
