@@ -205,12 +205,6 @@ textarea::placeholder {
   color: #111827 !important;
 }
 
-/* ✅ Badge ใน Table ให้คงสีเดิม */
-.status-badge {
-  background-color: inherit;
-  color: inherit;
-}
-
 /* ✨ Fix for Dark Mode */
 body {
   background-color: #f9fafb; /* พื้นหลังสีอ่อน */
