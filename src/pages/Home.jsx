@@ -586,4 +586,3 @@ const renderStatusBadge = (label, step, job) => {
       
     </div>
   );
-}
