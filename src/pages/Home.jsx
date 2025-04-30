@@ -541,55 +541,53 @@ const getStepKey = (currentStep) => {
         <th style={{ minWidth: "60px" }}>Delete</th>
       </tr>
     </thead>
-    <tbody>
-sortedJobs.map((job) => (
-  <tr key={job.id}> ... </tr>
-))
+<tbody>
+  {sortedJobs.map((job) => (
+    <tr key={job.id} onClick={() => setSelectedJob(job)}>
+      <td>{job.customer || "–"}</td>
+      <td>{job.po_number || "–"}</td>
+      <td>{getBatchNoWH(job, 0)}</td>
+      <td>{getBatchNoWH(job, 1)}</td>
+      <td>{getBatchNoWH(job, 2)}</td>
+      <td>{job.batch_no_production || "–"}</td>
+      <td>{job.product_name || "–"}</td>
+      <td>{job.currentStep || "–"}</td>
+      <td>
+        {renderStatusBadge("SL", "Sales", job)}
+        {renderStatusBadge("WH", "Warehouse", job)}
+        {renderStatusBadge("PD", "Production", job)}
+        {renderStatusBadge("QC", "QC", job)}
+        {renderStatusBadge("COA", "COA", job)}
+        {renderStatusBadge("AC", "Account", job)}
+      </td>
+      <td>{job.volume || "–"}</td>
+      <td>{job.delivery_date || "–"}</td>
+      <td>{renderLastUpdate(job)}</td>
+      <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+        {(role === "Admin" || role === "Sales") && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteJob(job.id);
+            }}
+            style={{
+              backgroundColor: "red",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              padding: "6px 16px",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >
+            ลบ
+          </button>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
 
-        <tr key={job.id} onClick={() => setSelectedJob(job)}>
-          <td>{job.customer || "–"}</td>
-          <td>{job.po_number || "–"}</td>
-          <td>{getBatchNoWH(job, 0)}</td>
-          <td>{getBatchNoWH(job, 1)}</td>
-          <td>{getBatchNoWH(job, 2)}</td>
-          <td>{job.batch_no_production || "–"}</td>
-          <td>{job.product_name || "–"}</td>
-          <td>{job.currentStep || "–"}</td>
-          <td>
-  {renderStatusBadge("SL", "Sales", job)}
-  {renderStatusBadge("WH", "Warehouse", job)}
-  {renderStatusBadge("PD", "Production", job)}
-  {renderStatusBadge("QC", "QC", job)}
-  {renderStatusBadge("COA", "COA", job)}
-  {renderStatusBadge("AC", "Account", job)}
-</td>
-          <td>{job.volume || "–"}</td>
-          <td>{job.delivery_date || "–"}</td>
-          <td>{renderLastUpdate(job)}</td>
-          <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-            {(role === "Admin" || role === "Sales") && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteJob(job.id);
-                }}
-                style={{
-                  backgroundColor: "red",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "6px 16px",
-                  fontWeight: "bold",
-                  cursor: "pointer"
-                }}
-              >
-                ลบ
-              </button>
-            )}
-          </td>
-        </tr>
-      ))}
-    </tbody>
   </table>
 </div>
 
