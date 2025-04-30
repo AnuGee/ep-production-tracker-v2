@@ -216,22 +216,43 @@ const renderStatusBadge = (label, step, job) => {
 
   let badgeClass = "status-badge pending";
   if (currentIndex > stepIndex) {
-    badgeClass = "status-badge completed";
+    badgeClass = "status-badge completed"; // เขียว
   } else if (currentIndex === stepIndex) {
-    badgeClass = "status-badge working";
+    badgeClass = "status-badge working"; // เหลือง
   }
 
-  const statusValue =
-    step === "QC" ? job.status?.qc_inspection :
-    step === "COA" ? job.status?.qc_coa :
-    step === "Account" ? job.status?.account :
-    step === "Production" ? job.status?.production :
-    step === "Warehouse" ? job.status?.warehouse :
-    step === "Sales" ? job.status?.sales :
-    "-";
+  // ✅ แบบละเอียด: ดึงข้อความของแต่ละแผนกชัดเจน
+  let statusValue = "-";
+  switch (step) {
+    case "Sales":
+      statusValue = job.status?.sales || "-";
+      break;
+    case "Warehouse":
+      statusValue = job.status?.warehouse || "-";
+      break;
+    case "Production":
+      statusValue = job.status?.production || "-";
+      break;
+    case "QC":
+      statusValue = job.status?.qc_inspection || "-";
+      break;
+    case "COA":
+      statusValue = job.status?.qc_coa || "-";
+      break;
+    case "Account":
+      statusValue = job.status?.account || "-";
+      break;
+    default:
+      statusValue = "-";
+  }
 
-  return <span className={badgeClass}>{label}: {statusValue || "-"}</span>;
-}; // ✅ ปิดจบแค่นี้
+  return (
+    <span className={badgeClass}>
+      {label}: {statusValue}
+    </span>
+  );
+};
+
 
   const exportToExcel = () => {
     const dataToExport = filteredJobs.map((job) => ({
