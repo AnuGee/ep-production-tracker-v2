@@ -34,8 +34,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 1rem;
   background-color: #fff;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: hidden;
 }
 
 .job-table th,
@@ -269,13 +267,6 @@ select option,
   margin-left: auto;
   margin-right: auto;
   padding: 1.5rem;
-}
-
-.table-wrapper {
-  max-height: 520px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  border-radius: 8px;
 }
 
 .table-wrapper {
