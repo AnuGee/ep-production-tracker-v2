@@ -234,16 +234,23 @@ const renderStatusBadge = (label, step, job) => {
         }
         break;
 
-      case "Warehouse":
-        const hasBN = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse[0];
-        const whStatus = job.status.warehouse ?? "";
-        if (!whStatus && hasBN) {
-          statusValue = "ผ่านแล้ว";
-          badgeClass = "status-badge completed";
-        } else {
-          statusValue = whStatus || "–";
-        }
-        break;
+case "Warehouse":
+  const hasBN = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse[0];
+  const whStatus = job.status.warehouse ?? "";
+
+  if (hasBN && (!whStatus || whStatus === "")) {
+    statusValue = "ผ่านแล้ว";
+    badgeClass = "status-badge completed";
+  } else if (whStatus === "เบิกเสร็จ") {
+    statusValue = "เบิกเสร็จ";
+    badgeClass = "status-badge completed";
+  } else if (whStatus === "ยังไม่เบิก" || whStatus === "กำลังเบิก") {
+    statusValue = whStatus;
+    badgeClass = "status-badge working";
+  } else {
+    statusValue = whStatus || "–";
+  }
+  break;
 
       case "Production":
         statusValue = job.status.production ?? "–";
