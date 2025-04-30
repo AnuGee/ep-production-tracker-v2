@@ -221,6 +221,7 @@ const renderStatusBadge = (label, step, job) => {
     badgeClass = "status-badge working"; // เหลือง
   }
 
+  // ✅ แบบละเอียด: ใช้ ?? เพื่อแสดงแม้จะเป็นค่าว่าง ("" ก็แสดง)
   let statusValue = "–";
   if (job.status) {
     switch (step) {
