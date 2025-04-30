@@ -244,29 +244,34 @@ case "Sales":
   }
   break;
 
-      case "Warehouse": {
-        const hasBatchNo =
-          Array.isArray(job.batch_no_warehouse) &&
-          job.batch_no_warehouse.length > 0;
+case "Warehouse": {
+  const hasBatchNo =
+    Array.isArray(job.batch_no_warehouse) &&
+    job.batch_no_warehouse.length > 0;
 
-        const whStatus = job.status?.warehouse ?? "";
+  const whStatus = job.status?.warehouse ?? "";
+  const currentStep = job.currentStep;
 
-        const isWHPassed =
-          (hasBatchNo && whStatus === "") ||     // ✅ มีครบตามจำนวน
-          whStatus === "เบิกเสร็จ";             // ✅ เบิกเสร็จจาก dropdown
+  const passedStepOrder = ["Production", "QC", "COA", "Account", "Completed"];
+  const isStepPassed = passedStepOrder.includes(currentStep);
 
-        if (isWHPassed) {
-          statusValue = whStatus === "เบิกเสร็จ" ? "เบิกเสร็จ" : "ผ่านแล้ว";
-          badgeClass = "status-badge completed"; // ✅ สีเขียว
-        } else if (whStatus === "ยังไม่เบิก" || whStatus === "กำลังเบิก") {
-          statusValue = whStatus;
-          badgeClass = "status-badge working"; // ✅ สีเหลือง
-        } else {
-          statusValue = "–";
-          badgeClass = "status-badge pending"; // ✅ สีเทา
-        }
-        break;
-      }
+  const isWHPassed =
+    isStepPassed ||                                 // ✅ ข้าม WH ไปแล้ว
+    (hasBatchNo && whStatus === "") ||             // ✅ มีครบตามจำนวน
+    whStatus === "เบิกเสร็จ";                     // ✅ เลือก dropdown
+
+  if (isWHPassed) {
+    statusValue = (whStatus === "เบิกเสร็จ") ? "เบิกเสร็จ" : "ผ่านแล้ว";
+    badgeClass = "status-badge completed";
+  } else if (whStatus === "ยังไม่เบิก" || whStatus === "กำลังเบิก") {
+    statusValue = whStatus;
+    badgeClass = "status-badge working";
+  } else {
+    statusValue = "–";
+    badgeClass = "status-badge pending";
+  }
+  break;
+}
         
       case "Production":
         statusValue = job.status.production ?? "–";
