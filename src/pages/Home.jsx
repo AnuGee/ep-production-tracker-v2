@@ -497,11 +497,13 @@ const renderStatusBadge = (label, step, job) => {
     {renderStatusBadge("WH", "Warehouse", job)}
     {renderStatusBadge("PD", "Production", job)}
     {renderStatusBadge("QC", "QC", job)}
+    {renderStatusBadge("COA", "COA", job)}
     {renderStatusBadge("AC", "Account", job)}
   </>
 ) : (
   renderStatusBadge("STEP", job.currentStep, job)
 )}
+
           </td>
           <td>{job.volume || "–"}</td>
           <td>{job.delivery_date || "–"}</td>
