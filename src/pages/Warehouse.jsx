@@ -47,40 +47,45 @@ export default function Warehouse() {
     setShowConfirm(true);
   };
 
-  const handleFinalSubmit = async () => {
-    const jobRef = doc(db, "production_workflow", selectedJobId);
+const handleFinalSubmit = async () => {
+  const jobRef = doc(db, "production_workflow", selectedJobId);
 
-    // ✅ Logic: currentStep ไป Production เฉพาะ “มีครบ + เบิกเสร็จ”
-let nextStep = "Warehouse";
-if (
-  form.stock === "มีครบตามจำนวน" || // กรณีที่กรอก Batch No ได้ทันที
-  (form.step === "เบิกเสร็จ")         // กรณีที่สถานะเลือกเบิกเสร็จ
-) {
-  nextStep = "Production";
-}
+  let nextStep = "Warehouse";
+  let statusUpdate = { warehouse: form.step || "ยังไม่เบิก" };
 
-    const updates = {
-      status: { warehouse: form.step || "ยังไม่เบิก" },
-      currentStep: nextStep,
-      batch_no_warehouse: [form.batch_no_wh1, form.batch_no_wh2, form.batch_no_wh3].filter(Boolean),
-      remarks: {
-        warehouse: form.remark || "",
-      },
-      Timestamp_Warehouse: new Date().toISOString(),
+  if (form.stock === "มีครบตามจำนวน") {
+    nextStep = "QC";
+    statusUpdate = {
+      warehouse: "",
+      qc_inspection: "skip",
+      qc_coa: "ยังไม่เตรียม",
     };
+  } else if (form.step === "เบิกเสร็จ") {
+    nextStep = "Production";
+  }
 
-    try {
-      await updateDoc(jobRef, updates);
-      toast.success("✅ อัปเดตสำเร็จ และส่งงานต่อเรียบร้อย");
-      fetchJobs();
-      setSelectedJobId("");
-      setForm({ stock: "", step: "", batch_no_wh1: "", batch_no_wh2: "", batch_no_wh3: "", remark: "" });
-      setShowConfirm(false);
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
-      setShowConfirm(false);
-    }
+  const updates = {
+    status: statusUpdate,
+    currentStep: nextStep,
+    batch_no_warehouse: [form.batch_no_wh1, form.batch_no_wh2, form.batch_no_wh3].filter(Boolean),
+    remarks: {
+      warehouse: form.remark || "",
+    },
+    Timestamp_Warehouse: new Date().toISOString(),
   };
+
+  try {
+    await updateDoc(jobRef, updates);
+    toast.success("✅ อัปเดตสำเร็จ และส่งงานต่อเรียบร้อย");
+    fetchJobs();
+    setSelectedJobId("");
+    setForm({ stock: "", step: "", batch_no_wh1: "", batch_no_wh2: "", batch_no_wh3: "", remark: "" });
+    setShowConfirm(false);
+  } catch (error) {
+    toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
+    setShowConfirm(false);
+  }
+};
 
   return (
     <div className="page-container">
