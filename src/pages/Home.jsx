@@ -213,7 +213,7 @@ const renderStatusBadge = (label, step, job) => {
   const currentIndex = stepOrder.indexOf(job.currentStep);
   const stepIndex = stepOrder.indexOf(step);
 
-  let badgeClass = "status-badge pending";
+  let badgeClass = "status-badge pending"; // เทา
   if (currentIndex > stepIndex) {
     badgeClass = "status-badge completed"; // เขียว
   } else if (currentIndex === stepIndex) {
@@ -221,19 +221,27 @@ const renderStatusBadge = (label, step, job) => {
   }
 
   let statusValue = "–";
+
   if (job.status) {
     switch (step) {
       case "Sales":
-        statusValue = job.status.sales ?? "–";
+        if (job.status.sales) {
+          statusValue = job.status.sales;
+        } else if (job.currentStep !== "Sales") {
+          statusValue = "กรอกแล้ว";
+        } else {
+          statusValue = "–";
+        }
         break;
 
       case "Warehouse":
-        // ✅ เงื่อนไขพิเศษ: ถ้า batch_no_warehouse[0] มีข้อมูล → ถือว่า “ผ่านแล้ว”
-        if (Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse[0]) {
+        const hasBN = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse[0];
+        const whStatus = job.status.warehouse ?? "";
+        if (!whStatus && hasBN) {
           statusValue = "ผ่านแล้ว";
           badgeClass = "status-badge completed";
         } else {
-          statusValue = job.status.warehouse ?? "–";
+          statusValue = whStatus || "–";
         }
         break;
 
