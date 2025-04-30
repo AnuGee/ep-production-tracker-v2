@@ -51,10 +51,13 @@ export default function Warehouse() {
     const jobRef = doc(db, "production_workflow", selectedJobId);
 
     // ✅ Logic: currentStep ไป Production เฉพาะ “มีครบ + เบิกเสร็จ”
-    let nextStep = "Warehouse";
-    if (form.stock === "มีครบตามจำนวน") {
-      nextStep = "Production";
-    }
+let nextStep = "Warehouse";
+if (
+  form.stock === "มีครบตามจำนวน" || // กรณีที่กรอก Batch No ได้ทันที
+  (form.step === "เบิกเสร็จ")         // กรณีที่สถานะเลือกเบิกเสร็จ
+) {
+  nextStep = "Production";
+}
 
     const updates = {
       status: { warehouse: form.step || "ยังไม่เบิก" },
