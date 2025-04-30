@@ -412,23 +412,6 @@ const getStepKey = (currentStep) => {
   </div>
 </div>
 
-{/* 🔴 เพิ่ม Pagination ใน Progress */}
-<div style={{ marginBottom: "1rem" }}>
-  <label>แสดงงาน: </label>
-  <select
-    value={itemsPerPageProgress}
-    onChange={(e) => {
-      setItemsPerPageProgress(e.target.value === "All" ? "All" : parseInt(e.target.value));
-      setCurrentPageProgress(1);
-    }}
-    style={{ marginLeft: "0.5rem", padding: "4px 8px", borderRadius: "6px" }}
-  >
-    {itemsPerPageOptions.map(option => (
-      <option key={option} value={option}>{option}</option>
-    ))}
-  </select>
-</div>
-
 <ProgressBoard
   jobs={itemsPerPageProgress === "All"
     ? filteredJobs
