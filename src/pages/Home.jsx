@@ -214,14 +214,13 @@ const renderStatusBadge = (label, step, job) => {
   const currentIndex = stepOrder.indexOf(job.currentStep);
   const stepIndex = stepOrder.indexOf(step);
 
-  let badgeClass = "status-badge pending"; // เทา
+  let badgeClass = "status-badge pending";
   if (currentIndex > stepIndex) {
-    badgeClass = "status-badge completed"; // เขียว
+    badgeClass = "status-badge completed";
   } else if (currentIndex === stepIndex) {
-    badgeClass = "status-badge working"; // เหลือง
+    badgeClass = "status-badge working";
   }
 
-  // ✅ ดึงข้อความสถานะจริงจาก job.status
   const statusValue =
     step === "QC" ? job.status?.qc_inspection :
     step === "COA" ? job.status?.qc_coa :
@@ -232,10 +231,7 @@ const renderStatusBadge = (label, step, job) => {
     "-";
 
   return <span className={badgeClass}>{label}: {statusValue || "-"}</span>;
-};
-
-  return <span className={badgeClass}>{displayText}</span>;
-};
+}; // ✅ ปิดจบแค่นี้
 
   const exportToExcel = () => {
     const dataToExport = filteredJobs.map((job) => ({
