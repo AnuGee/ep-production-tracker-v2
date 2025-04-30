@@ -58,12 +58,11 @@ export default function Sales() {
         batch_no: "",
         currentStep: "Warehouse",
         status: {
-          sales: "done",
-          warehouse: "notStarted",
-          production: "notStarted",
-          qc_inspection: "notStarted",
-          qc_coa: "notStarted",
-          account: "notStarted",
+          warehouse: "",
+          production: "",
+          qc_inspection: "",
+          qc_coa: "",
+          account: "",
         },
         remarks: {
           sales: remark || "",
