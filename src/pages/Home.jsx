@@ -26,10 +26,6 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
-  const [currentPageTable, setCurrentPageTable] = useState(1);
-  const [itemsPerPageTable, setItemsPerPageTable] = useState(10);
-
-  const itemsPerPageOptions = [10, 20, 50, 100, "All"];
 
 useEffect(() => {
   const style = document.createElement("style");
@@ -546,10 +542,9 @@ const getStepKey = (currentStep) => {
       </tr>
     </thead>
     <tbody>
-      {(itemsPerPageTable === "All" ? sortedJobs : sortedJobs.slice(
-  (currentPageTable - 1) * itemsPerPageTable,
-  currentPageTable * itemsPerPageTable
-)).map((job) => (
+sortedJobs.map((job) => (
+  <tr key={job.id}> ... </tr>
+))
 
         <tr key={job.id} onClick={() => setSelectedJob(job)}>
           <td>{job.customer || "–"}</td>
@@ -605,47 +600,6 @@ const getStepKey = (currentStep) => {
     </div>
   </div>
 )}
-
-{/* 📋 Pagination Controls for Table */}
-<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem" }}>
-  <div>
-    <label>แสดงงาน: </label>
-    <select
-      value={itemsPerPageTable}
-      onChange={(e) => {
-        setItemsPerPageTable(e.target.value === "All" ? "All" : parseInt(e.target.value));
-        setCurrentPageTable(1);
-      }}
-      style={{ marginLeft: "0.5rem", padding: "4px 8px", borderRadius: "6px" }}
-    >
-      {itemsPerPageOptions.map(option => (
-        <option key={option} value={option}>{option}</option>
-      ))}
-    </select>
-  </div>
-
-  <div>
-    {itemsPerPageTable !== "All" &&
-      Array.from({ length: Math.ceil(sortedJobs.length / itemsPerPageTable) }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => setCurrentPageTable(i + 1)}
-          style={{
-            margin: "0 4px",
-            padding: "4px 10px",
-            borderRadius: "6px",
-            backgroundColor: currentPageTable === (i + 1) ? "#2563eb" : "#d1d5db",
-            color: currentPageTable === (i + 1) ? "white" : "black",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          {i + 1}
-        </button>
-      ))
-    }
-  </div>
-</div>
       
     </div>
   );
