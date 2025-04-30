@@ -245,6 +245,7 @@ const renderStatusBadge = (label, step, job) => {
     switch (step) {
       case "Sales":
         statusValue = (job.currentStep === "Sales") ? "–" : "กรอกแล้ว";
+        if (badgeClass === "status-badge completed") statusValue = "กรอกแล้ว";
         break;
 
       case "Warehouse": {
@@ -253,67 +254,75 @@ const renderStatusBadge = (label, step, job) => {
           job.batch_no_warehouse.length > 0;
 
         const whStatus = job.status?.warehouse ?? "";
-        const currentStep = job.currentStep;
-
-        const passedStepOrder = ["Production", "QC", "COA", "Account", "Completed"];
-        const isStepPassed = passedStepOrder.includes(currentStep);
-
         const isWHPassed =
-          isStepPassed ||
+          currentIndex > stepIndex ||
           (hasBatchNo && whStatus === "") ||
           whStatus === "เบิกเสร็จ";
 
         if (isWHPassed) {
-          statusValue = (whStatus === "เบิกเสร็จ") ? "เบิกเสร็จ" : "ผ่านแล้ว";
           badgeClass = "status-badge completed";
+          statusValue = (whStatus === "เบิกเสร็จ") ? "เบิกเสร็จ" : "ผ่านแล้ว";
         } else if (["ยังไม่เบิก", "กำลังเบิก"].includes(whStatus)) {
-          statusValue = whStatus;
           badgeClass = "status-badge working";
+          statusValue = whStatus;
         }
         break;
       }
 
       case "Production": {
-        const prodStatus = job.status?.production ?? "–";
-        statusValue = prodStatus;
-        if (currentIndex > stepIndex && prodStatus !== "–") {
-          statusValue = "ผ่านแล้ว";
-          badgeClass = "status-badge completed";
-        } else if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(prodStatus)) {
+        const pdStatus = job.status?.production ?? "–";
+        if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pdStatus)) {
           badgeClass = "status-badge working";
+          statusValue = pdStatus;
+        } else if (currentIndex > stepIndex && pdStatus !== "–") {
+          badgeClass = "status-badge completed";
+          statusValue = "ผ่านแล้ว";
+        } else {
+          statusValue = pdStatus;
         }
         break;
       }
 
       case "QC": {
         const qcStatus = job.status?.qc_inspection ?? "–";
-        statusValue = qcStatus;
         if (qcStatus === "ตรวจผ่านแล้ว") {
           badgeClass = "status-badge completed";
-        } else if (qcStatus.includes("กำลังตรวจ") || qcStatus.includes("Hold") || qcStatus.includes("รอปรับ")) {
+          statusValue = "ผ่านแล้ว";
+        } else if (
+          ["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qcStatus)
+        ) {
           badgeClass = "status-badge working";
+          statusValue = qcStatus;
+        } else {
+          statusValue = qcStatus;
         }
         break;
       }
 
       case "COA": {
         const coaStatus = job.status?.qc_coa ?? "–";
-        statusValue = coaStatus;
         if (coaStatus === "เตรียมพร้อมแล้ว") {
           badgeClass = "status-badge completed";
+          statusValue = "ผ่านแล้ว";
         } else if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coaStatus)) {
           badgeClass = "status-badge working";
+          statusValue = coaStatus;
+        } else {
+          statusValue = coaStatus;
         }
         break;
       }
 
       case "Account": {
         const acStatus = job.status?.account ?? "–";
-        statusValue = acStatus;
         if (acStatus === "Invoice ออกแล้ว") {
           badgeClass = "status-badge completed";
+          statusValue = "ผ่านแล้ว";
         } else if (acStatus === "Invoice ยังไม่ออก") {
           badgeClass = "status-badge working";
+          statusValue = acStatus;
+        } else {
+          statusValue = acStatus;
         }
         break;
       }
