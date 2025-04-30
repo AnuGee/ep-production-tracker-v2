@@ -94,24 +94,21 @@ const getStepStatus = (job, step) => {
     case "Warehouse": {
       const hasBatchNo = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse.length > 0;
       const wh = status.warehouse ?? "";
-      if (
-        ["Production", "QC", "COA", "Account", "Completed"].includes(currentStep) ||
-        (hasBatchNo && wh === "") ||
-        wh === "เบิกเสร็จ"
-      ) {
+      const passed = ["Production", "QC", "COA", "Account", "Completed"].includes(currentStep);
+      const isPassedByBatch = hasBatchNo && (wh === "" || wh === undefined);
+
+      if (passed || wh === "เบิกเสร็จ" || isPassedByBatch) {
         return "done";
       }
+
       if (["ยังไม่เบิก", "กำลังเบิก"].includes(wh)) return "doing";
+
       return "notStarted";
     }
 
     case "Production": {
       const pd = status.production;
-      if (
-        currentStep === "QC" && status.qc_inspection === "skip"
-      ) {
-        return "done"; // ✅ ถูกข้ามไป COA แล้ว
-      }
+      if (currentStep === "QC" && status.qc_inspection === "skip") return "done"; // ข้าม Production
       if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "doing";
       if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
       return "notStarted";
