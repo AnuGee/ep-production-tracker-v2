@@ -304,6 +304,23 @@ const renderStatusBadge = (label, step, job) => {
     saveAs(blob, `EP_All_Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
+const getStepKey = (currentStep) => {
+  switch (currentStep) {
+    case "Sales":
+      return "Sales";
+    case "Warehouse":
+      return "Warehouse";
+    case "Production":
+      return "Production";
+    case "QC":
+      return "QC";
+    case "Account":
+      return "Account";
+    default:
+      return "–";
+  }
+};
+  
   return (
     <div className="page-container">
       <h2 style={{ marginTop: 0 }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
@@ -519,7 +536,7 @@ const renderStatusBadge = (label, step, job) => {
     {renderStatusBadge("AC", "Account", job)}
   </>
 ) : (
-  renderStatusBadge("STEP", job.currentStep, job)
+  renderStatusBadge("STEP", getStepKey(job.currentStep), job)
 )}
 
           </td>
