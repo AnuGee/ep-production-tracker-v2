@@ -82,18 +82,66 @@ useEffect(() => {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
 const getStepStatus = (job, step) => {
-  if (!job || !job.currentStep) return "notStarted";
+  if (!job || !job.status) return "notStarted";
 
-  const stepOrder = ["Sales", "Warehouse", "Production", "QC", "Account", "Completed"];
-  const currentIndex = stepOrder.indexOf(job.currentStep);
-  const stepIndex = stepOrder.indexOf(step);
+  const currentStep = job.currentStep;
+  const status = job.status;
 
-  if (currentIndex > stepIndex) {
-    return "done";         // งานผ่านแผนกนี้แล้ว → เขียว
-  } else if (currentIndex === stepIndex) {
-    return "doing";        // งานอยู่ที่แผนกนี้ → เหลือง
-  } else {
-    return "notStarted";   // งานยังไม่ถึงแผนกนี้ → เทา
+  switch (step) {
+    case "Sales":
+      return currentStep !== "Sales" ? "done" : "doing";
+
+    case "Warehouse": {
+      const hasBatchNo = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse.length > 0;
+      const wh = status.warehouse ?? "";
+      if (
+        ["Production", "QC", "COA", "Account", "Completed"].includes(currentStep) ||
+        (hasBatchNo && wh === "") ||
+        wh === "เบิกเสร็จ"
+      ) {
+        return "done";
+      }
+      if (["ยังไม่เบิก", "กำลังเบิก"].includes(wh)) return "doing";
+      return "notStarted";
+    }
+
+    case "Production": {
+      const pd = status.production;
+      if (
+        currentStep === "QC" && status.qc_inspection === "skip"
+      ) {
+        return "done"; // ✅ ถูกข้ามไป COA แล้ว
+      }
+      if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "doing";
+      if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
+      return "notStarted";
+    }
+
+    case "QC": {
+      const qc = status.qc_inspection;
+      if (qc === "ตรวจผ่านแล้ว") return "done";
+      if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
+      if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
+      return "notStarted";
+    }
+
+    case "COA": {
+      const coa = status.qc_coa;
+      if (coa === "เตรียมพร้อมแล้ว") return "done";
+      if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
+      if (["Account", "Completed"].includes(currentStep)) return "done";
+      return "notStarted";
+    }
+
+    case "Account": {
+      const ac = status.account;
+      if (ac === "Invoice ออกแล้ว") return "done";
+      if (ac === "Invoice ยังไม่ออก") return "doing";
+      return "notStarted";
+    }
+
+    default:
+      return "notStarted";
   }
 };
   
