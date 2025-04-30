@@ -277,3 +277,19 @@ select option,
   border: 1px solid #ccc;
   border-radius: 8px;
 }
+
+.table-wrapper {
+  max-height: 520px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+/* ✅ ทำให้หัวตาราง sticky */
+.job-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #f3f4f6; /* สีพื้นหลัง */
+  z-index: 2;                 /* อยู่เหนือแถวอื่น */
+  box-shadow: inset 0 -1px 0 #ddd; /* เส้นขอบล่าง */
+}
