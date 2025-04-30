@@ -221,28 +221,39 @@ const renderStatusBadge = (label, step, job) => {
     badgeClass = "status-badge working"; // เหลือง
   }
 
-  // ✅ แบบละเอียด: ใช้ ?? เพื่อแสดงแม้จะเป็นค่าว่าง ("" ก็แสดง)
   let statusValue = "–";
   if (job.status) {
     switch (step) {
       case "Sales":
         statusValue = job.status.sales ?? "–";
         break;
+
       case "Warehouse":
-        statusValue = job.status.warehouse ?? "–";
+        // ✅ เงื่อนไขพิเศษ: ถ้า batch_no_warehouse[0] มีข้อมูล → ถือว่า “ผ่านแล้ว”
+        if (Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse[0]) {
+          statusValue = "ผ่านแล้ว";
+          badgeClass = "status-badge completed";
+        } else {
+          statusValue = job.status.warehouse ?? "–";
+        }
         break;
+
       case "Production":
         statusValue = job.status.production ?? "–";
         break;
+
       case "QC":
         statusValue = job.status.qc_inspection ?? "–";
         break;
+
       case "COA":
         statusValue = job.status.qc_coa ?? "–";
         break;
+
       case "Account":
         statusValue = job.status.account ?? "–";
         break;
+
       default:
         statusValue = "–";
     }
