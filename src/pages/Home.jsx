@@ -244,6 +244,30 @@ case "Sales":
   }
   break;
 
+      case "Warehouse": {
+        const hasBatchNo =
+          Array.isArray(job.batch_no_warehouse) &&
+          job.batch_no_warehouse.length > 0;
+
+        const whStatus = job.status?.warehouse ?? "";
+
+        const isWHPassed =
+          (hasBatchNo && whStatus === "") ||     // ✅ มีครบตามจำนวน
+          whStatus === "เบิกเสร็จ";             // ✅ เบิกเสร็จจาก dropdown
+
+        if (isWHPassed) {
+          statusValue = whStatus === "เบิกเสร็จ" ? "เบิกเสร็จ" : "ผ่านแล้ว";
+          badgeClass = "status-badge completed"; // ✅ สีเขียว
+        } else if (whStatus === "ยังไม่เบิก" || whStatus === "กำลังเบิก") {
+          statusValue = whStatus;
+          badgeClass = "status-badge working"; // ✅ สีเหลือง
+        } else {
+          statusValue = "–";
+          badgeClass = "status-badge pending"; // ✅ สีเทา
+        }
+        break;
+      }
+        
       case "Production":
         statusValue = job.status.production ?? "–";
         break;
