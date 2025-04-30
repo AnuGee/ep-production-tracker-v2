@@ -270,3 +270,10 @@ select option,
   margin-right: auto;
   padding: 1.5rem;
 }
+
+.table-wrapper {
+  max-height: 520px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
