@@ -122,7 +122,11 @@ export default function QC() {
           >
             <option value="">-- เลือกงาน --</option>
             {jobs
-              .filter((job) => job.currentStep === "QC" && job.waiting_for === "Inspection")
+  .filter((job) =>
+    job.currentStep === "QC" &&
+    job.waiting_for === "Inspection" &&
+    job.status?.qc_inspection !== "skip"
+  )
               .map((job) => (
                 <option key={job.id} value={job.id}>
                   {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
@@ -181,26 +185,34 @@ export default function QC() {
 
       <form onSubmit={handleCoaSubmit} className="form-grid">
         <h3>📄 เตรียมเอกสาร COA</h3>
-        <div className="full-span">
-          <label>📋 เลือกรายการ</label>
-          <select
-            value={selectedCoaJobId}
-            onChange={(e) => setSelectedCoaJobId(e.target.value)}
-            className="input-box"
-            disabled={
-              jobs.filter((job) => job.currentStep === "QC" && job.waiting_for === "COA").length === 0
-            }
-          >
-            <option value="">-- เลือกรายการ --</option>
-            {jobs
-              .filter((job) => job.currentStep === "QC" && job.waiting_for === "COA")
-              .map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-                </option>
-              ))}
-          </select>
-        </div>
+<div className="full-span">
+  <label>📋 เลือกรายการ</label>
+  <select
+    value={selectedCoaJobId}
+    onChange={(e) => setSelectedCoaJobId(e.target.value)}
+    className="input-box"
+    disabled={
+      jobs.filter(
+        (job) =>
+          job.currentStep === "QC" &&
+          (job.waiting_for === "COA" || job.status?.qc_inspection === "skip")
+      ).length === 0
+    }
+  >
+    <option value="">-- เลือกรายการ --</option>
+    {jobs
+      .filter(
+        (job) =>
+          job.currentStep === "QC" &&
+          (job.waiting_for === "COA" || job.status?.qc_inspection === "skip")
+      )
+      .map((job) => (
+        <option key={job.id} value={job.id}>
+          {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+        </option>
+      ))}
+  </select>
+</div>
 
         <div>
           <label>📄 สถานะ COA</label>
