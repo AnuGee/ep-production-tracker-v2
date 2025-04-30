@@ -22,7 +22,6 @@ export default function Home() {
   const [selectedMonth, setSelectedMonth] = useState("ทั้งหมด");
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [searchText, setSearchText] = useState("");
-  const [showAllStatus, setShowAllStatus] = useState(false);
   const [sortColumn, setSortColumn] = useState("Delivery Date");
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
@@ -463,17 +462,6 @@ const getStepKey = (currentStep) => {
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📋 รายการงานทั้งหมด</h3>
-<div style={{ display: "flex", justifyContent: "space-between", margin: "1rem 0" }}>
-  <label>
-    <input
-      type="checkbox"
-      checked={showAllStatus}
-      onChange={(e) => setShowAllStatus(e.target.checked)}
-      style={{ marginRight: "8px" }}
-    />
-    🔄 แสดงสถานะแบบละเอียด
-  </label>
-  <div>
     <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
     <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
   </div>
@@ -537,20 +525,13 @@ const getStepKey = (currentStep) => {
           <td>{job.product_name || "–"}</td>
           <td>{job.currentStep || "–"}</td>
           <td>
-{showAllStatus ? (
-  <>
-    {renderStatusBadge("SL", "Sales", job)}
-    {renderStatusBadge("WH", "Warehouse", job)}
-    {renderStatusBadge("PD", "Production", job)}
-    {renderStatusBadge("QC", "QC", job)}
-    {renderStatusBadge("COA", "COA", job)}
-    {renderStatusBadge("AC", "Account", job)}
-  </>
-) : (
-  renderStatusBadge("STEP", getStepKey(job.currentStep), job)
-)}
-
-          </td>
+  {renderStatusBadge("SL", "Sales", job)}
+  {renderStatusBadge("WH", "Warehouse", job)}
+  {renderStatusBadge("PD", "Production", job)}
+  {renderStatusBadge("QC", "QC", job)}
+  {renderStatusBadge("COA", "COA", job)}
+  {renderStatusBadge("AC", "Account", job)}
+</td>
           <td>{job.volume || "–"}</td>
           <td>{job.delivery_date || "–"}</td>
           <td>{renderLastUpdate(job)}</td>
