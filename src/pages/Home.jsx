@@ -465,7 +465,6 @@ const getStepKey = (currentStep) => {
     <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
     <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
   </div>
-</div>
 <div className="table-wrapper">
   <table className="job-table">
     <thead>
