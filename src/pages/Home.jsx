@@ -462,9 +462,10 @@ const getStepKey = (currentStep) => {
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>📋 รายการงานทั้งหมด</h3>
-    <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
-    <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
-  </div>
+<div style={{ marginBottom: "1rem" }}>
+  <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
+  <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
+</div>
 <div className="table-wrapper">
   <table className="job-table">
     <thead>
