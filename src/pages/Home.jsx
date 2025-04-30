@@ -215,13 +215,24 @@ const renderStatusBadge = (label, step, job) => {
   const stepIndex = stepOrder.indexOf(step);
 
   let badgeClass = "status-badge pending"; // เทา
-  let displayText = label;
-
   if (currentIndex > stepIndex) {
     badgeClass = "status-badge completed"; // เขียว
   } else if (currentIndex === stepIndex) {
     badgeClass = "status-badge working"; // เหลือง
   }
+
+  // ✅ ดึงข้อความสถานะจริงจาก job.status
+  const statusValue =
+    step === "QC" ? job.status?.qc_inspection :
+    step === "COA" ? job.status?.qc_coa :
+    step === "Account" ? job.status?.account :
+    step === "Production" ? job.status?.production :
+    step === "Warehouse" ? job.status?.warehouse :
+    step === "Sales" ? job.status?.sales :
+    "-";
+
+  return <span className={badgeClass}>{label}: {statusValue || "-"}</span>;
+};
 
   return <span className={badgeClass}>{displayText}</span>;
 };
