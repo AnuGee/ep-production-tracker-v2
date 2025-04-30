@@ -210,7 +210,7 @@ const sortedJobs = [...filteredJobs].sort((a, b) => {
 const renderStatusBadge = (label, step, job) => {
   if (!job || !job.currentStep) return null;
 
-  const stepOrder = ["Sales", "Warehouse", "Production", "QC", "Account", "Completed"];
+  const stepOrder = ["Sales", "Warehouse", "Production", "QC", "COA", "Account", "Completed"];
   const currentIndex = stepOrder.indexOf(job.currentStep);
   const stepIndex = stepOrder.indexOf(step);
 
@@ -221,29 +221,30 @@ const renderStatusBadge = (label, step, job) => {
     badgeClass = "status-badge working"; // เหลือง
   }
 
-  // ✅ แบบละเอียด: ดึงข้อความของแต่ละแผนกชัดเจน
-  let statusValue = "-";
-  switch (step) {
-    case "Sales":
-      statusValue = job.status?.sales || "-";
-      break;
-    case "Warehouse":
-      statusValue = job.status?.warehouse || "-";
-      break;
-    case "Production":
-      statusValue = job.status?.production || "-";
-      break;
-    case "QC":
-      statusValue = job.status?.qc_inspection || "-";
-      break;
-    case "COA":
-      statusValue = job.status?.qc_coa || "-";
-      break;
-    case "Account":
-      statusValue = job.status?.account || "-";
-      break;
-    default:
-      statusValue = "-";
+  let statusValue = "–";
+  if (job.status) {
+    switch (step) {
+      case "Sales":
+        statusValue = job.status.sales ?? "–";
+        break;
+      case "Warehouse":
+        statusValue = job.status.warehouse ?? "–";
+        break;
+      case "Production":
+        statusValue = job.status.production ?? "–";
+        break;
+      case "QC":
+        statusValue = job.status.qc_inspection ?? "–";
+        break;
+      case "COA":
+        statusValue = job.status.qc_coa ?? "–";
+        break;
+      case "Account":
+        statusValue = job.status.account ?? "–";
+        break;
+      default:
+        statusValue = "–";
+    }
   }
 
   return (
@@ -252,7 +253,6 @@ const renderStatusBadge = (label, step, job) => {
     </span>
   );
 };
-
 
   const exportToExcel = () => {
     const dataToExport = filteredJobs.map((job) => ({
