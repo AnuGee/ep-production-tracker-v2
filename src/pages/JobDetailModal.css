@@ -17,6 +17,7 @@
 
 .modal-content {
   background: white;
+  color: #111827; /* ✅ เพิ่มตรงนี้ */
   padding: 2rem;
   border-radius: 12px;
   width: 90%;
