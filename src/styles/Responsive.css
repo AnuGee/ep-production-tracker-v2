@@ -178,12 +178,6 @@ input::placeholder {
   font-size: 14px;
 }
 
-/* ✅ ตาราง: ให้ hover กลับมา */
 .job-table tbody tr:hover {
-  background-color: #e5e7eb !important;
-}
-
-.job-table tbody tr:hover {
-  background-color: #e5e7eb !important;
-  cursor: pointer;
+  background-color: #f3f4f6 !important;
 }
