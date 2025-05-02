@@ -169,10 +169,14 @@ input::placeholder {
   font-size: 14px;
 }
 
-.job-table tbody tr:hover {
-  background-color: #e5e7eb !important;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  z-index: 1;
+/* กำหนด transition ให้ tr เพื่อความนุ่มนวล (ถ้าต้องการ) */
+.job-table tbody tr {
+    transition: background-color 0.2s ease;
 }
 
+/* กำหนด background ให้ td ที่อยู่ใน tr ที่ hover */
+.job-table tbody tr:hover td {
+  background-color: #eef2ff !important; /* ลองเปลี่ยนเป็นสีอื่นที่ชัดเจนขึ้น เช่น Indigo 50 */
+  cursor: pointer;
+  /* ไม่จำเป็นต้องใส่ transition ที่นี่ ถ้าใส่ไว้ที่ tr แล้ว */
+}
