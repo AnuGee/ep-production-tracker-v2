@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "./JobDetailModal"; // ✅ ใช้ตัวใน pages/
 import {
@@ -26,6 +26,11 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
+  const tableWrapperRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftStart, setScrollLeftStart] = useState(0);
+  const [wasDragging, setWasDragging] = useState(false);
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -102,6 +107,30 @@ const getStepStatus = (job, step) => {
     fetchJobs();
   }, []);
 
+  // --- useEffect จัดการ global listeners (เพิ่มตรงนี้) ---
+  useEffect(() => {
+    const handleGlobalMouseUp = () => handleMouseUpOrLeave();
+    const handleGlobalMouseMove = (e) => handleMouseMove(e);
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      if (tableWrapperRef.current) {
+          tableWrapperRef.current.style.cursor = 'grab';
+          tableWrapperRef.current.style.userSelect = 'auto';
+      }
+    };
+  }, [isDragging, handleMouseMove, handleMouseUpOrLeave]);
+  // -------------------------------------------------
+  
   const getBatchNoWH = (job, index) => {
     return job.batch_no_warehouse?.[index] || "–";
   };
@@ -408,6 +437,38 @@ const getStepKey = (currentStep) => {
       return "–";
   }
 };
+
+    // --- Handlers สำหรับการลาก (เพิ่มตรงนี้ หรือรวมกับฟังก์ชันอื่น) ---
+  const handleMouseDown = (e) => {
+    if (!tableWrapperRef.current) return;
+    setWasDragging(false);
+    setIsDragging(true);
+    setStartX(e.pageX - tableWrapperRef.current.offsetLeft);
+    setScrollLeftStart(tableWrapperRef.current.scrollLeft);
+    tableWrapperRef.current.style.cursor = 'grabbing';
+    tableWrapperRef.current.style.userSelect = 'none';
+  };
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isDragging || !tableWrapperRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - tableWrapperRef.current.offsetLeft;
+    const walk = x - startX;
+    tableWrapperRef.current.scrollLeft = scrollLeftStart - walk;
+    if (Math.abs(walk) > 10) {
+        setWasDragging(true);
+    }
+  }, [isDragging, startX, scrollLeftStart]);
+
+  const handleMouseUpOrLeave = useCallback(() => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (tableWrapperRef.current) {
+        tableWrapperRef.current.style.cursor = 'grab';
+        tableWrapperRef.current.style.userSelect = 'auto';
+    }
+  }, [isDragging]);
+  // --------------------------------------------------------
   
   return (
     <div className="page-container">
@@ -529,7 +590,12 @@ const getStepKey = (currentStep) => {
   <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (กรอง)</button>
   <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export ทั้งหมด</button>
 </div>
-<div className="table-wrapper">
+      <div
+        className="table-wrapper"
+        ref={tableWrapperRef}           {/* เพิ่ม ref */}
+        onMouseDown={handleMouseDown}   {/* เพิ่ม onMouseDown */}
+        style={{ cursor: 'grab' }}      {/* เพิ่ม style cursor เริ่มต้น */}
+      >
   <table className="job-table">
     <thead>
       <tr>
