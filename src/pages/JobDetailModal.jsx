@@ -44,9 +44,15 @@ export default function JobDetailModal({ job, onClose }) {
     );
   };
 
-  return (
-    <div className="modal-overlay">
-      <div className="modal-content">
+return (
+  <div
+    className="modal-overlay"
+    onClick={onClose} // ✅ คลิกพื้นหลัง = ปิด popup
+  >
+    <div
+      className="modal-content"
+      onClick={(e) => e.stopPropagation()} // ✅ กันคลิกทะลุภายใน popup
+    >
         <h3>📄 รายละเอียดงาน</h3>
         <div>
           <p><strong>👤 Customer:</strong> {job.customer || "–"}</p>
