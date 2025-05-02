@@ -14,9 +14,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ NEW
 import { AuthProvider } from "./context/AuthContext";
+import { useEffect } from "react";
 
 export default function App() {
-  return (
+  useEffect(() => {
+    document.body.classList.add("dark-mode"); // ✅ ใส่ Dark Mode
+  }, []);
+
+return (
     <AuthProvider>
       <Router>
         <Routes>
