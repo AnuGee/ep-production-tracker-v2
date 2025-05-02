@@ -71,7 +71,7 @@ export default function Header() {
       <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         {user ? (
           <>
-<span className="login-info">
+            <span style={{ fontWeight: "bold", textAlign: "center", color: "#1f2937" }}>
   👤 เข้าสู่ระบบในชื่อ: {user.email} (สิทธิ์: {role})
 </span>
             <button
