@@ -198,3 +198,12 @@ body.dark-mode .header-title {
 body.dark-mode .header-title {
   color: #f8fafc !important;
 }
+
+/* ใช้ตัวแปร CSS เพื่อควบคุมสี */
+:root {
+  --header-title-color: #1f2937; /* Light mode */
+}
+
+body.dark-mode {
+  --header-title-color: #f8fafc; /* Dark mode */
+}
