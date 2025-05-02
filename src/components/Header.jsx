@@ -30,7 +30,7 @@ export default function Header() {
       {/* Logo + System Name */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         <img src="/logo_ep.png" alt="Logo" style={{ height: 50 }} />
-        <<strong
+        <strong
   className="header-title"
   style={{
     fontSize: "22px",
