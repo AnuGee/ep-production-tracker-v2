@@ -162,3 +162,23 @@ input::placeholder {
 .job-table tbody tr:hover {
   background-color: #e5e7eb !important;
 }
+
+/* ✅ Legend สีของ Progress + Chart */
+.legend,
+.legend span,
+.legend label {
+  color: #1f2937 !important;
+  font-size: 14px;
+}
+
+/* ✅ ชื่อสินค้าใน ProgressBoard */
+.product-label {
+  color: #1f2937 !important;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* ✅ ตาราง: ให้ hover กลับมา */
+.job-table tbody tr:hover {
+  background-color: #e5e7eb !important;
+}
