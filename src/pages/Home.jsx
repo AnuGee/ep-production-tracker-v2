@@ -2,7 +2,7 @@
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
-import JobDetailModal from "./JobDetailModal";
+import JobDetailModal from "../components/JobDetailModal"; // ✅ Import modal
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -26,55 +26,6 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
-
-useEffect(() => {
-  const style = document.createElement("style");
-  style.innerHTML = `
-    .job-table thead th {
-      position: sticky;
-      top: 0;
-      background-color: #f3f4f6;
-      z-index: 10;
-      text-align: left;
-      font-weight: bold;
-      border-bottom: 1px solid #ccc;
-      box-shadow: inset 0 -1px 0 #ddd;
-    }
-
-    .job-table thead th.sorted {
-      background-color: #fef9c3;
-    }
-
-    .job-table tbody tr:hover {
-      background-color: #f3f4f6;
-    }
-
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      max-height: 520px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    .job-table {
-      width: 100%;
-      min-width: 1000px;
-      border-collapse: collapse;
-      background-color: white;
-    }
-
-    .job-table th,
-    .job-table td {
-      white-space: nowrap;
-      padding: 12px 16px;
-      font-size: 14px;
-    }
-  `;
-  document.head.appendChild(style);
-  return () => document.head.removeChild(style);
-}, []);
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -486,13 +437,15 @@ const getStepKey = (currentStep) => {
       </div>
 
       <hr style={{ margin: '2rem 0' }} />
-<h3 style={{ color: '#1f2937', fontSize: '1.5rem', backgroundColor: '#e0f2fe', padding: '0.5rem 1rem', borderRadius: '8px' }}>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
+<h3 className="total-volume">
+  📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG
+</h3>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
 
 {/* 📋 Legend ความหมายสี Progress */}
-<div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem", marginTop: "1rem" }}>
+<div className="legend" style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem", marginTop: "1rem" }}>
   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
     <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
     <span>ผ่านแผนกนี้แล้ว</span>
@@ -544,7 +497,7 @@ const getStepKey = (currentStep) => {
 <h3>📊 สรุปสถานะงานรายแผนก</h3>
 
 {/* 📋 Legend อธิบายสีของกราฟ */}
-<div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
+<div className="legend" style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
     <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
     <span>ผ่านแผนกนี้แล้ว</span>
@@ -621,7 +574,7 @@ const getStepKey = (currentStep) => {
     </thead>
 <tbody>
   {sortedJobs.map((job) => (
-    <tr key={job.id} onClick={() => setSelectedJob(job)}>
+    <tr key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
       <td>{job.customer || "–"}</td>
       <td>{job.po_number || "–"}</td>
       <td>{getBatchNoWH(job, 0)}</td>
