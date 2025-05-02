@@ -185,3 +185,20 @@ input::placeholder {
   cursor: pointer;
   /* ไม่จำเป็นต้องใส่ transition ที่นี่ ถ้าใส่ไว้ที่ tr แล้ว */
 }
+
+.pagination > li > a {
+  background-color: #f3f4f6 !important; /* เทาอ่อน */
+  color: #111827 !important;            /* สีเข้ม อ่านชัด */
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin: 2px;
+  font-weight: bold;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.pagination > li.selected > a {
+  background-color: #2563eb !important; /* น้ำเงิน */
+  color: white !important;
+}
