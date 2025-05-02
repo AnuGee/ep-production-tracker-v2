@@ -25,14 +25,3 @@
   cursor: pointer;
   font-weight: bold;
 }
-
-/* Light Mode */
-.header-title {
-  font-size: 22px;
-  color: #1f2937;
-}
-
-/* Dark Mode */
-body.dark-mode .header-title {
-  color: #f8fafc;
-}
