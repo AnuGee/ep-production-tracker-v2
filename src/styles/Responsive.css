@@ -186,19 +186,19 @@ input::placeholder {
   /* ไม่จำเป็นต้องใส่ transition ที่นี่ ถ้าใส่ไว้ที่ tr แล้ว */
 }
 
-.pagination > li > a {
-  background-color: #f3f4f6 !important; /* เทาอ่อน */
-  color: #111827 !important;            /* สีเข้ม อ่านชัด */
+.pagination li {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
   border-radius: 8px;
   padding: 6px 12px;
   margin: 2px;
   font-weight: bold;
-  text-decoration: none;
   border: none;
   cursor: pointer;
+  text-align: center;
 }
 
-.pagination > li.selected > a {
-  background-color: #2563eb !important; /* น้ำเงิน */
+.pagination li.selected {
+  background-color: #2563eb !important;
   color: white !important;
 }
