@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ NEW
 import { AuthProvider } from "./context/AuthContext";
 import { useEffect } from "react";
+import "./styles/Responsive.css";
 
 export default function App() {
   useEffect(() => {
