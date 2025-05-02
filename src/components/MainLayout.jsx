@@ -29,17 +29,3 @@ export default function MainLayout({ children }) {
         </div>
     );
 }
-
-/* EDIT BY DEEPSEEK */
-// ใน MainLayout.jsx
-const MainLayout = ({ children }) => {
-  return (
-    <div className="app-container">
-      <Header />
-      <main className="content-container">
-        {children}
-      </main>
-      {/* Footer ถ้ามี */}
-    </div>
-  );
-};
