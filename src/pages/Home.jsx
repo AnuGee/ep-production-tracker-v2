@@ -486,7 +486,9 @@ const getStepKey = (currentStep) => {
       </div>
 
       <hr style={{ margin: '2rem 0' }} />
-<h3 style={{ color: '#1f2937', fontSize: '1.5rem', backgroundColor: '#e0f2fe', padding: '0.5rem 1rem', borderRadius: '8px' }}>📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG</h3>
+<h3 className="total-volume">
+  📦 รวมยอดผลิตในเดือนนี้: {getTotalVolume().toLocaleString()} KG
+</h3>
 
       <hr style={{ margin: '2rem 0' }} />
 <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
