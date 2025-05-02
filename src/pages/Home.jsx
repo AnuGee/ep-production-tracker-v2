@@ -27,55 +27,6 @@ export default function Home() {
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
 
-useEffect(() => {
-  const style = document.createElement("style");
-  style.innerHTML = `
-    .job-table thead th {
-      position: sticky;
-      top: 0;
-      background-color: #f3f4f6;
-      z-index: 10;
-      text-align: left;
-      font-weight: bold;
-      border-bottom: 1px solid #ccc;
-      box-shadow: inset 0 -1px 0 #ddd;
-    }
-
-    .job-table thead th.sorted {
-      background-color: #fef9c3;
-    }
-
-    .job-table tbody tr:hover {
-      background-color: #f3f4f6;
-    }
-
-    .table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      max-height: 520px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    .job-table {
-      width: 100%;
-      min-width: 1000px;
-      border-collapse: collapse;
-      background-color: white;
-    }
-
-    .job-table th,
-    .job-table td {
-      white-space: nowrap;
-      padding: 12px 16px;
-      font-size: 14px;
-    }
-  `;
-  document.head.appendChild(style);
-  return () => document.head.removeChild(style);
-}, []);
-
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   const years = ["ทั้งหมด", "2025", "2026", "2027", "2028", "2029", "2030"];
