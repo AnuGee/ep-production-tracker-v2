@@ -194,3 +194,7 @@ body.dark-mode .total-volume {
 body.dark-mode .header-title {
   color: #f8fafc;
 }
+
+body.dark-mode .header-title {
+  color: #f8fafc !important;
+}
