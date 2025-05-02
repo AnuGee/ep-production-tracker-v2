@@ -445,7 +445,7 @@ const getStepKey = (currentStep) => {
 <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
 
 {/* 📋 Legend ความหมายสี Progress */}
-<div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem", marginTop: "1rem" }}>
+<div className="legend" style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem", marginTop: "1rem" }}>
   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
     <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
     <span>ผ่านแผนกนี้แล้ว</span>
@@ -497,7 +497,7 @@ const getStepKey = (currentStep) => {
 <h3>📊 สรุปสถานะงานรายแผนก</h3>
 
 {/* 📋 Legend อธิบายสีของกราฟ */}
-<div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
+<div className="legend" style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: "1rem" }}>
   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
     <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
     <span>ผ่านแผนกนี้แล้ว</span>
