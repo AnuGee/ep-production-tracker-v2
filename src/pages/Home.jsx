@@ -2,7 +2,7 @@
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
-import JobDetailModal from "./JobDetailModal";
+import JobDetailModal from "../components/JobDetailModal"; // ✅ Import modal
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -574,7 +574,7 @@ const getStepKey = (currentStep) => {
     </thead>
 <tbody>
   {sortedJobs.map((job) => (
-    <tr key={job.id} onClick={() => setSelectedJob(job)}>
+    <tr key={job.id} onClick={() => setSelectedJob(job)} style={{ cursor: "pointer" }}>
       <td>{job.customer || "–"}</td>
       <td>{job.po_number || "–"}</td>
       <td>{getBatchNoWH(job, 0)}</td>
