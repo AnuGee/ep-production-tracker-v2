@@ -30,8 +30,7 @@ export default function MainLayout({ children }) {
     );
 }
 
--------EDIT BY DEEPSEEK-------
-
+/* EDIT BY DEEPSEEK */
 // ใน MainLayout.jsx
 const MainLayout = ({ children }) => {
   return (
