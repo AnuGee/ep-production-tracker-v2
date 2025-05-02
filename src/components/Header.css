@@ -15,18 +15,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  justify-content: center;
 }
 
 .menu-button {
   padding: 10px 20px;
   border-radius: 8px;
   border: none;
-  background-color: #e5e7eb;
-  cursor: pointer;
+  background-color: #2563eb;
+  color: white;
   font-weight: bold;
+  cursor: pointer;
 }
 
-/* ✅ สีข้อความชัดเจน ไม่ขึ้นกับ Dark Mode */
 .header-title {
   font-size: 22px;
   font-weight: bold;
