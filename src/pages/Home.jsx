@@ -619,17 +619,14 @@ const getStepKey = (currentStep) => {
   ))}
 </tbody>
 
-  </table>
+</table>
 </div>
 
 {selectedJob && (
-  <div className="overlay" onClick={() => setSelectedJob(null)}>
-    <div className="modal" onClick={(e) => e.stopPropagation()}>
-      <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
-    </div>
-  </div>
+  <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
 )}
-      
-    </div>
+
+</div>
+
   );
 }
