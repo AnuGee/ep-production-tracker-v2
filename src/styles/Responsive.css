@@ -168,3 +168,18 @@ strong {
     color: #f1f5f9 !important;
   }
 }
+
+/* Light Mode */
+.total-volume {
+  background-color: #e0f2fe; /* ฟ้าอ่อน */
+  color: #1f2937; /* เทาเข้ม */
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+/* Dark Mode */
+body.dark-mode .total-volume {
+  background-color: #0f3d4c; /* ฟ้าน้ำทะเลเข้ม */
+  color: #e0f2fe; /* ฟ้าอ่อน */
+}
