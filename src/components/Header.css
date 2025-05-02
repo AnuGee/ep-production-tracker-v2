@@ -25,3 +25,22 @@
   cursor: pointer;
   font-weight: bold;
 }
+
+.header-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--header-title-color);
+}
+
+.login-info {
+  font-weight: bold;
+  color: var(--header-title-color);
+}
+
+/* ใช้ตัวแปรสีร่วมกับ Dark Mode */
+:root {
+  --header-title-color: #1f2937;
+}
+body.dark-mode {
+  --header-title-color: #f8fafc;
+}
