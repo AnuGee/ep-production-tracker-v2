@@ -1,4 +1,3 @@
-/* 🌐 Light Mode (Default) */
 body {
   background-color: #f9fafb;
   color: #111827;
@@ -98,97 +97,11 @@ strong {
   box-shadow: inset 0 -1px 0 #ddd;
 }
 
-/* ✅ Dark Mode */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #0f172a;
-    color: #f1f5f9;
-  }
-
-  .page-container,
-  .table-wrapper,
-  .job-table {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-  }
-
-  h1, h2, h3, h4, h5, h6,
-  .header-title,
-  .login-info,
-  label,
-  strong {
-    color: #f1f5f9 !important;
-  }
-
-  .job-table thead th {
-    background-color: #334155 !important;
-    color: #f1f5f9 !important;
-  }
-
-  .job-table td {
-    color: #f1f5f9 !important;
-  }
-
-  .job-table tbody tr:hover {
-    background-color: #475569 !important;
-    color: #f8fafc !important;
-  }
-
-  input, select, textarea {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-    border: 1px solid #64748b !important;
-  }
-
-  input::placeholder,
-  select option {
-    color: #cbd5e1 !important;
-  }
-
-  /* ✅ ปรับสีสำหรับ .monthly-summary */
-  .monthly-summary {
-    background-color: #0ea5e9 !important;
-    color: #f8fafc !important;
-  }
-
-  /* 📊 Bar Chart Text + Tooltip */
-  .recharts-text,
-  .recharts-cartesian-axis-tick-value,
-  .recharts-default-legend,
-  .chart-title,
-  .dashboard-header,
-  .dashboard-label {
-    fill: #f1f5f9 !important;
-    color: #f1f5f9 !important;
-  }
-
-  .recharts-tooltip-label,
-  .recharts-tooltip-item {
-    background-color: #1e293b !important;
-    color: #f1f5f9 !important;
-  }
-}
-
-/* Light Mode */
+/* 📦 รวมยอดผลิต */
 .total-volume {
-  background-color: #e0f2fe; /* ฟ้าอ่อน */
-  color: #1f2937; /* เทาเข้ม */
+  background-color: #e0f2fe;
+  color: #1f2937;
   font-size: 1.5rem;
   padding: 0.5rem 1rem;
   border-radius: 8px;
-}
-
-/* Dark Mode */
-body.dark-mode .total-volume {
-  background-color: #0f3d4c; /* ฟ้าน้ำทะเลเข้ม */
-  color: #e0f2fe; /* ฟ้าอ่อน */
-}
-
-/* ใช้ตัวแปร CSS เพื่อควบคุมสี */
-:root {
-  --header-title-color: #1f2937; /* Light mode */
-}
-
-body.dark-mode {
-  --header-title-color: #f8fafc; /* Dark mode */
 }
