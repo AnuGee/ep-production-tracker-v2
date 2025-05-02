@@ -53,13 +53,14 @@
   gap: 16px;
   margin: 30px 0;
 }
+
 .summary-card {
   background: #f3f4f6;
-  color: #111827; /* ✅ เพิ่มบรรทัดนี้ */
-  padding: 18px 20px;
-  border-radius: 10px;
-  font-size: 16px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  color: #111827;
+}
+
+.summary-card strong {
+  color: #111827;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -67,5 +68,8 @@
     background: #1f2937;
     color: #f9fafb;
   }
-}
 
+  .summary-card strong {
+    color: #f9fafb;
+  }
+}
