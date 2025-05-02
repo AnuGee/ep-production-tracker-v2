@@ -2,7 +2,7 @@
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
-import JobDetailModal from "../components/JobDetailModal"; // ✅ Import modal
+import JobDetailModal from "./JobDetailModal"; // ✅ ใช้ตัวใน pages/
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -623,11 +623,7 @@ const getStepKey = (currentStep) => {
 </div>
 
 {selectedJob && (
-  <div className="overlay" onClick={() => setSelectedJob(null)}>
-    <div className="modal" onClick={(e) => e.stopPropagation()}>
-      <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
-    </div>
-  </div>
+  <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
 )}
       
     </div>
