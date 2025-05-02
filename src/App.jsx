@@ -19,7 +19,6 @@ import "./styles/Responsive.css";
 
 export default function App() {
   useEffect(() => {
-    document.body.classList.add("dark-mode"); // ✅ ใส่ Dark Mode
   }, []);
 
 return (
