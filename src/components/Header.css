@@ -7,7 +7,7 @@
   background-color: #f3f4f6;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
-  margin-bottom: 1rem; /* ระยะห่างล่างพอดี */
+  margin-bottom: 1rem;
 }
 
 .menu-container {
@@ -26,10 +26,11 @@
   font-weight: bold;
 }
 
+/* ✅ สีข้อความชัดเจน ไม่ขึ้นกับ Dark Mode */
 .header-title {
   font-size: 22px;
   font-weight: bold;
-  color: #1f2937; /* เทาเข้ม อ่านชัดแน่นอน */
+  color: #1f2937;
 }
 
 .login-info {
