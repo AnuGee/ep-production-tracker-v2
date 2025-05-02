@@ -174,9 +174,18 @@ input::placeholder {
     transition: background-color 0.2s ease;
 }
 
-/* กำหนด background ให้ td ที่อยู่ใน tr ที่ hover */
+/* แก้ไข Hover effect ให้ทำงานอย่างถูกต้อง */
 .job-table tbody tr:hover td {
-  background-color: #eef2ff !important; /* ลองเปลี่ยนเป็นสีอื่นที่ชัดเจนขึ้น เช่น Indigo 50 */
+  background-color: #f3f4f6 !important;
+}
+
+/* เพิ่ม transition เพื่อให้การเปลี่ยนสีดูนุ่มนวลขึ้น */
+.job-table tbody tr td {
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* เพิ่ม style เพื่อให้แน่ใจว่า hover effect ทำงาน */
+.job-table tbody tr:hover {
+  background-color: #f3f4f6 !important;
   cursor: pointer;
-  /* ไม่จำเป็นต้องใส่ transition ที่นี่ ถ้าใส่ไว้ที่ tr แล้ว */
 }
