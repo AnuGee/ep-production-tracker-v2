@@ -182,3 +182,8 @@ input::placeholder {
 .job-table tbody tr:hover {
   background-color: #e5e7eb !important;
 }
+
+.job-table tbody tr:hover {
+  background-color: #e5e7eb !important;
+  cursor: pointer;
+}
