@@ -50,7 +50,7 @@ const getStatusColor = (step, job) => {
         <tbody>
           {jobs.map((job) => (
             <tr key={job.id}>
-              <td><span role="img" aria-label="doc">📄</span> {job.product_name}</td>
+              <td><span className="product-label"><span role="img" aria-label="doc">📄</span> {job.product_name}</span></td>
               {steps.map((step) => (
                 <td key={step}>
                   <div
