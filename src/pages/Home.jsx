@@ -540,17 +540,20 @@ export default function Home() {
                 <option value="All">ทั้งหมด</option>
             </select>
            <span>รายการ</span>
-           {itemsPerPageProgress !== "All" && Math.ceil(sortedJobs.length / itemsPerPageProgress) > 1 && ( // Show pagination buttons only if needed
-               <div style={{ marginLeft: 'auto' }}>
-                    {Array.from({ length: Math.ceil(sortedJobs.length / itemsPerPageProgress) }, (_, i) => (
-                      <button /* Pagination Button Styling */
-                         key={i} onClick={() => setCurrentPageProgress(i + 1)}
-                         disabled={currentPageProgress === (i + 1)}
-                         style={{ /* ... */ }}
-                      > {i + 1} </button>
-                    ))}
-               </div>
-            )}
+           {itemsPerPageProgress !== "All" && Math.ceil(sortedJobs.length / itemsPerPageProgress) > 1 && (
+  <div className="pagination" style={{ marginLeft: 'auto' }}>
+    {Array.from({ length: Math.ceil(sortedJobs.length / itemsPerPageProgress) }, (_, i) => (
+      <button
+        key={i}
+        onClick={() => setCurrentPageProgress(i + 1)}
+        disabled={currentPageProgress === (i + 1)}
+        className="pagination-button"
+      >
+        {i + 1}
+      </button>
+    ))}
+  </div>
+)}
        </div>
 
 
