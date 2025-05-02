@@ -173,4 +173,6 @@ input::placeholder {
   background-color: #e5e7eb !important;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  z-index: 1;
 }
+
