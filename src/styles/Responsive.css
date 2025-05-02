@@ -186,19 +186,52 @@ input::placeholder {
   /* ไม่จำเป็นต้องใส่ transition ที่นี่ ถ้าใส่ไว้ที่ tr แล้ว */
 }
 
-.pagination li {
-  background-color: #f3f4f6 !important;
-  color: #111827 !important;
-  border-radius: 8px;
-  padding: 6px 12px;
-  margin: 2px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  text-align: center;
+/* เพิ่ม这部分ที่ท้ายไฟล์ Responsive.css */
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.pagination li.selected {
-  background-color: #2563eb !important;
-  color: white !important;
+.pagination button {
+  background-color: #f3f4f6;
+  color: #111827;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-weight: bold;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pagination button:hover {
+  background-color: #e5e7eb;
+}
+
+.pagination button:disabled {
+  background-color: #2563eb;
+  color: white;
+  cursor: default;
+}
+
+/* สำหรับ dark mode (ถ้ามี) */
+@media (prefers-color-scheme: dark) {
+  .pagination button {
+    background-color: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+  }
+  
+  .pagination button:hover {
+    background-color: #4b5563;
+  }
+  
+  .pagination button:disabled {
+    background-color: #2563eb;
+    color: white;
+  }
 }
