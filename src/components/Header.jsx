@@ -30,7 +30,7 @@ export default function Header() {
       {/* Logo + System Name */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         <img src="/logo_ep.png" alt="Logo" style={{ height: 50 }} />
-<strong className="header-title">
+<strong className="header-title" style={{ color: "#1f2937", fontSize: "22px", fontWeight: "bold" }}>
   ระบบติดตามสถานะงาน
 </strong>
       </div>
@@ -71,7 +71,7 @@ export default function Header() {
       <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         {user ? (
           <>
-            <span className="login-info">
+            <span style={{ fontWeight: "bold", textAlign: "center", color: "#1f2937" }}>
   👤 เข้าสู่ระบบในชื่อ: {user.email} (สิทธิ์: {role})
 </span>
             <button
