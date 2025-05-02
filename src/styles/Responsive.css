@@ -154,13 +154,6 @@ input::placeholder {
   font-size: 14px;
 }
 
-/* ✅ ตาราง Hover Highlight */
-.job-table tbody tr:hover {
-  background-color: #e5e7eb !important;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
 /* ✅ Legend สีของ Progress + Chart */
 .legend,
 .legend span,
@@ -174,4 +167,10 @@ input::placeholder {
   color: #1f2937 !important;
   font-weight: bold;
   font-size: 14px;
+}
+
+.job-table tbody tr:hover {
+  background-color: #e5e7eb !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
