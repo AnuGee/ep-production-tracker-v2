@@ -235,32 +235,3 @@ input::placeholder {
     color: white;
   }
 }
-
-.summary-cards-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin: 1.5rem 0;
-  justify-content: center;
-}
-
-.summary-card {
-  background-color: #f3f4f6; /* เทาอ่อน */
-  color: #111827; /* เทาเข้ม */
-  padding: 1rem 1.5rem;
-  border-radius: 16px;
-  font-weight: bold;
-  font-size: 16px;
-  min-width: 180px;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: background-color 0.2s;
-}
-
-/* ✅ ถ้าอยากรองรับ Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .summary-card {
-    background-color: #1f2937; /* เทาเข้ม */
-    color: #f9fafb; /* ขาว */
-  }
-}
