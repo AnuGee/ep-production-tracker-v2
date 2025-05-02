@@ -2,7 +2,7 @@
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 import React, { useEffect, useState } from "react";
 import ProgressBoard from "./ProgressBoard";
-import JobDetailModal from "../components/JobDetailModal"; // ✅ Import modal
+import JobDetailModal from "../JobDetailModal"; // ✅ Import modal
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
