@@ -304,9 +304,12 @@ input::placeholder {
   justify-content: center; /* เพิ่มบรรทัดนี้เพื่อให้ข้อความอยู่ตรงกลางแนวนอนด้วย */
   gap: 8px;
 }
+
 .button-container {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  /* คุณอาจต้องการเพิ่ม align-items: center; ที่นี่ด้วย ถ้าปุ่มยังไม่ตรงแนวตั้ง */
+  margin-top: 1rem; /* รักษา margin ด้านบน */
 }
+
+.submit-btn,
+.cancel-btn {
+  display: block; /* เปลี่ยนจาก flex เป็น block */
+  width: 100%; /* ทำให้ปุ่มกว้างเต็มพื้นที่ */
