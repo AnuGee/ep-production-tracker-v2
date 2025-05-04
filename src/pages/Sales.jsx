@@ -57,7 +57,13 @@ export default function Sales() {
             handleFinalSubmit();
             toast.dismiss(t.id);
           }}>✅ ยืนยันการบันทึก</button>
-          <button className="clear-button" onClick={() => toast.dismiss(t.id)}>❌ ยกเลิก</button>
+          <button
+  className="cancel-btn"
+  onClick={() => toast.dismiss(t.id)}
+>
+  ❌ ยกเลิก
+</button>
+
         </div>
       </div>
     ));
