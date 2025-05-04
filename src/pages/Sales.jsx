@@ -32,40 +32,19 @@ export default function Sales() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const { product_name, volume, customer, delivery_date } = form;
+const handleSubmit = (e) => {
+  e.preventDefault();
+  const { product_name, volume, customer, delivery_date } = form;
 
-    if (!product_name || !volume || !customer || !delivery_date) {
-      toast.error("❌ กรุณากรอกข้อมูลให้ครบทุกช่อง");
-      return;
-    }
+  if (!product_name || !volume || !customer || !delivery_date) {
+    toast.error("❌ กรุณากรอกข้อมูลให้ครบทุกช่อง");
+    return;
+  }
 
-toast.custom((t) => (
-  <div className="custom-toast-confirm">
-    <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-    <ul>
-      <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
-      <li><strong>Product Name:</strong> {form.product_name}</li>
-      <li><strong>Volume (KG.):</strong> {form.volume}</li>
-      <li><strong>Customer:</strong> {form.customer}</li>
-      <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
-      {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
-    </ul>
-    <div className="button-row">
-      <button className="submit-btn" onClick={() => {
-        handleFinalSubmit();
-        toast.dismiss(t.id);
-      }}>
-        ✅ ยืนยันการบันทึก
-      </button>
-      <button className="cancel-btn" onClick={() => toast.dismiss(t.id)}>
-        ❌ ยกเลิก
-      </button>
-    </div>
-  </div>
-));
-  };
+  // ✅ เปิด popup modal ยืนยันข้อมูล
+  setShowConfirm(true);
+};
+};
 
   const handleFinalSubmit = async () => {
     const { po_date, po_number, product_name, volume, customer, delivery_date, remark } = form;
@@ -168,6 +147,32 @@ toast.custom((t) => (
           </button>
         </div>
       </form>
+      {showConfirm && (
+  <div className="modal-backdrop" onClick={() => setShowConfirm(false)}>
+    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
+      <ul>
+        <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
+        <li><strong>Product Name:</strong> {form.product_name}</li>
+        <li><strong>Volume (KG.):</strong> {form.volume}</li>
+        <li><strong>Customer:</strong> {form.customer}</li>
+        <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
+        {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
+      </ul>
+      <div className="button-row">
+        <button className="submit-btn" onClick={() => {
+          handleFinalSubmit();
+          setShowConfirm(false);
+        }}>
+          ✅ ยืนยันการบันทึก
+        </button>
+        <button className="cancel-btn" onClick={() => setShowConfirm(false)}>
+          ❌ ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
