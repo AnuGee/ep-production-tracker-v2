@@ -107,10 +107,40 @@ export default function QC() {
     }
   };
 
+  const renderModal = ({ title, items, onConfirm, onCancel }) => (
+    <div className="overlay" onClick={onCancel}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>{title}</h3>
+        <ul style={{ marginTop: "10px" }}>
+          {items.map((item, idx) => (
+            <li key={idx}><strong>{item.label}</strong> {item.value}</li>
+          ))}
+        </ul>
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          <button className="submit-btn" onClick={onConfirm}>✅ ยืนยันการบันทึก</button>
+          <button
+            className="cancel-btn"
+            onClick={onCancel}
+            style={{
+              backgroundColor: "#dc2626",
+              color: "white",
+              padding: "10px 16px",
+              fontSize: "16px",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >❌ ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="page-container">
       <h2>🧬 <strong>QC - ตรวจสอบสินค้าและเอกสาร COA</strong></h2>
 
+      {/* 🔍 ตรวจสอบสินค้า */}
       <form onSubmit={handleInspectionSubmit} className="form-grid">
         <h3>🔍 ตรวจสอบสินค้า</h3>
         <div className="full-span">
@@ -121,17 +151,15 @@ export default function QC() {
             className="input-box"
           >
             <option value="">-- เลือกงาน --</option>
-            {jobs
-  .filter((job) =>
-    job.currentStep === "QC" &&
-    job.waiting_for === "Inspection" &&
-    job.status?.qc_inspection !== "skip"
-  )
-              .map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-                </option>
-              ))}
+            {jobs.filter((job) =>
+              job.currentStep === "QC" &&
+              job.waiting_for === "Inspection" &&
+              job.status?.qc_inspection !== "skip"
+            ).map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -165,54 +193,45 @@ export default function QC() {
         </button>
       </form>
 
-      {showConfirmInspection && (
-        <div className="overlay" onClick={() => setShowConfirmInspection(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul>
-              <li><strong>สถานะการตรวจสอบ:</strong> {inspectionStatus}</li>
-              {inspectionRemark && <li><strong>หมายเหตุ:</strong> {inspectionRemark}</li>}
-            </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button className="submit-btn" onClick={handleFinalInspectionSubmit}>✅ ยืนยันการบันทึก</button>
-              <button className="clear-button" onClick={() => setShowConfirmInspection(false)}>❌ ยกเลิก</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showConfirmInspection && renderModal({
+        title: "📋 ยืนยันข้อมูลก่อนบันทึก",
+        items: [
+          { label: "สถานะการตรวจสอบ:", value: inspectionStatus },
+          ...(inspectionRemark ? [{ label: "หมายเหตุ:", value: inspectionRemark }] : [])
+        ],
+        onConfirm: handleFinalInspectionSubmit,
+        onCancel: () => setShowConfirmInspection(false),
+      })}
 
       <hr style={{ margin: "2rem 0" }} />
 
+      {/* 📄 เตรียม COA */}
       <form onSubmit={handleCoaSubmit} className="form-grid">
         <h3>📄 เตรียมเอกสาร COA</h3>
-<div className="full-span">
-  <label>📋 เลือกรายการ</label>
-  <select
-    value={selectedCoaJobId}
-    onChange={(e) => setSelectedCoaJobId(e.target.value)}
-    className="input-box"
-    disabled={
-      jobs.filter(
-        (job) =>
-          job.currentStep === "QC" &&
-          (job.waiting_for === "COA" || job.status?.qc_inspection === "skip")
-      ).length === 0
-    }
-  >
-    <option value="">-- เลือกรายการ --</option>
-    {jobs
-      .filter(
-        (job) =>
-          job.currentStep === "QC" &&
-          (job.waiting_for === "COA" || job.status?.qc_inspection === "skip")
-      )
-      .map((job) => (
-        <option key={job.id} value={job.id}>
-          {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-        </option>
-      ))}
-  </select>
-</div>
+        <div className="full-span">
+          <label>📋 เลือกรายการ</label>
+          <select
+            value={selectedCoaJobId}
+            onChange={(e) => setSelectedCoaJobId(e.target.value)}
+            className="input-box"
+            disabled={
+              jobs.filter(job =>
+                job.currentStep === "QC" &&
+                (job.waiting_for === "COA" || job.status?.qc_inspection === "skip")
+              ).length === 0
+            }
+          >
+            <option value="">-- เลือกรายการ --</option>
+            {jobs.filter(job =>
+              job.currentStep === "QC" &&
+              (job.waiting_for === "COA" || job.status?.qc_inspection === "skip")
+            ).map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div>
           <label>📄 สถานะ COA</label>
@@ -244,21 +263,15 @@ export default function QC() {
         </button>
       </form>
 
-      {showConfirmCoa && (
-        <div className="overlay" onClick={() => setShowConfirmCoa(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul>
-              <li><strong>สถานะ COA:</strong> {coaStatus}</li>
-              {coaRemark && <li><strong>หมายเหตุ:</strong> {coaRemark}</li>}
-            </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button className="submit-btn" onClick={handleFinalCoaSubmit}>✅ ยืนยันการบันทึก</button>
-              <button className="clear-button" onClick={() => setShowConfirmCoa(false)}>❌ ยกเลิก</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showConfirmCoa && renderModal({
+        title: "📋 ยืนยันข้อมูลก่อนบันทึก",
+        items: [
+          { label: "สถานะ COA:", value: coaStatus },
+          ...(coaRemark ? [{ label: "หมายเหตุ:", value: coaRemark }] : [])
+        ],
+        onConfirm: handleFinalCoaSubmit,
+        onCancel: () => setShowConfirmCoa(false),
+      })}
     </div>
   );
 }
