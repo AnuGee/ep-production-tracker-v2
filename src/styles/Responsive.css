@@ -256,19 +256,48 @@ input::placeholder {
 .modal-content {
   background: white;
   padding: 1.5rem;
-  border-radius: 10px;
+  border-radius: 12px;
   width: 100%;
-  max-width: 450px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-width: 480px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.submit-btn {
+  background-color: #2563eb; /* Blue */
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .cancel-btn {
-  background-color: #ef4444;
+  background-color: #f97316; /* Orange, not red */
   color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
   font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
   cursor: pointer;
-  height: 40px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
