@@ -8,6 +8,7 @@ import "../styles/Responsive.css";
 export default function Warehouse() {
   const [jobs, setJobs] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
   const [form, setForm] = useState({
     stock: "",
     step: "",
@@ -16,7 +17,6 @@ export default function Warehouse() {
     batch_no_wh3: "",
     remark: "",
   });
-  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     fetchJobs();
@@ -35,7 +35,14 @@ export default function Warehouse() {
 
   const handleSelectJob = (e) => {
     setSelectedJobId(e.target.value);
-    setForm({ stock: "", step: "", batch_no_wh1: "", batch_no_wh2: "", batch_no_wh3: "", remark: "" });
+    setForm({
+      stock: "",
+      step: "",
+      batch_no_wh1: "",
+      batch_no_wh2: "",
+      batch_no_wh3: "",
+      remark: "",
+    });
   };
 
   const handleSubmit = (e) => {
@@ -47,45 +54,52 @@ export default function Warehouse() {
     setShowConfirm(true);
   };
 
-const handleFinalSubmit = async () => {
-  const jobRef = doc(db, "production_workflow", selectedJobId);
+  const handleFinalSubmit = async () => {
+    const jobRef = doc(db, "production_workflow", selectedJobId);
 
-  let nextStep = "Warehouse";
-  let statusUpdate = { warehouse: form.step || "ยังไม่เบิก" };
+    let nextStep = "Warehouse";
+    let statusUpdate = { warehouse: form.step || "ยังไม่เบิก" };
 
-  if (form.stock === "มีครบตามจำนวน") {
-    nextStep = "QC";
-    statusUpdate = {
-      warehouse: "",
-      qc_inspection: "skip",
-      qc_coa: "ยังไม่เตรียม",
+    if (form.stock === "มีครบตามจำนวน") {
+      nextStep = "QC";
+      statusUpdate = {
+        warehouse: "",
+        qc_inspection: "skip",
+        qc_coa: "ยังไม่เตรียม",
+      };
+    } else if (form.step === "เบิกเสร็จ") {
+      nextStep = "Production";
+    }
+
+    const updates = {
+      status: statusUpdate,
+      currentStep: nextStep,
+      batch_no_warehouse: [form.batch_no_wh1, form.batch_no_wh2, form.batch_no_wh3].filter(Boolean),
+      remarks: {
+        warehouse: form.remark || "",
+      },
+      Timestamp_Warehouse: new Date().toISOString(),
     };
-  } else if (form.step === "เบิกเสร็จ") {
-    nextStep = "Production";
-  }
 
-  const updates = {
-    status: statusUpdate,
-    currentStep: nextStep,
-    batch_no_warehouse: [form.batch_no_wh1, form.batch_no_wh2, form.batch_no_wh3].filter(Boolean),
-    remarks: {
-      warehouse: form.remark || "",
-    },
-    Timestamp_Warehouse: new Date().toISOString(),
+    try {
+      await updateDoc(jobRef, updates);
+      toast.success("✅ อัปเดตสำเร็จ และส่งงานต่อเรียบร้อย");
+      fetchJobs();
+      setSelectedJobId("");
+      setForm({
+        stock: "",
+        step: "",
+        batch_no_wh1: "",
+        batch_no_wh2: "",
+        batch_no_wh3: "",
+        remark: "",
+      });
+      setShowConfirm(false);
+    } catch (error) {
+      toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
+      setShowConfirm(false);
+    }
   };
-
-  try {
-    await updateDoc(jobRef, updates);
-    toast.success("✅ อัปเดตสำเร็จ และส่งงานต่อเรียบร้อย");
-    fetchJobs();
-    setSelectedJobId("");
-    setForm({ stock: "", step: "", batch_no_wh1: "", batch_no_wh2: "", batch_no_wh3: "", remark: "" });
-    setShowConfirm(false);
-  } catch (error) {
-    toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
-    setShowConfirm(false);
-  }
-};
 
   return (
     <div className="page-container">
@@ -154,26 +168,22 @@ const handleFinalSubmit = async () => {
       </form>
 
       {showConfirm && (
-        <div className="overlay" onClick={() => setShowConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul>
+            <ul style={{ textAlign: "left", marginTop: "10px" }}>
               <li><strong>สต๊อกสินค้า:</strong> {form.stock}</li>
               {form.stock !== "มีครบตามจำนวน" && (
                 <li><strong>สถานะ:</strong> {form.step || "–"}</li>
               )}
-              {(form.batch_no_wh1 || form.batch_no_wh2 || form.batch_no_wh3) && (
-                <>
-                  {form.batch_no_wh1 && <li><strong>Batch No WH1:</strong> {form.batch_no_wh1}</li>}
-                  {form.batch_no_wh2 && <li><strong>Batch No WH2:</strong> {form.batch_no_wh2}</li>}
-                  {form.batch_no_wh3 && <li><strong>Batch No WH3:</strong> {form.batch_no_wh3}</li>}
-                </>
-              )}
+              {form.batch_no_wh1 && <li><strong>Batch No WH1:</strong> {form.batch_no_wh1}</li>}
+              {form.batch_no_wh2 && <li><strong>Batch No WH2:</strong> {form.batch_no_wh2}</li>}
+              {form.batch_no_wh3 && <li><strong>Batch No WH3:</strong> {form.batch_no_wh3}</li>}
               {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
             </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", justifyContent: "center" }}>
               <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยันการบันทึก</button>
-              <button className="clear-button" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
+              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
             </div>
           </div>
         </div>
