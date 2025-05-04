@@ -1,7 +1,7 @@
 // src/pages/Account.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import { collection, doc, getDocs, updateDoc, serverTimestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
@@ -19,91 +19,117 @@ export default function Account() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setJobs(data.filter((job) => job.currentStep === "Account"));
+    const filtered = data.filter((job) => job.currentStep === "Account");
+    setJobs(filtered);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedJobId || !accountStatus) {
-      toast.error("❌ กรุณาเลือกงานและกรอกสถานะ");
+      toast.error("❌ กรุณาเลือกงานและสถานะ");
       return;
     }
-    setShowConfirm(true);
+    setShowConfirm(true); // เปิด popup ยืนยัน
   };
 
   const handleFinalSubmit = async () => {
-    const jobRef = doc(db, "production_workflow", selectedJobId);
-    const updates = {
-      status: { account: accountStatus },
-      remarks: { account: remark || "" },
-      Timestamp_Account: new Date().toISOString(),
-    };
-
-    if (accountStatus === "Invoice ออกแล้ว") {
-      updates.currentStep = "Completed";
-    }
-
     try {
-      await updateDoc(jobRef, updates);
-      toast.success("✅ อัปเดตสถานะบัญชีสำเร็จ");
-      fetchJobs();
+      const jobRef = doc(db, "production_workflow", selectedJobId);
+      await updateDoc(jobRef, {
+        "status.account": accountStatus,
+        "remarks.account": remark || "",
+        currentStep: accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
+        Timestamp_Account: serverTimestamp(),
+        audit_logs: [
+          ...jobs.find((j) => j.id === selectedJobId)?.audit_logs || [],
+          {
+            step: "Account",
+            field: "status.account",
+            value: accountStatus,
+            remark: remark || "",
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      });
+      toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
       setSelectedJobId("");
       setAccountStatus("");
       setRemark("");
       setShowConfirm(false);
+      fetchJobs();
     } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
-      setShowConfirm(false);
+      toast.error("❌ เกิดข้อผิดพลาด");
     }
   };
 
   return (
     <div className="page-container">
-      <h2>💰 <strong>Account - อัปเดตข้อมูลสถานะบัญชี</strong></h2>
+      <h2>💰 <strong>Account - บันทึกสถานะใบแจ้งหนี้</strong></h2>
 
       <form onSubmit={handleSubmit} className="form-grid">
-        <div className="full-span">
-          <label>📋 เลือกรายการ</label>
-          <select value={selectedJobId} onChange={(e) => setSelectedJobId(e.target.value)} className="input-box">
+        <div className="form-group">
+          <label>📦 <strong>เลือกงาน</strong></label>
+          <select
+            value={selectedJobId}
+            onChange={(e) => setSelectedJobId(e.target.value)}
+            className="input-box"
+          >
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
+                {job.product_name} | ลูกค้า: {job.customer}
               </option>
             ))}
           </select>
         </div>
 
-        <div>
-          <label>📄 สถานะใบแจ้งหนี้</label>
-          <select value={accountStatus} onChange={(e) => setAccountStatus(e.target.value)} className="input-box">
+        <div className="form-group">
+          <label>📄 <strong>สถานะใบแจ้งหนี้</strong></label>
+          <select
+            value={accountStatus}
+            onChange={(e) => setAccountStatus(e.target.value)}
+            className="input-box"
+          >
             <option value="">-- เลือกสถานะ --</option>
             <option value="Invoice ยังไม่ออก">Invoice ยังไม่ออก</option>
             <option value="Invoice ออกแล้ว">Invoice ออกแล้ว</option>
           </select>
         </div>
 
-        <div className="full-span">
-          <label>📝 หมายเหตุ (ถ้ามี)</label>
-          <input type="text" value={remark} onChange={(e) => setRemark(e.target.value)} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
+        <div className="form-group full-span">
+          <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
+          <input
+            type="text"
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            className="input-box"
+            placeholder="ระบุหมายเหตุหากมี"
+          />
         </div>
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกข้อมูล Account
-        </button>
+        <div className="full-span" style={{ marginTop: "1rem" }}>
+          <button type="submit" className="submit-btn">
+            ✅ บันทึกข้อมูล
+          </button>
+        </div>
       </form>
 
+      {/* ✅ Modal ยืนยันก่อนบันทึก */}
       {showConfirm && (
-        <div className="overlay" onClick={() => setShowConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul>
+        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>📋 <strong>ยืนยันข้อมูลก่อนบันทึก</strong></h3>
+            <ul style={{ textAlign: "left", marginTop: "10px" }}>
               <li><strong>สถานะใบแจ้งหนี้:</strong> {accountStatus}</li>
               {remark && <li><strong>หมายเหตุ:</strong> {remark}</li>}
             </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยันการบันทึก</button>
-              <button className="clear-button" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
+            <div className="button-row">
+              <button className="submit-btn" onClick={handleFinalSubmit}>
+                ✅ ยืนยันการบันทึก
+              </button>
+              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>
+                ❌ ยกเลิก
+              </button>
             </div>
           </div>
         </div>
