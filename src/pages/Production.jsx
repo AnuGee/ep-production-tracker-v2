@@ -62,12 +62,12 @@ export default function Production() {
 
     if (form.production_status === "รอผลตรวจ") {
       updates.currentStep = "QC";
-      updates.waiting_for = "Inspection"; // ✅ ส่งไปตรวจสอบสินค้า
+      updates.waiting_for = "Inspection";
     } else if (form.production_status === "ผลิตเสร็จ") {
       updates.currentStep = "QC";
-      updates.waiting_for = "COA"; // ✅ ส่งไปหมวดเตรียมเอกสาร COA
+      updates.waiting_for = "COA";
     } else {
-      updates.currentStep = "Production"; // กำลังผลิต/กำลังบรรจุ
+      updates.currentStep = "Production";
     }
 
     try {
@@ -151,9 +151,9 @@ export default function Production() {
               <li><strong>สถานะการผลิต:</strong> {form.production_status}</li>
               {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
             </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+            <div className="button-row">
               <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยันการบันทึก</button>
-              <button className="clear-button" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
+              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
             </div>
           </div>
         </div>
