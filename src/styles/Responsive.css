@@ -240,66 +240,59 @@ input::placeholder {
   margin-top: 12px;
 }
 
-/* ✅ กล่อง Toast ตรงกลางจอ */
+/* แก้ popup ให้อยู่กลางจอ */
 .custom-toast-confirm {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: white;
   padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 9999 !important;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
   width: 90%;
-  max-width: 450px;
+  max-width: 500px;
+  z-index: 9999;
   text-align: center;
 }
 
-/* ✅ จัดข้อความใน list ชัดเจน */
-.custom-toast-confirm ul {
-  margin-top: 1rem;
-  text-align: left;
-  padding-left: 1.25rem;
-}
-
-/* ✅ ปุ่มน้ำเงิน */
-.custom-toast-confirm .submit-btn {
+/* ปุ่มยืนยัน */
+.submit-btn {
   background-color: #2563eb;
   color: white;
+  padding: 12px 20px;
   border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-weight: bold;
+  border-radius: 8px;
+  flex: 1;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  flex: 1;
 }
 
-/* ✅ ปุ่มแดง */
-.custom-toast-confirm .cancel-btn {
+/* ปุ่มยกเลิก */
+.cancel-btn {
   background-color: #ef4444;
   color: white;
+  padding: 12px 20px;
   border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
-  font-weight: bold;
+  border-radius: 8px;
+  flex: 1;
+  font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  flex: 1;
 }
 
-.custom-toast-confirm .cancel-btn:hover {
-  background-color: #dc2626;
+/* ให้ไอคอนข้างในปุ่มเด่นชัด */
+.cancel-btn svg,
+.cancel-btn span {
+  color: white !important;
 }
 
-/* ✅ ปุ่ม container */
-.custom-toast-confirm .button-row {
+/* แถวปุ่ม */
+.button-row {
   display: flex;
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
