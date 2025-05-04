@@ -1,4 +1,3 @@
-// src/pages/Sales.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore";
@@ -17,7 +16,6 @@ export default function Sales() {
   });
 
   const [jobs, setJobs] = useState([]);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     fetchJobs();
@@ -42,7 +40,27 @@ export default function Sales() {
       toast.error("❌ กรุณากรอกข้อมูลให้ครบทุกช่อง");
       return;
     }
-    setShowConfirm(true);
+
+    toast.custom((t) => (
+      <div className="custom-toast-confirm">
+        <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
+        <ul style={{ textAlign: "left", marginTop: "10px" }}>
+          <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
+          <li><strong>Product Name:</strong> {form.product_name}</li>
+          <li><strong>Volume (KG.):</strong> {form.volume}</li>
+          <li><strong>Customer:</strong> {form.customer}</li>
+          <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
+          {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
+        </ul>
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          <button className="submit-btn" onClick={() => {
+            handleFinalSubmit();
+            toast.dismiss(t.id);
+          }}>✅ ยืนยันการบันทึก</button>
+          <button className="clear-button" onClick={() => toast.dismiss(t.id)}>❌ ยกเลิก</button>
+        </div>
+      </div>
+    ));
   };
 
   const handleFinalSubmit = async () => {
@@ -95,10 +113,8 @@ export default function Sales() {
         remark: "",
       });
       fetchJobs();
-      setShowConfirm(false);
     } catch (error) {
       toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
-      setShowConfirm(false);
     }
   };
 
@@ -107,65 +123,47 @@ export default function Sales() {
       <h2>📝 <strong>Sales - กรอกข้อมูลเริ่มต้น</strong></h2>
 
       <form onSubmit={handleSubmit} className="form-grid">
-        <div>
+        <div className="form-group">
           <label>📅 <strong>PO Date</strong></label>
           <input type="date" name="po_date" value={form.po_date} onChange={handleChange} className="input-box" disabled />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>📄 <strong>PO Number</strong></label>
           <input type="text" name="po_number" value={form.po_number} onChange={handleChange} className="input-box" />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>📦 <strong>Product Name</strong></label>
           <input type="text" name="product_name" value={form.product_name} onChange={handleChange} className="input-box" />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>⚖️ <strong>Volume (KG.)</strong></label>
           <input type="number" name="volume" value={form.volume} onChange={handleChange} className="input-box" />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>🧑‍💼 <strong>Customer Name</strong></label>
           <input type="text" name="customer" value={form.customer} onChange={handleChange} className="input-box" />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>🚚 <strong>Delivery Date</strong></label>
           <input type="date" name="delivery_date" value={form.delivery_date} onChange={handleChange} className="input-box" />
         </div>
 
-        <div className="full-span">
+        <div className="form-group full-span">
           <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
           <input type="text" name="remark" value={form.remark} onChange={handleChange} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
         </div>
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกข้อมูล และส่งต่อไปยัง Warehouse
-        </button>
-      </form>
-
-      {showConfirm && (
-        <div className="overlay" onClick={() => setShowConfirm(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul>
-              <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
-              <li><strong>Product Name:</strong> {form.product_name}</li>
-              <li><strong>Volume (KG.):</strong> {form.volume}</li>
-              <li><strong>Customer:</strong> {form.customer}</li>
-              <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
-              {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
-            </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยันการบันทึก</button>
-              <button className="clear-button" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
-            </div>
-          </div>
+        <div className="full-span" style={{ marginTop: "1rem" }}>
+          <button type="submit" className="submit-btn">
+            ✅ บันทึกข้อมูล และส่งต่อไปยัง Warehouse
+          </button>
         </div>
-      )}
+      </form>
     </div>
   );
 }
