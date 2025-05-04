@@ -161,14 +161,14 @@ export default function Sales() {
               <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
               {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
             </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button className="submit-btn" onClick={handleFinalSubmit}>
-                ✅ ยืนยันการบันทึก
-              </button>
-              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>
-                ❌ ยกเลิก
-              </button>
-            </div>
+            <div className="button-container">
+  <button className="submit-btn" onClick={handleFinalSubmit}>
+    ✅ ยืนยันการบันทึก
+  </button>
+  <button className="cancel-btn" onClick={() => setShowConfirm(false)}>
+    ❌ ยกเลิก
+  </button>
+</div>
           </div>
         </div>
       )}
