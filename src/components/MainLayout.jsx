@@ -2,6 +2,7 @@
 import "../styles/AppTheme.css";
 import React from "react";
 import Header from "./Header";
+import { Toaster } from "react-hot-toast"; // ✅ เพิ่มตรงนี้
 
 export default function MainLayout({ children }) {
     return (
