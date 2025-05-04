@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { db, timestamp } from "../firebase";
+import { db } from "../firebase";
 import {
   collection,
   getDocs,
-  updateDoc,
   doc,
+  updateDoc,
   serverTimestamp,
-  arrayUnion,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
+import "../styles/Responsive.css";
 
 export default function Production() {
   const [jobs, setJobs] = useState([]);
@@ -19,121 +19,139 @@ export default function Production() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      const querySnapshot = await getDocs(collection(db, "production_workflow"));
-      const data = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const filtered = data.filter((job) => job.currentStep === "Production");
-      setJobs(filtered);
-    };
-
     fetchJobs();
   }, []);
+
+  const fetchJobs = async () => {
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const filtered = data.filter((job) =>
+      ["Production", "QC", "Account"].includes(job.currentStep)
+    );
+    setJobs(filtered);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedJobId || !batchNo || !productionStatus) {
-      toast.error("❌ กรุณากรอกข้อมูลให้ครบถ้วน");
+      toast.error("❌ กรุณากรอกข้อมูลให้ครบ");
       return;
     }
-    setShowConfirm(true); // ✅ เปิด popup modal ยืนยัน
+    setShowConfirm(true); // เปิด popup ยืนยัน
   };
 
   const handleFinalSubmit = async () => {
     try {
       const jobRef = doc(db, "production_workflow", selectedJobId);
 
-      let newStep = "Production";
-      if (productionStatus === "รอผลตรวจ") newStep = "QC";
-      if (productionStatus === "ผลิตเสร็จ") newStep = "Account";
+      let nextStep = "Production";
+      if (productionStatus === "รอผลตรวจ") nextStep = "QC";
+      else if (productionStatus === "ผลิตเสร็จ") nextStep = "Account";
 
       await updateDoc(jobRef, {
         batch_no: batchNo,
-        production_status: productionStatus,
-        production_remark: remark,
-        currentStep: newStep,
-        lastUpdated: serverTimestamp(),
-        audit_logs: arrayUnion({
-          step: "Production",
-          field: "production_status",
-          value: productionStatus,
-          timestamp: timestamp(),
-        }),
+        "status.production": productionStatus,
+        "remarks.production": remark,
+        currentStep: nextStep,
+        Timestamp_Production: serverTimestamp(),
       });
 
-      toast.success("✅ อัปเดตข้อมูลเรียบร้อยแล้ว");
+      await updateDoc(jobRef, {
+        audit_logs: [
+          ...jobs.find((job) => job.id === selectedJobId)?.audit_logs || [],
+          {
+            step: "Production",
+            field: "status.production",
+            value: productionStatus,
+            remark,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      });
+
+      toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
       setSelectedJobId("");
       setBatchNo("");
       setProductionStatus("");
       setRemark("");
       setShowConfirm(false);
+      fetchJobs();
     } catch (error) {
-      console.error("Error updating document: ", error);
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      toast.error("❌ เกิดข้อผิดพลาด");
     }
   };
 
   return (
     <div className="page-container">
       <h2>🧪 <strong>Production - อัปเดตข้อมูลการผลิต</strong></h2>
-      <form onSubmit={handleSubmit}>
-        <label>เลือกการรายการ</label>
-        <select
-          value={selectedJobId}
-          onChange={(e) => setSelectedJobId(e.target.value)}
-          required
-        >
-          <option value="">-- เลือกงาน --</option>
-          {jobs.map((job) => (
-            <option key={job.id} value={job.id}>
-              {job.po_number} - {job.product_name} - {job.customer}
-            </option>
-          ))}
-        </select>
 
-        <label>📘 Batch No</label>
-        <input
-          type="text"
-          value={batchNo}
-          onChange={(e) => setBatchNo(e.target.value)}
-          required
-        />
+      <form onSubmit={handleSubmit} className="form-grid">
+        <div className="form-group full-span">
+          <label>📋 <strong>เลือกรายการ</strong></label>
+          <select
+            value={selectedJobId}
+            onChange={(e) => setSelectedJobId(e.target.value)}
+            className="input-box"
+          >
+            <option value="">-- เลือกรายการ --</option>
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.product_name} - {job.customer}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <label>🏗️ สถานะการผลิต</label>
-        <select
-          value={productionStatus}
-          onChange={(e) => setProductionStatus(e.target.value)}
-          required
-        >
-          <option value="">-- เลือกสถานะ --</option>
-          <option value="ยังไม่เริ่มผลิต">ยังไม่เริ่มผลิต</option>
-          <option value="กำลังผลิต">กำลังผลิต</option>
-          <option value="รอผลตรวจ">รอผลตรวจ</option>
-          <option value="กำลังบรรจุ">กำลังบรรจุ</option>
-          <option value="ผลิตเสร็จ">ผลิตเสร็จ</option>
-        </select>
+        <div className="form-group">
+          <label>🆔 <strong>Batch No</strong></label>
+          <input
+            type="text"
+            value={batchNo}
+            onChange={(e) => setBatchNo(e.target.value)}
+            className="input-box"
+          />
+        </div>
 
-        <label>📝 หมายเหตุ (ถ้ามี)</label>
-        <input
-          type="text"
-          placeholder="ระบุหมายเหตุหากมี"
-          value={remark}
-          onChange={(e) => setRemark(e.target.value)}
-        />
+        <div className="form-group">
+          <label>⚙️ <strong>สถานะการผลิต</strong></label>
+          <select
+            value={productionStatus}
+            onChange={(e) => setProductionStatus(e.target.value)}
+            className="input-box"
+          >
+            <option value="">-- เลือกสถานะ --</option>
+            <option value="ยังไม่เริ่มผลิต">ยังไม่เริ่มผลิต</option>
+            <option value="กำลังผลิต">กำลังผลิต</option>
+            <option value="รอผลตรวจ">รอผลตรวจ</option>
+            <option value="กำลังบรรจุ">กำลังบรรจุ</option>
+            <option value="ผลิตเสร็จ">ผลิตเสร็จ</option>
+          </select>
+        </div>
 
-        <button type="submit" className="submit-btn">
-          ✅ บันทึกข้อมูล Production
-        </button>
+        <div className="form-group full-span">
+          <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
+          <input
+            type="text"
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+            className="input-box"
+            placeholder="ระบุหมายเหตุหากมี"
+          />
+        </div>
+
+        <div className="full-span" style={{ marginTop: "1rem" }}>
+          <button type="submit" className="submit-btn">
+            ✅ บันทึกข้อมูล Production
+          </button>
+        </div>
       </form>
 
       {/* ✅ MODAL ยืนยันการบันทึก */}
       {showConfirm && (
-        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+        <div className="overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>📋 <strong>ยืนยันข้อมูลก่อนบันทึก</strong></h3>
-            <ul style={{ marginTop: "1rem", textAlign: "left" }}>
+            <ul style={{ textAlign: "left", marginTop: "1rem" }}>
               <li><strong>Batch No:</strong> {batchNo}</li>
               <li><strong>สถานะการผลิต:</strong> {productionStatus}</li>
               {remark && <li><strong>หมายเหตุ:</strong> {remark}</li>}
