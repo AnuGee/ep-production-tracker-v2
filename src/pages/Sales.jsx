@@ -41,32 +41,30 @@ export default function Sales() {
       return;
     }
 
-    toast.custom((t) => (
-      <div className="custom-toast-confirm">
-        <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-        <ul style={{ textAlign: "left", marginTop: "10px" }}>
-          <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
-          <li><strong>Product Name:</strong> {form.product_name}</li>
-          <li><strong>Volume (KG.):</strong> {form.volume}</li>
-          <li><strong>Customer:</strong> {form.customer}</li>
-          <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
-          {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
-        </ul>
-        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-          <button className="submit-btn" onClick={() => {
-            handleFinalSubmit();
-            toast.dismiss(t.id);
-          }}>✅ ยืนยันการบันทึก</button>
-          <button
-  className="cancel-btn"
-  onClick={() => toast.dismiss(t.id)}
->
-  ❌ ยกเลิก
-</button>
-
-        </div>
-      </div>
-    ));
+toast.custom((t) => (
+  <div className="custom-toast-confirm">
+    <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
+    <ul>
+      <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
+      <li><strong>Product Name:</strong> {form.product_name}</li>
+      <li><strong>Volume (KG.):</strong> {form.volume}</li>
+      <li><strong>Customer:</strong> {form.customer}</li>
+      <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
+      {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
+    </ul>
+    <div className="button-row">
+      <button className="submit-btn" onClick={() => {
+        handleFinalSubmit();
+        toast.dismiss(t.id);
+      }}>
+        ✅ ยืนยันการบันทึก
+      </button>
+      <button className="cancel-btn" onClick={() => toast.dismiss(t.id)}>
+        ❌ ยกเลิก
+      </button>
+    </div>
+  </div>
+));
   };
 
   const handleFinalSubmit = async () => {
