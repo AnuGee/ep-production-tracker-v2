@@ -272,6 +272,7 @@ input::placeholder {
   gap: 1rem;
   justify-content: center;
   margin-top: 1.5rem;
+  align-items: center; /* เพิ่มบรรทัดนี้เพื่อความชัวร์ */
 }
 
 .submit-btn {
@@ -289,6 +290,7 @@ input::placeholder {
 }
 
 .cancel-btn {
+  box-sizing: border-box; /* เพิ่มบรรทัดนี้เพื่อความชัวร์ */
   background-color: #f97316; /* Orange, not red */
   color: white;
   font-weight: bold;
@@ -299,5 +301,6 @@ input::placeholder {
   height: 48px;
   display: flex;
   align-items: center;
+  justify-content: center; /* เพิ่มบรรทัดนี้เพื่อให้ข้อความอยู่ตรงกลางแนวนอนด้วย */
   gap: 8px;
 }
