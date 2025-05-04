@@ -172,7 +172,6 @@ export default function Sales() {
     </button>
   </div>
 </div>
-        </div>
       )}
     </div>
   );
