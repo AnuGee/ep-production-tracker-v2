@@ -267,49 +267,51 @@ input::placeholder {
   margin-bottom: 1rem;
 }
 
-.button-row {
+.custom-toast-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+  z-index: 9999;
+  text-align: center;
+}
+
+.button-container {  /* เปลี่ยนชื่อ Class */
   display: flex;
+  flex-direction: column; /* จัดเรียงในแนวตั้ง */
   gap: 1rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-  align-items: center; /* เพิ่มบรรทัดนี้เพื่อความชัวร์ */
-}
-
-.submit-btn {
-  background-color: #2563eb; /* Blue */
-  color: white;
-  font-weight: bold;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  cursor: pointer;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cancel-btn {
-  box-sizing: border-box; /* เพิ่มบรรทัดนี้เพื่อความชัวร์ */
-  background-color: #f97316; /* Orange, not red */
-  color: white;
-  font-weight: bold;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  cursor: pointer;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center; /* เพิ่มบรรทัดนี้เพื่อให้ข้อความอยู่ตรงกลางแนวนอนด้วย */
-  gap: 8px;
-}
-
-.button-container {
-  margin-top: 1rem; /* รักษา margin ด้านบน */
+  margin-top: 1rem;
+  width: 100%; /* ให้ปุ่มกว้างเท่า Modal */
 }
 
 .submit-btn,
 .cancel-btn {
-  display: block; /* เปลี่ยนจาก flex เป็น block */
-  width: 100%; /* ทำให้ปุ่มกว้างเต็มพื้นที่ */
+  background-color: #2563eb;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  flex: 1;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* ให้ปุ่มกว้างเต็มพื้นที่ */
+  box-sizing: border-box; /* สำคัญ: รวม padding ใน width */
+}
+
+.cancel-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.cancel-btn svg,
+.cancel-btn span {
+  color: white !important;
+}
