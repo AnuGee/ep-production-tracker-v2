@@ -1,3 +1,4 @@
+// src/pages/Sales.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore";
@@ -42,7 +43,7 @@ export default function Sales() {
       return;
     }
 
-    setShowConfirm(true);
+    setShowConfirm(true); // ✅ เปิด popup modal
   };
 
   const handleFinalSubmit = async () => {
@@ -150,10 +151,10 @@ export default function Sales() {
       </form>
 
       {showConfirm && (
-        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal">
             <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul style={{ textAlign: "left", marginTop: "10px" }}>
+            <ul>
               <li><strong>PO Number:</strong> {form.po_number || "–"}</li>
               <li><strong>Product Name:</strong> {form.product_name}</li>
               <li><strong>Volume (KG.):</strong> {form.volume}</li>
@@ -161,14 +162,10 @@ export default function Sales() {
               <li><strong>Delivery Date:</strong> {form.delivery_date}</li>
               {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
             </ul>
-<div className="button-container">
-  <button className="submit-btn" onClick={handleFinalSubmit}>
-    ✅ ยืนยันการบันทึก
-  </button>
-  <button className="cancel-btn" onClick={() => setShowConfirm(false)} style={{ marginTop: '1rem' }}>
-    ❌ ยกเลิก
-  </button>
-</div>
+            <div className="button-row">
+              <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยันการบันทึก</button>
+              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
+            </div>
           </div>
         </div>
       )}
