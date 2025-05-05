@@ -1,8 +1,9 @@
 // src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getFirestore, serverTimestamp } from "firebase/firestore"; // ✅ เพิ่ม serverTimestamp
-import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth"; // ✅ เพิ่มตรงนี้
 
+// 🔥 Config จาก Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCZOBE24iUSeZAfBTzrn7SFbjNftK268_I",
   authDomain: "ep-pd-tracker.firebaseapp.com",
@@ -12,9 +13,10 @@ const firebaseConfig = {
   appId: "1:154336258483:web:d5ca2385824283f42e43c6"
 };
 
+// 🔧 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
+const auth = getAuth(app); // ✅ เพิ่มตรงนี้
 
-// ✅ export เพิ่ม timestamp
-export { db, auth, serverTimestamp as timestamp };
+// ✅ export ไว้ใช้งานในทุกไฟล์
+export { db, auth };
