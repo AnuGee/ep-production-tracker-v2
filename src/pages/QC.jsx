@@ -238,7 +238,7 @@ export default function QC() {
 
       {/* ✅ Popup Confirm - Inspection */}
       {showConfirmInspection && (
-        <div className="overlay" onClick={() => setShowConfirmInspection(false)}>
+        <div className="modal-overlay" onClick={() => setShowConfirmInspection(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
             <ul>
@@ -259,7 +259,7 @@ export default function QC() {
 
       {/* ✅ Popup Confirm - COA */}
       {showConfirmCoa && (
-        <div className="overlay" onClick={() => setShowConfirmCoa(false)}>
+        <div className="modal-overlay" onClick={() => setShowConfirmCoa(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>📋 ยืนยันข้อมูล COA</h3>
             <ul>
