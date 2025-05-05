@@ -373,3 +373,15 @@ input::placeholder {
   align-items: center;
   gap: 8px;
 }
+
+/* ปรับสี font ใน popup modal ให้มองเห็นได้ชัดใน dark mode */
+.custom-toast-confirm,
+.modal,
+.modal-content {
+  color: #111827 !important; /* เทาเข้ม */
+}
+
+.custom-toast-confirm li,
+.modal ul li {
+  color: #111827 !important;
+}
