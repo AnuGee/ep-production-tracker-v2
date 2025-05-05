@@ -25,8 +25,10 @@ export default function Production() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const filtered = data.filter((job) =>
-      ["Production", "QC", "Account"].includes(job.currentStep)
+    const filtered = data.filter(
+      (job) =>
+        ["Production", "QC", "Account"].includes(job.currentStep) &&
+        job.status?.qc_inspection !== "skip"
     );
     setJobs(filtered);
   };
