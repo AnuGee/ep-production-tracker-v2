@@ -116,40 +116,46 @@ export default function Warehouse() {
           </select>
         </div>
 
-        <div className="form-group full-span">
-          <label>📦 <strong>สต๊อกสินค้า</strong></label>
-          <select value={stock} onChange={(e) => setStock(e.target.value)} className="input-box">
-            <option value="">-- สต๊อกสินค้า --</option>
-            <option value="มีครบตามจำนวน">มีครบตามจำนวน</option>
-            <option value="มีบางส่วน">มีบางส่วน</option>
-            <option value="ไม่มี">ไม่มี</option>
-          </select>
-        </div>
+<div className="form-group full-span">
+  <label>📦 <strong>สต๊อกสินค้า</strong></label>
+  <select value={stock} onChange={(e) => setStock(e.target.value)} className="input-box">
+    <option value="">-- สต๊อกสินค้า --</option>
+    <option value="มีครบตามจำนวน">มีครบตามจำนวน</option>
+    <option value="มีบางส่วน">มีบางส่วน</option>
+    <option value="ไม่มี">ไม่มี</option>
+  </select>
+</div>
 
-        <div className="form-group">
-          <label>🔢 <strong>Batch No WH1</strong></label>
-          <input type="text" value={batch1} onChange={(e) => setBatch1(e.target.value)} className="input-box" />
-        </div>
-        <div className="form-group">
-          <label>🔢 <strong>Batch No WH2</strong></label>
-          <input type="text" value={batch2} onChange={(e) => setBatch2(e.target.value)} className="input-box" />
-        </div>
-        <div className="form-group">
-          <label>🔢 <strong>Batch No WH3</strong></label>
-          <input type="text" value={batch3} onChange={(e) => setBatch3(e.target.value)} className="input-box" />
-        </div>
+{/* 🔢 Batch No แสดงเฉพาะ "มีครบตามจำนวน" หรือ "มีบางส่วน" */}
+{["มีครบตามจำนวน", "มีบางส่วน"].includes(stock) && (
+  <>
+    <div className="form-group">
+      <label>🔢 <strong>Batch No WH1</strong></label>
+      <input type="text" value={batch1} onChange={(e) => setBatch1(e.target.value)} className="input-box" />
+    </div>
+    <div className="form-group">
+      <label>🔢 <strong>Batch No WH2</strong></label>
+      <input type="text" value={batch2} onChange={(e) => setBatch2(e.target.value)} className="input-box" />
+    </div>
+    <div className="form-group">
+      <label>🔢 <strong>Batch No WH3</strong></label>
+      <input type="text" value={batch3} onChange={(e) => setBatch3(e.target.value)} className="input-box" />
+    </div>
+  </>
+)}
 
-        {stock !== "มีครบตามจำนวน" && (
-          <div className="form-group full-span">
-            <label>🔄 <strong>สถานะ</strong></label>
-            <select value={step} onChange={(e) => setStep(e.target.value)} className="input-box">
-              <option value="">-- เลือกสถานะ --</option>
-              <option value="ยังไม่เบิก">ยังไม่เบิก</option>
-              <option value="กำลังเบิก">กำลังเบิก</option>
-              <option value="เบิกเสร็จ">เบิกเสร็จ</option>
-            </select>
-          </div>
-        )}
+{/* 🔄 แสดงเฉพาะเมื่อไม่ใช่ "มีครบตามจำนวน" */}
+{stock !== "มีครบตามจำนวน" && (
+  <div className="form-group full-span">
+    <label>🔄 <strong>สถานะ</strong></label>
+    <select value={step} onChange={(e) => setStep(e.target.value)} className="input-box">
+      <option value="">-- เลือกสถานะ --</option>
+      <option value="ยังไม่เบิก">ยังไม่เบิก</option>
+      <option value="กำลังเบิก">กำลังเบิก</option>
+      <option value="เบิกเสร็จ">เบิกเสร็จ</option>
+    </select>
+  </div>
+)}
 
         <div className="form-group full-span">
           <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
