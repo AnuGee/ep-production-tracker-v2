@@ -157,7 +157,7 @@ export default function Production() {
 
       {/* ✅ MODAL Confirm */}
       {showConfirm && (
-        <div className="overlay" onClick={() => setShowConfirm(false)}>
+        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>📋 <strong>ยืนยันข้อมูลก่อนบันทึก</strong></h3>
             <ul style={{ textAlign: "left", marginTop: "1rem" }}>
