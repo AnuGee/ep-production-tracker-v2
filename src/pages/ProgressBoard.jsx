@@ -5,60 +5,54 @@ export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
   const getStatusColor = (step, job) => {
-    if (!job.status) return "#e5e7eb"; // ยังไม่เริ่ม
+    if (!job.status) return "#e5e7eb"; // เทา
 
-    const status = job.status;
-    const currentStep = job.currentStep;
+    const { currentStep, status } = job;
+
+    if (currentStep === step) return "#facc15"; // เหลือง
 
     switch (step) {
       case "Sales":
-        return job.product_name && job.po_number && job.volume && job.customer
-          ? "#4ade80" // เขียว
-          : "#e5e7eb"; // เทา
+        return (job.product_name && job.po_number && job.volume && job.customer)
+          ? "#4ade80"
+          : "#e5e7eb";
 
       case "Warehouse":
-        if (
-          status.warehouse === "เบิกเสร็จ" ||
-          status.warehouse === "มีของครบตามจำนวน"
-        )
+        if (status.warehouse === "เบิกเสร็จ" || status.warehouse === "มีของครบตามจำนวน") {
           return "#4ade80";
+        }
         return "#e5e7eb";
 
       case "Production":
-        // ✅ ผลิตเสร็จ
-        if (status.production === "ผลิตเสร็จ") {
-          return "#4ade80";
-        }
+        // ✅ กรณีผลิตเสร็จ
+        if (status.production === "ผลิตเสร็จ") return "#4ade80";
 
-        // ✅ Warehouse มีของครบ และ currentStep ไปถึง QC/หลังจากนั้น
+        // ✅ กรณี Warehouse มีของครบตามจำนวน และ currentStep คือ QC หรือหลังจากนั้น (ข้าม Production)
         if (
           status.warehouse === "มีของครบตามจำนวน" &&
-          ["QC", "Account", "Completed"].includes(currentStep)
+          ["QC", "COA", "Account", "Completed"].includes(currentStep)
         ) {
           return "#4ade80";
         }
 
-        // ✅ ระหว่างทำ
+        // ✅ กรณี Warehouse เบิกเสร็จ และ Production อยู่ในขั้นตอนใดๆ ที่ไม่ใช่ยังไม่เริ่มผลิต
         if (
           status.warehouse === "เบิกเสร็จ" &&
           ["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(status.production)
         ) {
-          return "#facc15";
+          return "#facc15"; // กำลังทำ - เหลือง
         }
 
-        // ✅ QC ผ่านแล้ว แต่ production ยังบรรจุอยู่
+        // ✅ กรณี QC ตรวจสอบสินค้าผ่านแล้ว และ Production อยู่ในขั้นตอนบรรจุ
         if (
-          status.qc_inspection === "ตรวจผ่านแล้ว" &&
+          status.qc_inspection === "ตรวจผ่าน" &&
           status.production === "กำลังบรรจุ"
         ) {
-          return "#facc15";
+          return "#facc15"; // กำลังทำ - เหลือง
         }
 
-        // ❌ ถ้า QC ไม่ผ่าน → currentStep = Warehouse → Production กลับเป็นเทา
-        if (
-          currentStep === "Warehouse" &&
-          status.qc_inspection === "ตรวจไม่ผ่าน"
-        ) {
+        // ❌ กรณี QC ตรวจไม่ผ่าน → ย้อนกลับไป Warehouse → รีเซ็ต Production
+        if (currentStep === "Warehouse" && status.qc_inspection === "ตรวจไม่ผ่าน") {
           return "#e5e7eb";
         }
 
@@ -68,25 +62,17 @@ export default function ProgressBoard({ jobs }) {
         if (
           status.qc_inspection === "ตรวจผ่านแล้ว" &&
           status.qc_coa === "เตรียมพร้อมแล้ว"
-        ) {
-          return "#4ade80";
-        }
+        ) return "#4ade80";
 
-        if (
-          ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(
-            status.qc_inspection
-          ) ||
-          ["กำลังเตรียม"].includes(status.qc_coa)
-        ) {
-          return "#facc15";
+        // ❌ QC ถูกย้อน → reset สี QC ด้วย
+        if (currentStep === "Warehouse" && status.qc_inspection === "ตรวจไม่ผ่าน") {
+          return "#e5e7eb";
         }
 
         return "#e5e7eb";
 
       case "Account":
-        if (status.account === "Invoice ออกแล้ว") return "#4ade80";
-        if (status.account === "Invoice ยังไม่ออก") return "#facc15";
-        return "#e5e7eb";
+        return (status.account === "Invoice ออกแล้ว") ? "#4ade80" : "#e5e7eb";
 
       default:
         return "#e5e7eb";
@@ -105,16 +91,13 @@ export default function ProgressBoard({ jobs }) {
           </tr>
         </thead>
         <tbody>
-          {[...jobs]
-            .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""))
+          {jobs
+            .sort((a, b) => a.product_name.localeCompare(b.product_name))
             .map((job) => (
               <tr key={job.id}>
                 <td>
                   <span className="product-label">
-                    <span role="img" aria-label="doc">
-                      📄
-                    </span>{" "}
-                    {job.product_name}
+                    <span role="img" aria-label="doc">📄</span> {job.product_name}
                   </span>
                 </td>
                 {steps.map((step) => (
@@ -132,7 +115,7 @@ export default function ProgressBoard({ jobs }) {
                   </td>
                 ))}
               </tr>
-            ))}
+          ))}
         </tbody>
       </table>
     </div>
