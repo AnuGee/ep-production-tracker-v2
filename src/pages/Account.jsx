@@ -19,8 +19,11 @@ export default function Account() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const filtered = data.filter((job) => job.currentStep === "Account");
-    setJobs(filtered);
+    const filtered = data
+  .filter((job) => job.currentStep === "Account")
+  .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
+setJobs(filtered);
+
   };
 
   const handleSubmit = (e) => {
