@@ -22,14 +22,15 @@ export default function Production() {
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const filtered = data.filter(
-      (job) => job.currentStep === "Production"
-    );
-    setJobs(filtered);
-  };
+const fetchJobs = async () => {
+  const snapshot = await getDocs(collection(db, "production_workflow"));
+  const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const filtered = data
+    .filter((job) => job.currentStep === "Production")
+    .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
+  setJobs(filtered);
+};
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
