@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import {
   collection,
-  getDocs,
   doc,
+  getDocs,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -25,7 +25,9 @@ export default function Production() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const filtered = data.filter((job) => job.currentStep === "Production");
+    const filtered = data.filter(
+      (job) => job.currentStep === "Production"
+    );
     setJobs(filtered);
   };
 
@@ -41,29 +43,31 @@ export default function Production() {
   const handleFinalSubmit = async () => {
     try {
       const jobRef = doc(db, "production_workflow", selectedJobId);
-
       let nextStep = "Production";
-      if (productionStatus === "รอผลตรวจ") nextStep = "QC";
-      else if (productionStatus === "ผลิตเสร็จ") nextStep = "QC";
 
-      const updates = {
+      // 👇 Logic เปลี่ยนขั้น
+      if (productionStatus === "รอผลตรวจ") {
+        nextStep = "QC"; // 🔍 ตรวจสอบสินค้า
+      } else if (productionStatus === "ผลิตเสร็จ") {
+        nextStep = "QC"; // 📄 เตรียมเอกสาร COA
+      }
+
+      // 👇 อัปเดต status และข้อมูล
+      await updateDoc(jobRef, {
         batch_no: batchNo,
         "status.production": productionStatus,
         "remarks.production": remark,
         currentStep: nextStep,
         Timestamp_Production: serverTimestamp(),
-      };
+      });
 
-      if (productionStatus === "รอผลตรวจ") {
-        updates.waiting_for = "Inspection";
-      } else if (productionStatus === "ผลิตเสร็จ") {
-        updates.waiting_for = "COA";
-      }
+      // 👇 เพิ่ม audit log
+      const job = jobs.find((job) => job.id === selectedJobId);
+      const auditLogs = job?.audit_logs || [];
 
       await updateDoc(jobRef, {
-        ...updates,
         audit_logs: [
-          ...(jobs.find((job) => job.id === selectedJobId)?.audit_logs || []),
+          ...auditLogs,
           {
             step: "Production",
             field: "status.production",
@@ -151,6 +155,7 @@ export default function Production() {
         </div>
       </form>
 
+      {/* ✅ MODAL Confirm */}
       {showConfirm && (
         <div className="overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
