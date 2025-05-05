@@ -30,7 +30,13 @@ export default function Warehouse() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const filtered = data.filter((job) => job.currentStep === "Warehouse");
+    const filtered = data
+  .filter((job) => job.currentStep === "Warehouse")
+  .sort((a, b) => {
+    const nameA = `${a.product_name} - ${a.customer}`.toUpperCase();
+    const nameB = `${b.product_name} - ${b.customer}`.toUpperCase();
+    return nameA.localeCompare(nameB);
+  });
     setJobs(filtered);
   };
 
