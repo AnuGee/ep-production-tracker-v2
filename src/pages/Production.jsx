@@ -41,33 +41,29 @@ export default function Production() {
   const handleFinalSubmit = async () => {
     try {
       const jobRef = doc(db, "production_workflow", selectedJobId);
-      const job = jobs.find((j) => j.id === selectedJobId);
+
       let nextStep = "Production";
-      let updates = {
+      if (productionStatus === "รอผลตรวจ") nextStep = "QC";
+      else if (productionStatus === "ผลิตเสร็จ") nextStep = "QC";
+
+      const updates = {
         batch_no: batchNo,
         "status.production": productionStatus,
         "remarks.production": remark,
+        currentStep: nextStep,
         Timestamp_Production: serverTimestamp(),
       };
 
-      // ✅ Logic ขั้นตอนการผลิต
       if (productionStatus === "รอผลตรวจ") {
-        nextStep = "QC";
         updates.waiting_for = "Inspection";
       } else if (productionStatus === "ผลิตเสร็จ") {
-        nextStep = "QC";
         updates.waiting_for = "COA";
       }
 
-      updates.currentStep = nextStep;
-
-      // ✅ อัปเดตข้อมูลหลัก
-      await updateDoc(jobRef, updates);
-
-      // ✅ อัปเดต Audit Logs
       await updateDoc(jobRef, {
+        ...updates,
         audit_logs: [
-          ...(job?.audit_logs || []),
+          ...(jobs.find((job) => job.id === selectedJobId)?.audit_logs || []),
           {
             step: "Production",
             field: "status.production",
