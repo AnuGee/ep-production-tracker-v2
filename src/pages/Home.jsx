@@ -139,11 +139,22 @@ export default function Home() {
       }
       case "Production": {
         const pd = status.production;
-        if (currentStep === "QC" && status.qc_inspection === "skip") return "done";
-        if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "doing";
-        if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
-        return "notStarted";
-      }
+        
+       // ✅ เพิ่มเงื่อนไขพิเศษ: กรณีมีของครบใน WH → ข้าม Production → ไป COA เลย
+          const skipProduction =
+            Array.isArray(job.batch_no_warehouse) &&
+            job.batch_no_warehouse.length > 0 &&
+            !pd &&
+            !status.qc_inspection &&  // ยังไม่ได้ตรวจ
+            ["QC", "COA", "Account", "Completed"].includes(currentStep);
+        
+          if (skipProduction) return "done";
+        
+          if (currentStep === "QC" && status.qc_inspection === "skip") return "done";
+          if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "doing";
+          if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
+          return "notStarted";
+        }
       case "QC": {
         const qc = status.qc_inspection;
         if (qc === "ตรวจผ่านแล้ว") return "done";
