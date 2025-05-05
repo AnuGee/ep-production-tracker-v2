@@ -227,7 +227,7 @@ export default function QC() {
       </form>
       {/* ✅ MODAL ยืนยันการบันทึกสถานะตรวจสอบสินค้า */}
 {showConfirmInspection && (
-  <div className="overlay" onClick={() => setShowConfirmInspection(false)}>
+  <div className="modal-overlay" onClick={() => setShowConfirmInspection(false)}>
     <div className="modal" onClick={(e) => e.stopPropagation()}>
       <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
       <ul style={{ textAlign: "left", marginTop: "1rem" }}>
@@ -248,7 +248,7 @@ export default function QC() {
 
 {/* ✅ MODAL ยืนยันการบันทึกสถานะ COA */}
 {showConfirmCoa && (
-  <div className="overlay" onClick={() => setShowConfirmCoa(false)}>
+  <div className="modal-overlay" onClick={() => setShowConfirmCoa(false)}>
     <div className="modal" onClick={(e) => e.stopPropagation()}>
       <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
       <ul style={{ textAlign: "left", marginTop: "1rem" }}>
