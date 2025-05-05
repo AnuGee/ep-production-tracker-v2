@@ -1,9 +1,11 @@
+// ✅ Warehouse.jsx - ปรับให้ทำงานตาม Flow กรณี "มีครบตามจำนวน" แล้วไป COA โดยตรง
+
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import {
   collection,
-  doc,
   getDocs,
+  doc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -38,10 +40,6 @@ export default function Warehouse() {
       toast.error("❌ กรุณากรอกข้อมูลให้ครบ");
       return;
     }
-    if (stock !== "มีครบตามจำนวน" && !step) {
-      toast.error("❌ กรุณาเลือกสถานะเบิก");
-      return;
-    }
     setShowConfirm(true);
   };
 
@@ -50,14 +48,13 @@ export default function Warehouse() {
       const jobRef = doc(db, "production_workflow", selectedJobId);
 
       let nextStep = "Warehouse";
-      let statusUpdate = {
-        warehouse: step || "",
-      };
+      let statusUpdate = { warehouse: step };
 
+      // ✅ มีครบตามจำนวน → ไป QC โดยตรง (skip inspection)
       if (stock === "มีครบตามจำนวน") {
         nextStep = "QC";
         statusUpdate = {
-          warehouse: "",
+          warehouse: "มีครบตามจำนวน",
           qc_inspection: "skip",
           qc_coa: "ยังไม่เตรียม",
         };
@@ -65,26 +62,19 @@ export default function Warehouse() {
         nextStep = "Production";
       }
 
-      const batchNumbers = [batch1, batch2, batch3].filter((b) => b !== "");
-
       await updateDoc(jobRef, {
-        currentStep: nextStep,
+        batch_no_warehouse: [batch1, batch2, batch3].filter((b) => b),
         stock,
-        step,
-        batch_no_warehouse: batchNumbers,
-        [`remarks.warehouse`]: remark,
-        [`status`]: {
-          ...(statusUpdate || {}),
-        },
+        "status": statusUpdate,
+        "remarks.warehouse": remark,
+        currentStep: nextStep,
         Timestamp_Warehouse: serverTimestamp(),
       });
 
-      const job = jobs.find((job) => job.id === selectedJobId);
-      const auditLogs = job?.audit_logs || [];
-
+      // 🔍 เพิ่มเข้า audit log
       await updateDoc(jobRef, {
         audit_logs: [
-          ...auditLogs,
+          ...jobs.find((j) => j.id === selectedJobId)?.audit_logs || [],
           {
             step: "Warehouse",
             field: "stock",
@@ -92,17 +82,6 @@ export default function Warehouse() {
             remark,
             timestamp: new Date().toISOString(),
           },
-          ...(step
-            ? [
-                {
-                  step: "Warehouse",
-                  field: "step",
-                  value: step,
-                  remark,
-                  timestamp: new Date().toISOString(),
-                },
-              ]
-            : []),
         ],
       });
 
@@ -124,15 +103,10 @@ export default function Warehouse() {
   return (
     <div className="page-container">
       <h2>🏭 <strong>Warehouse - อัปเดตข้อมูลสต๊อกสินค้า</strong></h2>
-
       <form onSubmit={handleSubmit} className="form-grid">
         <div className="form-group full-span">
           <label>📋 <strong>เลือกรายการ</strong></label>
-          <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
-            className="input-box"
-          >
+          <select value={selectedJobId} onChange={(e) => setSelectedJobId(e.target.value)} className="input-box">
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
@@ -144,11 +118,7 @@ export default function Warehouse() {
 
         <div className="form-group full-span">
           <label>📦 <strong>สต๊อกสินค้า</strong></label>
-          <select
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            className="input-box"
-          >
+          <select value={stock} onChange={(e) => setStock(e.target.value)} className="input-box">
             <option value="">-- สต๊อกสินค้า --</option>
             <option value="มีครบตามจำนวน">มีครบตามจำนวน</option>
             <option value="มีบางส่วน">มีบางส่วน</option>
@@ -156,14 +126,23 @@ export default function Warehouse() {
           </select>
         </div>
 
+        <div className="form-group">
+          <label>🔢 <strong>Batch No WH1</strong></label>
+          <input type="text" value={batch1} onChange={(e) => setBatch1(e.target.value)} className="input-box" />
+        </div>
+        <div className="form-group">
+          <label>🔢 <strong>Batch No WH2</strong></label>
+          <input type="text" value={batch2} onChange={(e) => setBatch2(e.target.value)} className="input-box" />
+        </div>
+        <div className="form-group">
+          <label>🔢 <strong>Batch No WH3</strong></label>
+          <input type="text" value={batch3} onChange={(e) => setBatch3(e.target.value)} className="input-box" />
+        </div>
+
         {stock !== "มีครบตามจำนวน" && (
           <div className="form-group full-span">
             <label>🔄 <strong>สถานะ</strong></label>
-            <select
-              value={step}
-              onChange={(e) => setStep(e.target.value)}
-              className="input-box"
-            >
+            <select value={step} onChange={(e) => setStep(e.target.value)} className="input-box">
               <option value="">-- เลือกสถานะ --</option>
               <option value="ยังไม่เบิก">ยังไม่เบิก</option>
               <option value="กำลังเบิก">กำลังเบิก</option>
@@ -171,34 +150,6 @@ export default function Warehouse() {
             </select>
           </div>
         )}
-
-        <div className="form-group">
-          <label>🔢 <strong>Batch No WH1</strong></label>
-          <input
-            type="text"
-            value={batch1}
-            onChange={(e) => setBatch1(e.target.value)}
-            className="input-box"
-          />
-        </div>
-        <div className="form-group">
-          <label>🔢 <strong>Batch No WH2</strong></label>
-          <input
-            type="text"
-            value={batch2}
-            onChange={(e) => setBatch2(e.target.value)}
-            className="input-box"
-          />
-        </div>
-        <div className="form-group">
-          <label>🔢 <strong>Batch No WH3</strong></label>
-          <input
-            type="text"
-            value={batch3}
-            onChange={(e) => setBatch3(e.target.value)}
-            className="input-box"
-          />
-        </div>
 
         <div className="form-group full-span">
           <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
@@ -218,26 +169,22 @@ export default function Warehouse() {
         </div>
       </form>
 
-      {/* ✅ MODAL Confirm */}
+      {/* ✅ MODAL ยืนยัน */}
       {showConfirm && (
-        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+        <div className="overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>📋 <strong>ยืนยันข้อมูลก่อนบันทึก</strong></h3>
             <ul style={{ textAlign: "left", marginTop: "1rem" }}>
               <li><strong>สต๊อกสินค้า:</strong> {stock}</li>
-              {step && <li><strong>สถานะ:</strong> {step}</li>}
-              {batch1 && <li><strong>WH1:</strong> {batch1}</li>}
-              {batch2 && <li><strong>WH2:</strong> {batch2}</li>}
-              {batch3 && <li><strong>WH3:</strong> {batch3}</li>}
+              {batch1 && <li><strong>Batch No WH1:</strong> {batch1}</li>}
+              {batch2 && <li><strong>Batch No WH2:</strong> {batch2}</li>}
+              {batch3 && <li><strong>Batch No WH3:</strong> {batch3}</li>}
+              {stock !== "มีครบตามจำนวน" && <li><strong>สถานะ:</strong> {step}</li>}
               {remark && <li><strong>หมายเหตุ:</strong> {remark}</li>}
             </ul>
             <div className="button-row">
-              <button className="submit-btn" onClick={handleFinalSubmit}>
-                ✅ ยืนยันการบันทึก
-              </button>
-              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>
-                ❌ ยกเลิก
-              </button>
+              <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยัน</button>
+              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
             </div>
           </div>
         </div>
