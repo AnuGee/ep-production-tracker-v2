@@ -1,10 +1,11 @@
-// src/pages/QC.jsx
+// ✅ QC.jsx – แก้ไข logic ให้แยกงานตามสถานะ 🔍 ตรวจสอบสินค้า และ 📄 COA
+
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import {
   collection,
-  doc,
   getDocs,
+  doc,
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
@@ -32,140 +33,121 @@ export default function QC() {
     setJobs(data);
   };
 
-  const handleInspectionSubmit = (e) => {
+  const inspectionJobs = jobs.filter(
+    (job) =>
+      job.currentStep === "QC" &&
+      job.status?.production === "รอผลตรวจ" &&
+      job.status?.qc_inspection !== "skip"
+  );
+
+  const coaJobs = jobs.filter(
+    (job) =>
+      job.currentStep === "QC" &&
+      job.status?.qc_coa !== undefined &&
+      (job.status?.production === "ผลิตเสร็จ" || job.status?.qc_inspection === "skip")
+  );
+
+  const handleSubmitInspection = (e) => {
     e.preventDefault();
     if (!selectedInspectionJobId || !inspectionStatus) {
-      toast.error("❌ กรุณาเลือกงานและสถานะ");
+      toast.error("❌ กรุณาเลือกสถานะการตรวจสอบ");
       return;
     }
     setShowConfirmInspection(true);
   };
 
-  const handleCoaSubmit = (e) => {
+  const handleSubmitCoa = (e) => {
     e.preventDefault();
     if (!selectedCoaJobId || !coaStatus) {
-      toast.error("❌ กรุณาเลือกงานและสถานะ");
+      toast.error("❌ กรุณาเลือกสถานะ COA");
       return;
     }
     setShowConfirmCoa(true);
   };
 
-  const handleFinalInspectionSubmit = async () => {
-    try {
-      const jobRef = doc(db, "production_workflow", selectedInspectionJobId);
-      const job = jobs.find((job) => job.id === selectedInspectionJobId);
-      let nextStep = "QC";
+  const handleConfirmInspection = async () => {
+    const jobRef = doc(db, "production_workflow", selectedInspectionJobId);
+    const nextStep =
+      inspectionStatus === "ตรวจผ่าน"
+        ? "Production"
+        : inspectionStatus === "ตรวจไม่ผ่าน"
+        ? "Warehouse"
+        : "QC";
 
-      if (inspectionStatus === "ตรวจผ่าน") {
-        nextStep = "Production"; // กลับไปผลิตต่อ
-      } else if (inspectionStatus === "ตรวจไม่ผ่าน") {
-        nextStep = "Warehouse"; // กลับไปเริ่มใหม่
-      }
+    await updateDoc(jobRef, {
+      "status.qc_inspection": inspectionStatus,
+      "remarks.qc_inspection": inspectionRemark,
+      currentStep: nextStep,
+      Timestamp_QC: serverTimestamp(),
+      audit_logs: [
+        ...jobs.find((j) => j.id === selectedInspectionJobId)?.audit_logs || [],
+        {
+          step: "QC",
+          field: "qc_inspection",
+          value: inspectionStatus,
+          remark: inspectionRemark,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
 
-      await updateDoc(jobRef, {
-        "status.qc_inspection": inspectionStatus,
-        "remarks.qc_inspection": inspectionRemark,
-        currentStep: nextStep,
-        Timestamp_QC_Inspection: serverTimestamp(),
-        audit_logs: [
-          ...(job?.audit_logs || []),
-          {
-            step: "QC",
-            field: "status.qc_inspection",
-            value: inspectionStatus,
-            remark: inspectionRemark,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
-
-      toast.success("✅ บันทึกผลการตรวจสอบเรียบร้อย");
-      setSelectedInspectionJobId("");
-      setInspectionStatus("");
-      setInspectionRemark("");
-      setShowConfirmInspection(false);
-      fetchJobs();
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาด");
-    }
+    toast.success("✅ บันทึกสถานะการตรวจสอบเรียบร้อยแล้ว");
+    setSelectedInspectionJobId("");
+    setInspectionStatus("");
+    setInspectionRemark("");
+    setShowConfirmInspection(false);
+    fetchJobs();
   };
 
-  const handleFinalCoaSubmit = async () => {
-    try {
-      const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-      const job = jobs.find((job) => job.id === selectedCoaJobId);
-      let nextStep = "QC";
+  const handleConfirmCoa = async () => {
+    const jobRef = doc(db, "production_workflow", selectedCoaJobId);
+    const nextStep = coaStatus === "เตรียมพร้อมแล้ว" ? "Account" : "QC";
 
-      if (coaStatus === "เตรียมพร้อมแล้ว") {
-        nextStep = "Account";
-      }
+    await updateDoc(jobRef, {
+      "status.qc_coa": coaStatus,
+      "remarks.qc_coa": coaRemark,
+      currentStep: nextStep,
+      Timestamp_QC: serverTimestamp(),
+      audit_logs: [
+        ...jobs.find((j) => j.id === selectedCoaJobId)?.audit_logs || [],
+        {
+          step: "QC",
+          field: "qc_coa",
+          value: coaStatus,
+          remark: coaRemark,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
 
-      await updateDoc(jobRef, {
-        "status.qc_coa": coaStatus,
-        "remarks.qc_coa": coaRemark,
-        currentStep: nextStep,
-        Timestamp_QC_COA: serverTimestamp(),
-        audit_logs: [
-          ...(job?.audit_logs || []),
-          {
-            step: "QC",
-            field: "status.qc_coa",
-            value: coaStatus,
-            remark: coaRemark,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
-
-      toast.success("✅ บันทึกสถานะ COA แล้ว");
-      setSelectedCoaJobId("");
-      setCoaStatus("");
-      setCoaRemark("");
-      setShowConfirmCoa(false);
-      fetchJobs();
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาด");
-    }
+    toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
+    setSelectedCoaJobId("");
+    setCoaStatus("");
+    setCoaRemark("");
+    setShowConfirmCoa(false);
+    fetchJobs();
   };
-
-  const inspectionJobs = jobs.filter(
-    (job) => job.currentStep === "QC" && job.status?.production === "รอผลตรวจ"
-  );
-
-  const coaJobs = jobs.filter(
-    (job) => job.currentStep === "QC" && job.status?.production === "ผลิตเสร็จ"
-  );
 
   return (
     <div className="page-container">
       <h2>🧬 <strong>QC - ตรวจสอบสินค้าและเอกสาร COA</strong></h2>
 
       {/* 🔍 ตรวจสอบสินค้า */}
-      <form onSubmit={handleInspectionSubmit} className="form-grid">
+      <form onSubmit={handleSubmitInspection} className="form-grid">
         <h3>🔍 ตรวจสอบสินค้า</h3>
         <div className="form-group full-span">
-          <label>📋 เลือกรายการ</label>
-          <select
-            value={selectedInspectionJobId}
-            onChange={(e) => setSelectedInspectionJobId(e.target.value)}
-            className="input-box"
-          >
-            <option value="">-- เลือกรายการ --</option>
+          <label>📋 <strong>เลือกรายการ</strong></label>
+          <select value={selectedInspectionJobId} onChange={(e) => setSelectedInspectionJobId(e.target.value)} className="input-box">
+            <option value="">-- เลือกงาน --</option>
             {inspectionJobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.product_name} - {job.customer}
-              </option>
+              <option key={job.id} value={job.id}>{job.product_name} - {job.customer}</option>
             ))}
           </select>
         </div>
 
-        <div className="form-group">
-          <label>🔍 สถานะการตรวจสอบ</label>
-          <select
-            value={inspectionStatus}
-            onChange={(e) => setInspectionStatus(e.target.value)}
-            className="input-box"
-          >
+        <div className="form-group full-span">
+          <label>🔍 <strong>สถานะการตรวจสอบ</strong></label>
+          <select value={inspectionStatus} onChange={(e) => setInspectionStatus(e.target.value)} className="input-box">
             <option value="">-- เลือกสถานะ --</option>
             <option value="กำลังตรวจ">กำลังตรวจ</option>
             <option value="ตรวจผ่าน">ตรวจผ่าน</option>
@@ -174,46 +156,31 @@ export default function QC() {
         </div>
 
         <div className="form-group full-span">
-          <label>📝 หมายเหตุ (ถ้ามี)</label>
-          <input
-            type="text"
-            value={inspectionRemark}
-            onChange={(e) => setInspectionRemark(e.target.value)}
-            className="input-box"
-          />
+          <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
+          <input type="text" value={inspectionRemark} onChange={(e) => setInspectionRemark(e.target.value)} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
         </div>
 
         <div className="full-span">
-          <button type="submit" className="submit-btn">✅ บันทึกผลการตรวจสอบ</button>
+          <button type="submit" className="submit-btn">✅ บันทึกข้อมูลตรวจสอบ</button>
         </div>
       </form>
 
       {/* 📄 เตรียมเอกสาร COA */}
-      <form onSubmit={handleCoaSubmit} className="form-grid" style={{ marginTop: "3rem" }}>
+      <form onSubmit={handleSubmitCoa} className="form-grid">
         <h3>📄 เตรียมเอกสาร COA</h3>
         <div className="form-group full-span">
-          <label>📋 เลือกรายการ</label>
-          <select
-            value={selectedCoaJobId}
-            onChange={(e) => setSelectedCoaJobId(e.target.value)}
-            className="input-box"
-          >
-            <option value="">-- เลือกรายการ --</option>
+          <label>📋 <strong>เลือกรายการ</strong></label>
+          <select value={selectedCoaJobId} onChange={(e) => setSelectedCoaJobId(e.target.value)} className="input-box">
+            <option value="">-- เลือกงาน --</option>
             {coaJobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.product_name} - {job.customer}
-              </option>
+              <option key={job.id} value={job.id}>{job.product_name} - {job.customer}</option>
             ))}
           </select>
         </div>
 
-        <div className="form-group">
-          <label>📄 สถานะ COA</label>
-          <select
-            value={coaStatus}
-            onChange={(e) => setCoaStatus(e.target.value)}
-            className="input-box"
-          >
+        <div className="form-group full-span">
+          <label>📄 <strong>สถานะ COA</strong></label>
+          <select value={coaStatus} onChange={(e) => setCoaStatus(e.target.value)} className="input-box">
             <option value="">-- เลือกสถานะ --</option>
             <option value="ยังไม่เตรียม">ยังไม่เตรียม</option>
             <option value="กำลังเตรียม">กำลังเตรียม</option>
@@ -222,57 +189,39 @@ export default function QC() {
         </div>
 
         <div className="form-group full-span">
-          <label>📝 หมายเหตุ (ถ้ามี)</label>
-          <input
-            type="text"
-            value={coaRemark}
-            onChange={(e) => setCoaRemark(e.target.value)}
-            className="input-box"
-          />
+          <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
+          <input type="text" value={coaRemark} onChange={(e) => setCoaRemark(e.target.value)} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
         </div>
 
         <div className="full-span">
-          <button type="submit" className="submit-btn">✅ บันทึกสถานะ COA</button>
+          <button type="submit" className="submit-btn">✅ บันทึกข้อมูล COA</button>
         </div>
       </form>
 
-      {/* ✅ Popup Confirm - Inspection */}
+      {/* ✅ Popup ยืนยัน */}
       {showConfirmInspection && (
-        <div className="modal-overlay" onClick={() => setShowConfirmInspection(false)}>
+        <div className="overlay" onClick={() => setShowConfirmInspection(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul>
-              <li><strong>สถานะการตรวจสอบ:</strong> {inspectionStatus}</li>
-              {inspectionRemark && <li><strong>หมายเหตุ:</strong> {inspectionRemark}</li>}
-            </ul>
+            <h3>📋 <strong>ยืนยันข้อมูลตรวจสอบสินค้า</strong></h3>
+            <p><strong>สถานะ:</strong> {inspectionStatus}</p>
+            {inspectionRemark && <p><strong>หมายเหตุ:</strong> {inspectionRemark}</p>}
             <div className="button-row">
-              <button className="submit-btn" onClick={handleFinalInspectionSubmit}>
-                ✅ ยืนยัน
-              </button>
-              <button className="cancel-btn" onClick={() => setShowConfirmInspection(false)}>
-                ❌ ยกเลิก
-              </button>
+              <button className="submit-btn" onClick={handleConfirmInspection}>✅ ยืนยัน</button>
+              <button className="cancel-btn" onClick={() => setShowConfirmInspection(false)}>❌ ยกเลิก</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ✅ Popup Confirm - COA */}
       {showConfirmCoa && (
-        <div className="modal-overlay" onClick={() => setShowConfirmCoa(false)}>
+        <div className="overlay" onClick={() => setShowConfirmCoa(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 ยืนยันข้อมูล COA</h3>
-            <ul>
-              <li><strong>สถานะ COA:</strong> {coaStatus}</li>
-              {coaRemark && <li><strong>หมายเหตุ:</strong> {coaRemark}</li>}
-            </ul>
+            <h3>📋 <strong>ยืนยันข้อมูล COA</strong></h3>
+            <p><strong>สถานะ:</strong> {coaStatus}</p>
+            {coaRemark && <p><strong>หมายเหตุ:</strong> {coaRemark}</p>}
             <div className="button-row">
-              <button className="submit-btn" onClick={handleFinalCoaSubmit}>
-                ✅ ยืนยัน
-              </button>
-              <button className="cancel-btn" onClick={() => setShowConfirmCoa(false)}>
-                ❌ ยกเลิก
-              </button>
+              <button className="submit-btn" onClick={handleConfirmCoa}>✅ ยืนยัน</button>
+              <button className="cancel-btn" onClick={() => setShowConfirmCoa(false)}>❌ ยกเลิก</button>
             </div>
           </div>
         </div>
