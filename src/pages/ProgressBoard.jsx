@@ -47,27 +47,34 @@ const getStatusColor = (step, job) => {
             ))}
           </tr>
         </thead>
-        <tbody>
-          {jobs.map((job) => (
-            <tr key={job.id}>
-              <td><span className="product-label"><span role="img" aria-label="doc">📄</span> {job.product_name}</span></td>
-              {steps.map((step) => (
-                <td key={step}>
-                  <div
-                    style={{
-                      backgroundColor: getStatusColor(step, job),
-                      height: "20px",
-                      width: "100px",
-                      maxWidth: "100px",
-                      borderRadius: "6px",
-                      margin: "auto",
-                    }}
-                  ></div>
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
+<tbody>
+  {[...jobs]
+    .sort((a, b) => a.product_name.localeCompare(b.product_name, 'th'))
+    .map((job) => (
+      <tr key={job.id}>
+        <td>
+          <span className="product-label">
+            <span role="img" aria-label="doc">📄</span> {job.product_name}
+          </span>
+        </td>
+        {steps.map((step) => (
+          <td key={step}>
+            <div
+              style={{
+                backgroundColor: getStatusColor(step, job),
+                height: "20px",
+                width: "100px",
+                maxWidth: "100px",
+                borderRadius: "6px",
+                margin: "auto",
+              }}
+            ></div>
+          </td>
+        ))}
+      </tr>
+  ))}
+</tbody>
+
       </table>
     </div>
   );
