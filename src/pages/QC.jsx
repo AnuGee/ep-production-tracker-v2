@@ -181,6 +181,7 @@ export default function QC() {
         <button type="submit" className="submit-btn full-span">
           ✅ บันทึกสถานะตรวจสอบสินค้า
         </button>
+        <hr style={{ margin: "2rem 0", border: "1px solid #ccc" }} />
       </form>
 
       <form onSubmit={handleCoaSubmit} className="form-grid">
