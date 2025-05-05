@@ -1,54 +1,77 @@
-// src/pages/Warehouse.jsx
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
-import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import { db, timestamp } from "../firebase";
+import {
+  collection,
+  getDocs,
+  doc,
+  updateDoc,
+  query,
+  where,
+} from "firebase/firestore";
 import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
 export default function Warehouse() {
   const [jobs, setJobs] = useState([]);
   const [selectedJobId, setSelectedJobId] = useState("");
-  const [showConfirm, setShowConfirm] = useState(false);
   const [form, setForm] = useState({
     stock: "",
     step: "",
-    batch_no_wh1: "",
-    batch_no_wh2: "",
-    batch_no_wh3: "",
     remark: "",
+    batch_no_warehouse: ["", "", ""],
   });
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
+    const fetchJobs = async () => {
+      const q = query(
+        collection(db, "production_workflow"),
+        where("currentStep", "==", "Warehouse")
+      );
+      const querySnapshot = await getDocs(q);
+      const jobsData = [];
+      querySnapshot.forEach((doc) => {
+        jobsData.push({ id: doc.id, ...doc.data() });
+      });
+      setJobs(jobsData);
+    };
+
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setJobs(data.filter((job) => job.currentStep === "Warehouse"));
+  const handleSelectJob = (jobId) => {
+    setSelectedJobId(jobId);
+    const job = jobs.find((j) => j.id === jobId);
+    if (job) {
+      setForm({
+        stock: job.status?.stock || "",
+        step: job.status?.warehouse || "",
+        remark: job.remarks?.warehouse || "",
+        batch_no_warehouse: job.batch_no_warehouse || ["", "", ""],
+      });
+    }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleChange = (field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
-  const handleSelectJob = (e) => {
-    setSelectedJobId(e.target.value);
-    setForm({
-      stock: "",
-      step: "",
-      batch_no_wh1: "",
-      batch_no_wh2: "",
-      batch_no_wh3: "",
-      remark: "",
-    });
+  const handleBatchChange = (index, value) => {
+    const newBatch = [...form.batch_no_warehouse];
+    newBatch[index] = value;
+    setForm((prev) => ({
+      ...prev,
+      batch_no_warehouse: newBatch,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedJobId || !form.stock) {
-      toast.error("❌ กรุณาเลือกงานและกรอกข้อมูลให้ครบ");
+      toast.error("❌ กรุณาเลือกรายการและเลือกสถานะสต๊อก");
       return;
     }
     setShowConfirm(true);
@@ -56,14 +79,28 @@ export default function Warehouse() {
 
   const handleFinalSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedJobId);
+    const auditLog = {
+      step: "Warehouse",
+      field: "status",
+      value: {
+        stock: form.stock,
+        warehouse: form.step,
+      },
+      timestamp: new Date().toISOString(),
+      remark: form.remark || "",
+    };
 
     let nextStep = "Warehouse";
-    let statusUpdate = { warehouse: form.step || "ยังไม่เบิก" };
+    let statusUpdate = {
+      stock: form.stock,
+      warehouse: form.step,
+    };
 
     if (form.stock === "มีครบตามจำนวน") {
       nextStep = "QC";
       statusUpdate = {
-        warehouse: "",
+        stock: form.stock,
+        warehouse: "มีครบตามจำนวน",
         qc_inspection: "skip",
         qc_coa: "ยังไม่เตรียม",
       };
@@ -71,117 +108,111 @@ export default function Warehouse() {
       nextStep = "Production";
     }
 
-    const updates = {
-      status: statusUpdate,
-      currentStep: nextStep,
-      batch_no_warehouse: [form.batch_no_wh1, form.batch_no_wh2, form.batch_no_wh3].filter(Boolean),
-      remarks: {
-        warehouse: form.remark || "",
-      },
-      Timestamp_Warehouse: new Date().toISOString(),
-    };
-
     try {
-      await updateDoc(jobRef, updates);
-      toast.success("✅ อัปเดตสำเร็จ และส่งงานต่อเรียบร้อย");
-      fetchJobs();
-      setSelectedJobId("");
+      await updateDoc(jobRef, {
+        currentStep: nextStep,
+        status: statusUpdate,
+        batch_no_warehouse: form.batch_no_warehouse,
+        [`remarks.warehouse`]: form.remark || "",
+        Timestamp_Warehouse: timestamp,
+        audit_logs: [...(jobs.find((j) => j.id === selectedJobId).audit_logs || []), auditLog],
+      });
+
+      toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
       setForm({
         stock: "",
         step: "",
-        batch_no_wh1: "",
-        batch_no_wh2: "",
-        batch_no_wh3: "",
         remark: "",
+        batch_no_warehouse: ["", "", ""],
       });
+      setSelectedJobId("");
       setShowConfirm(false);
+      window.location.reload(); // รีเฟรชหน้าหลังอัปเดต
     } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาดในการอัปเดต");
-      setShowConfirm(false);
+      toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
     }
   };
 
   return (
     <div className="page-container">
-      <h2>🏭 <strong>Warehouse - อัปเดตข้อมูลสต๊อกสินค้า</strong></h2>
+      <h2>🏭 Warehouse - อัปเดตข้อมูลสต๊อก</h2>
+      <form onSubmit={handleSubmit}>
+        <label>📋 เลือกรายการ:</label>
+        <select value={selectedJobId} onChange={(e) => handleSelectJob(e.target.value)}>
+          <option value="">-- เลือกงาน --</option>
+          {jobs.map((job) => (
+            <option key={job.id} value={job.id}>
+              {job.po_number} - {job.product_name}
+            </option>
+          ))}
+        </select>
 
-      <form onSubmit={handleSubmit} className="form-grid">
-        <div className="full-span">
-          <label>📋 เลือกรายการ</label>
-          <select value={selectedJobId} onChange={handleSelectJob} className="input-box">
-            <option value="">-- เลือกงาน --</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.po_number || "-"} - {job.customer || "-"} - {job.product_name || "-"}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label>📦 สต๊อกสินค้า</label>
-          <select name="stock" value={form.stock} onChange={handleChange} className="input-box">
-            <option value="">-- เลือกสต๊อกสินค้า --</option>
-            <option value="มีครบตามจำนวน">มีครบตามจำนวน</option>
-            <option value="มีบางส่วน">มีบางส่วน</option>
-            <option value="ไม่มี">ไม่มี</option>
-          </select>
-        </div>
-
-        {(form.stock === "มีครบตามจำนวน" || form.stock === "มีบางส่วน") && (
-          <>
-            <div>
-              <label>🔢 Batch No WH1</label>
-              <input type="text" name="batch_no_wh1" value={form.batch_no_wh1} onChange={handleChange} className="input-box" />
-            </div>
-            <div>
-              <label>🔢 Batch No WH2</label>
-              <input type="text" name="batch_no_wh2" value={form.batch_no_wh2} onChange={handleChange} className="input-box" />
-            </div>
-            <div>
-              <label>🔢 Batch No WH3</label>
-              <input type="text" name="batch_no_wh3" value={form.batch_no_wh3} onChange={handleChange} className="input-box" />
-            </div>
-          </>
-        )}
+        <label>📦 สต๊อกสินค้า:</label>
+        <select value={form.stock} onChange={(e) => handleChange("stock", e.target.value)}>
+          <option value="">-- เลือกสถานะ --</option>
+          <option value="มีครบตามจำนวน">มีครบตามจำนวน</option>
+          <option value="มีบางส่วน">มีบางส่วน</option>
+          <option value="ไม่มี">ไม่มี</option>
+        </select>
 
         {form.stock !== "มีครบตามจำนวน" && (
-          <div>
-            <label>🔄 สถานะ</label>
-            <select name="step" value={form.step} onChange={handleChange} className="input-box">
+          <>
+            <label>🔄 สถานะการเบิก:</label>
+            <select value={form.step} onChange={(e) => handleChange("step", e.target.value)}>
               <option value="">-- เลือกสถานะ --</option>
               <option value="ยังไม่เบิก">ยังไม่เบิก</option>
               <option value="กำลังเบิก">กำลังเบิก</option>
               <option value="เบิกเสร็จ">เบิกเสร็จ</option>
             </select>
-          </div>
+          </>
         )}
 
-        <div className="full-span">
-          <label>📝 หมายเหตุ (ถ้ามี)</label>
-          <input type="text" name="remark" value={form.remark} onChange={handleChange} className="input-box" placeholder="ระบุหมายเหตุหากมี" />
-        </div>
+        <label>🔢 Batch No WH1:</label>
+        <input
+          type="text"
+          value={form.batch_no_warehouse[0]}
+          onChange={(e) => handleBatchChange(0, e.target.value)}
+        />
 
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกข้อมูล Warehouse
-        </button>
+        <label>🔢 Batch No WH2:</label>
+        <input
+          type="text"
+          value={form.batch_no_warehouse[1]}
+          onChange={(e) => handleBatchChange(1, e.target.value)}
+        />
+
+        <label>🔢 Batch No WH3:</label>
+        <input
+          type="text"
+          value={form.batch_no_warehouse[2]}
+          onChange={(e) => handleBatchChange(2, e.target.value)}
+        />
+
+        <label>📝 หมายเหตุ:</label>
+        <textarea
+          value={form.remark}
+          onChange={(e) => handleChange("remark", e.target.value)}
+        />
+
+        <button type="submit" className="submit-btn">✅ บันทึกข้อมูล</button>
       </form>
 
+      {/* Modal ยืนยันการบันทึก */}
       {showConfirm && (
-        <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal">
             <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
-            <ul style={{ textAlign: "left", marginTop: "10px" }}>
+            <ul>
               <li><strong>สต๊อกสินค้า:</strong> {form.stock}</li>
               {form.stock !== "มีครบตามจำนวน" && (
-                <li><strong>สถานะ:</strong> {form.step || "–"}</li>
+                <li><strong>สถานะการเบิก:</strong> {form.step}</li>
               )}
-              {form.batch_no_wh1 && <li><strong>Batch No WH1:</strong> {form.batch_no_wh1}</li>}
-              {form.batch_no_wh2 && <li><strong>Batch No WH2:</strong> {form.batch_no_wh2}</li>}
-              {form.batch_no_wh3 && <li><strong>Batch No WH3:</strong> {form.batch_no_wh3}</li>}
+              <li><strong>Batch No WH1:</strong> {form.batch_no_warehouse[0]}</li>
+              <li><strong>Batch No WH2:</strong> {form.batch_no_warehouse[1]}</li>
+              <li><strong>Batch No WH3:</strong> {form.batch_no_warehouse[2]}</li>
               {form.remark && <li><strong>หมายเหตุ:</strong> {form.remark}</li>}
             </ul>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", justifyContent: "center" }}>
+            <div className="button-row">
               <button className="submit-btn" onClick={handleFinalSubmit}>✅ ยืนยันการบันทึก</button>
               <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
             </div>
