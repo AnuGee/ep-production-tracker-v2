@@ -188,11 +188,17 @@ export default function QC() {
         <h3>📄 เตรียมเอกสาร COA</h3>
         <div className="form-group full-span">
           <label>📋 เลือกรายการ</label>
-          <select
-            value={selectedCoaJobId}
-            onChange={(e) => setSelectedCoaJobId(e.target.value)}
-            className="input-box"
-          >
+<select
+  value={selectedCoaJobId}
+  onChange={(e) => setSelectedCoaJobId(e.target.value)}
+  className="input-box"
+  disabled={coaJobs.length === 0}
+  style={{
+    backgroundColor: coaJobs.length === 0 ? "#e5e7eb" : "",
+    color: coaJobs.length === 0 ? "#9ca3af" : "",
+  }}
+>
+
             <option value="">-- เลือกงาน --</option>
 {coaJobs
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
