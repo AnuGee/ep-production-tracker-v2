@@ -184,59 +184,59 @@ export default function QC() {
         <hr style={{ margin: "2rem 0", border: "1px solid #ccc" }} />
       </form>
 
-      <form onSubmit={handleCoaSubmit} className="form-grid">
-        <h3>📄 เตรียมเอกสาร COA</h3>
-        <div className="form-group full-span">
-          <label>📋 เลือกรายการ</label>
-<select
-  value={selectedCoaJobId}
-  onChange={(e) => setSelectedCoaJobId(e.target.value)}
-  className="input-box"
-  disabled={coaJobs.length === 0}
-  style={{
-    backgroundColor: coaJobs.length === 0 ? "#e5e7eb" : "",
-    color: coaJobs.length === 0 ? "#9ca3af" : "",
-  }}
->
+<form onSubmit={handleCoaSubmit} className="form-grid">
+  <fieldset
+    disabled={coaJobs.length === 0}
+    style={{
+      opacity: coaJobs.length === 0 ? 0.6 : 1,
+      pointerEvents: coaJobs.length === 0 ? "none" : "auto",
+    }}
+  >
+    <h3>📄 เตรียมเอกสาร COA</h3>
+    <div className="form-group full-span">
+      <label>📋 เลือกรายการ</label>
+      <select
+        value={selectedCoaJobId}
+        onChange={(e) => setSelectedCoaJobId(e.target.value)}
+        className="input-box"
+      >
+        <option value="">-- เลือกงาน --</option>
+        {coaJobs.map((job) => (
+          <option key={job.id} value={job.id}>
+            {job.product_name} - {job.customer}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div className="form-group full-span">
+      <label>📄 สถานะ COA</label>
+      <select
+        value={coaStatus}
+        onChange={(e) => setCoaStatus(e.target.value)}
+        className="input-box"
+      >
+        <option value="">-- เลือกสถานะ --</option>
+        <option value="ยังไม่เตรียม">ยังไม่เตรียม</option>
+        <option value="กำลังเตรียม">กำลังเตรียม</option>
+        <option value="เตรียมพร้อมแล้ว">เตรียมพร้อมแล้ว</option>
+      </select>
+    </div>
+    <div className="form-group full-span">
+      <label>📝 หมายเหตุ</label>
+      <input
+        type="text"
+        value={coaRemark}
+        onChange={(e) => setCoaRemark(e.target.value)}
+        className="input-box"
+        placeholder="ระบุหมายเหตุหากมี"
+      />
+    </div>
+    <button type="submit" className="submit-btn full-span">
+      ✅ บันทึกสถานะ COA
+    </button>
+  </fieldset>
+</form>
 
-            <option value="">-- เลือกงาน --</option>
-{coaJobs
-  .sort((a, b) => a.product_name.localeCompare(b.product_name))
-  .map((job) => (
-    <option key={job.id} value={job.id}>
-      {job.product_name} - {job.customer}
-    </option>
-))}
-
-          </select>
-        </div>
-        <div className="form-group full-span">
-          <label>📄 สถานะ COA</label>
-          <select
-            value={coaStatus}
-            onChange={(e) => setCoaStatus(e.target.value)}
-            className="input-box"
-          >
-            <option value="">-- เลือกสถานะ --</option>
-            <option value="ยังไม่เตรียม">ยังไม่เตรียม</option>
-            <option value="กำลังเตรียม">กำลังเตรียม</option>
-            <option value="เตรียมพร้อมแล้ว">เตรียมพร้อมแล้ว</option>
-          </select>
-        </div>
-        <div className="form-group full-span">
-          <label>📝 หมายเหตุ</label>
-          <input
-            type="text"
-            value={coaRemark}
-            onChange={(e) => setCoaRemark(e.target.value)}
-            className="input-box"
-            placeholder="ระบุหมายเหตุหากมี"
-          />
-        </div>
-        <button type="submit" className="submit-btn full-span">
-          ✅ บันทึกสถานะ COA
-        </button>
-      </form>
       {/* ✅ MODAL ยืนยันการบันทึกสถานะตรวจสอบสินค้า */}
 {showConfirmInspection && (
   <div className="modal-overlay" onClick={() => setShowConfirmInspection(false)}>
