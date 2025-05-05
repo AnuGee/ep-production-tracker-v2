@@ -5,62 +5,65 @@ export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
   const getStatusColor = (step, job) => {
-    if (!job.status) return "#e5e7eb"; // เทา
+    if (!job.status) return "#e5e7eb"; // ยังไม่มีข้อมูล
 
-    if (job.currentStep === step) {
-      return "#facc15"; // กำลังทำ (เหลือง)
-    }
+    const { currentStep, status } = job;
+
+    if (currentStep === step) return "#facc15"; // กำลังทำ
 
     switch (step) {
       case "Sales":
         return (job.product_name && job.po_number && job.volume && job.customer)
-          ? "#4ade80" // เขียว
+          ? "#4ade80"
           : "#e5e7eb";
 
       case "Warehouse":
-        if (job.status.warehouse === "เบิกเสร็จ") return "#4ade80";
-        if (
-          job.status.warehouse === "มีครบตามจำนวน" &&
-          (job.status.qc_inspection || job.status.qc_coa)
-        )
+        if (status.warehouse === "เบิกเสร็จ" || status.warehouse === "มีของครบตามจำนวน") {
           return "#4ade80";
+        }
         return "#e5e7eb";
 
       case "Production":
-        if (job.status.production === "ผลิตเสร็จ") return "#4ade80";
+        // ✅ กรณีผลิตเสร็จ
+        if (status.production === "ผลิตเสร็จ") return "#4ade80";
+
+        // ✅ กรณีข้าม Production → ไปเตรียม COA แล้ว ถือว่าผ่าน Production
         if (
-          job.status.warehouse === "มีครบตามจำนวน" &&
-          !job.status.production &&
-          (job.status.qc_inspection || job.status.qc_coa)
-        )
-          return "#4ade80"; // ข้าม production
-        if (job.currentStep === "Warehouse" && job.status.qc_inspection === "ตรวจไม่ผ่าน")
-          return "#e5e7eb"; // ถูก QC ตีกลับไป warehouse → รีเซ็ต
+          (status.qc_coa === "ยังไม่เตรียม" ||
+           status.qc_coa === "กำลังเตรียม" ||
+           status.qc_coa === "เตรียมพร้อมแล้ว") &&
+          (status.warehouse === "มีของครบตามจำนวน" || status.warehouse === "ข้าม Production")
+        ) {
+          return "#4ade80";
+        }
+
+        // ❌ กรณี QC ตรวจไม่ผ่าน → ย้อนกลับไป Warehouse → รีเซ็ต Production
+        if (currentStep === "Warehouse" && status.qc_inspection === "ตรวจไม่ผ่าน") {
+          return "#e5e7eb";
+        }
+
         return "#e5e7eb";
 
       case "QC":
         if (
-          job.status.qc_inspection === "ตรวจผ่านแล้ว" &&
-          job.status.qc_coa === "เตรียมพร้อมแล้ว"
-        )
-          return "#4ade80";
-        if (job.status.qc_inspection === "ตรวจไม่ผ่าน")
-          return "#e5e7eb"; // ตีกลับให้รีเซ็ต QC ด้วย
+          status.qc_inspection === "ตรวจผ่านแล้ว" &&
+          status.qc_coa === "เตรียมพร้อมแล้ว"
+        ) return "#4ade80";
+
+        // ❌ QC ถูกย้อน → reset สี QC ด้วย
+        if (currentStep === "Warehouse" && status.qc_inspection === "ตรวจไม่ผ่าน") {
+          return "#e5e7eb";
+        }
+
         return "#e5e7eb";
 
       case "Account":
-        if (job.status.account === "Invoice ออกแล้ว") return "#4ade80";
-        return "#e5e7eb";
+        return (status.account === "Invoice ออกแล้ว") ? "#4ade80" : "#e5e7eb";
 
       default:
         return "#e5e7eb";
     }
   };
-
-  // 🔤 เรียงตามชื่อ product
-  const sortedJobs = [...jobs].sort((a, b) =>
-    (a.product_name || "").localeCompare(b.product_name || "")
-  );
 
   return (
     <div className="progress-table-wrapper">
@@ -74,28 +77,30 @@ export default function ProgressBoard({ jobs }) {
           </tr>
         </thead>
         <tbody>
-          {sortedJobs.map((job) => (
-            <tr key={job.id}>
-              <td>
-                <span className="product-label">
-                  📄 {job.product_name}
-                </span>
-              </td>
-              {steps.map((step) => (
-                <td key={step}>
-                  <div
-                    style={{
-                      backgroundColor: getStatusColor(step, job),
-                      height: "20px",
-                      width: "100px",
-                      maxWidth: "100px",
-                      borderRadius: "6px",
-                      margin: "auto",
-                    }}
-                  ></div>
+          {jobs
+            .sort((a, b) => a.product_name.localeCompare(b.product_name))
+            .map((job) => (
+              <tr key={job.id}>
+                <td>
+                  <span className="product-label">
+                    <span role="img" aria-label="doc">📄</span> {job.product_name}
+                  </span>
                 </td>
-              ))}
-            </tr>
+                {steps.map((step) => (
+                  <td key={step}>
+                    <div
+                      style={{
+                        backgroundColor: getStatusColor(step, job),
+                        height: "20px",
+                        width: "100px",
+                        maxWidth: "100px",
+                        borderRadius: "6px",
+                        margin: "auto",
+                      }}
+                    ></div>
+                  </td>
+                ))}
+              </tr>
           ))}
         </tbody>
       </table>
