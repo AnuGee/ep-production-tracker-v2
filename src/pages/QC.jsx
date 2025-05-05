@@ -225,6 +225,47 @@ export default function QC() {
           ✅ บันทึกสถานะ COA
         </button>
       </form>
+      {/* ✅ MODAL ยืนยันการบันทึกสถานะตรวจสอบสินค้า */}
+{showConfirmInspection && (
+  <div className="overlay" onClick={() => setShowConfirmInspection(false)}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
+      <ul style={{ textAlign: "left", marginTop: "1rem" }}>
+        <li><strong>สถานะการตรวจสอบ:</strong> {inspectionStatus}</li>
+        {inspectionRemark && <li><strong>หมายเหตุ:</strong> {inspectionRemark}</li>}
+      </ul>
+      <div className="button-row">
+        <button className="submit-btn" onClick={handleFinalInspectionSubmit}>
+          ✅ ยืนยันการบันทึก
+        </button>
+        <button className="cancel-btn" onClick={() => setShowConfirmInspection(false)}>
+          ❌ ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* ✅ MODAL ยืนยันการบันทึกสถานะ COA */}
+{showConfirmCoa && (
+  <div className="overlay" onClick={() => setShowConfirmCoa(false)}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
+      <ul style={{ textAlign: "left", marginTop: "1rem" }}>
+        <li><strong>สถานะ COA:</strong> {coaStatus}</li>
+        {coaRemark && <li><strong>หมายเหตุ:</strong> {coaRemark}</li>}
+      </ul>
+      <div className="button-row">
+        <button className="submit-btn" onClick={handleFinalCoaSubmit}>
+          ✅ ยืนยันการบันทึก
+        </button>
+        <button className="cancel-btn" onClick={() => setShowConfirmCoa(false)}>
+          ❌ ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
