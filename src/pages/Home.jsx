@@ -571,12 +571,20 @@ export default function Home() {
       {/* --- Summary Chart --- */}
       <hr style={{ margin: '2rem 0' }} />
       <h3>📊 สรุปสถานะงานรายแผนก (ตามที่กรอง)</h3>
-      <div className="legend" style={{ /* ... Legend Styles ... */ marginBottom: "1rem" }}>
-          {/* Legend Items */}
-         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div> <span>ผ่านแล้ว</span> </div>
-         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div> <span>กำลังทำ</span> </div>
-         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div> <span>ยังไม่เริ่ม</span> </div>
-      </div>
+<div className="legend" style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
+    <span>ผ่านแล้ว</span>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div>
+    <span>กำลังทำ</span>
+  </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+    <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div>
+    <span>ยังไม่เริ่ม</span>
+  </div>
+</div>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart layout="vertical" data={summaryPerStep} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <XAxis type="number" hide />
