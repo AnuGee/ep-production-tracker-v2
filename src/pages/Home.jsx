@@ -600,8 +600,7 @@ export default function Home() {
       <hr style={{ margin: '2rem 0' }} />
       <h3>📋 รายการงานทั้งหมด ({sortedJobs.length} รายการ)</h3>
       <div style={{ marginBottom: "1rem" }}>
-        <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📥 Export (มุมมองนี้)</button>
-        <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export (ทั้งหมด)</button>
+        <button onClick={exportAllToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export</button>
       </div>
 
       {/* --- Table Wrapper with Drag Scroll (แก้ไขแล้ว) --- */}
