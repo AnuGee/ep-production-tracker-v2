@@ -25,9 +25,7 @@ export default function Production() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-const filtered = data.filter(
-  (job) => job.currentStep === "Production"
-);
+    const filtered = data.filter((job) => job.currentStep === "Production");
     setJobs(filtered);
   };
 
@@ -37,28 +35,39 @@ const filtered = data.filter(
       toast.error("❌ กรุณากรอกข้อมูลให้ครบ");
       return;
     }
-    setShowConfirm(true); // เปิด popup ยืนยัน
+    setShowConfirm(true);
   };
 
   const handleFinalSubmit = async () => {
     try {
       const jobRef = doc(db, "production_workflow", selectedJobId);
-
+      const job = jobs.find((j) => j.id === selectedJobId);
       let nextStep = "Production";
-      if (productionStatus === "รอผลตรวจ") nextStep = "QC";
-      else if (productionStatus === "ผลิตเสร็จ") nextStep = "Account";
-
-      await updateDoc(jobRef, {
+      let updates = {
         batch_no: batchNo,
         "status.production": productionStatus,
         "remarks.production": remark,
-        currentStep: nextStep,
         Timestamp_Production: serverTimestamp(),
-      });
+      };
 
+      // ✅ Logic ขั้นตอนการผลิต
+      if (productionStatus === "รอผลตรวจ") {
+        nextStep = "QC";
+        updates.waiting_for = "Inspection";
+      } else if (productionStatus === "ผลิตเสร็จ") {
+        nextStep = "QC";
+        updates.waiting_for = "COA";
+      }
+
+      updates.currentStep = nextStep;
+
+      // ✅ อัปเดตข้อมูลหลัก
+      await updateDoc(jobRef, updates);
+
+      // ✅ อัปเดต Audit Logs
       await updateDoc(jobRef, {
         audit_logs: [
-          ...jobs.find((job) => job.id === selectedJobId)?.audit_logs || [],
+          ...(job?.audit_logs || []),
           {
             step: "Production",
             field: "status.production",
@@ -146,7 +155,6 @@ const filtered = data.filter(
         </div>
       </form>
 
-      {/* ✅ MODAL ยืนยันการบันทึก */}
       {showConfirm && (
         <div className="overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
