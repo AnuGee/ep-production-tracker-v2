@@ -64,11 +64,11 @@ return (
           <p><strong>🎨 Product:</strong> {job.product_name || "–"}</p>
           <p><strong>📍 Current Step:</strong> {job.currentStep || "–"}</p>
           <p><strong>📊 Status:</strong> {
-  job.currentStep === "Production" ? `${job.status?.production || "–"} (Production)` :
-  job.currentStep === "Warehouse" ? `${job.status?.warehouse || "–"} (Warehouse)` :
-  job.currentStep === "QC" ? `${job.status?.qc_inspection || "–"} (QC)` :
-  job.currentStep === "Sales" ? `${job.status?.sales || "–"} (Sales)` :
-  job.currentStep === "Account" ? `${job.status?.account || "–"} (Account)` :
+  job.currentStep === "Warehouse" ? `${job.status?.sales || "–"} (Sales)` :
+  job.currentStep === "Production" ? `${job.status?.warehouse || "–"} (Warehouse)` :
+  job.currentStep === "QC" ? `${job.status?.production || "–"} (Production)` :
+  job.currentStep === "Account" ? `${job.status?.qc_coa || job.status?.qc_inspection || "–"} (QC)` :
+  job.currentStep === "Completed" ? `${job.status?.account || "–"} (Account)` :
   "–"
 }</p>
           <p><strong>📦 Volume (KG):</strong> {job.volume || "–"}</p>
