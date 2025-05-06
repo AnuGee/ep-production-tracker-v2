@@ -11,7 +11,7 @@ export default function ProgressBoard({ jobs }) {
     const currentStep = job.currentStep;
 
     if (job.currentStep === step) {
-      return "#facc15"; // กำลังทำ
+      return "#facc15"; // 🔶 กำลังทำ
     }
 
     switch (step) {
@@ -30,14 +30,15 @@ export default function ProgressBoard({ jobs }) {
         return "#e5e7eb";
 
       case "Production":
-        if (status.production === "ผลิตเสร็จ") return "#4ade80";
-
+        // ✅ หาก Warehouse เลือก "มีของครบตามจำนวน" แล้วข้าม Production ไป COA หรือ Account
         if (
           status.warehouse === "มีของครบตามจำนวน" &&
           ["QC", "COA", "Account", "Completed"].includes(currentStep)
         ) {
-          return "#4ade80"; // ✅ ข้าม Production ไป QC
+          return "#4ade80";
         }
+
+        if (status.production === "ผลิตเสร็จ") return "#4ade80";
 
         if (
           status.warehouse === "เบิกเสร็จ" &&
