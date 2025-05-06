@@ -22,15 +22,27 @@ export default function Production() {
     fetchJobs();
   }, []);
 
-const fetchJobs = async () => {
-  const snapshot = await getDocs(collection(db, "production_workflow"));
-  const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  const filtered = data
-    .filter((job) => job.currentStep === "Production")
-    .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
-  setJobs(filtered);
-};
+  const fetchJobs = async () => {
+    const snapshot = await getDocs(collection(db, "production_workflow"));
+    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const filtered = data
+      .filter((job) => job.currentStep === "Production")
+      .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
+    setJobs(filtered);
+  };
 
+  const handleJobSelect = (jobId) => {
+    setSelectedJobId(jobId);
+    const job = jobs.find((j) => j.id === jobId);
+
+    // ✅ ถ้ามี batch_no_warehouse ให้รวมทั้งหมดมาใส่ในช่อง batchNo
+    if (job?.batch_no_warehouse?.length > 0) {
+      const combinedBatchNo = job.batch_no_warehouse.filter(Boolean).join(" / ");
+      setBatchNo(combinedBatchNo);
+    } else {
+      setBatchNo("");
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -46,14 +58,10 @@ const fetchJobs = async () => {
       const jobRef = doc(db, "production_workflow", selectedJobId);
       let nextStep = "Production";
 
-      // 👇 Logic เปลี่ยนขั้น
-      if (productionStatus === "รอผลตรวจ") {
-        nextStep = "QC"; // 🔍 ตรวจสอบสินค้า
-      } else if (productionStatus === "ผลิตเสร็จ") {
-        nextStep = "QC"; // 📄 เตรียมเอกสาร COA
+      if (productionStatus === "รอผลตรวจ" || productionStatus === "ผลิตเสร็จ") {
+        nextStep = "QC";
       }
 
-      // 👇 อัปเดต status และข้อมูล
       await updateDoc(jobRef, {
         batch_no: batchNo,
         "status.production": productionStatus,
@@ -62,7 +70,6 @@ const fetchJobs = async () => {
         Timestamp_Production: serverTimestamp(),
       });
 
-      // 👇 เพิ่ม audit log
       const job = jobs.find((job) => job.id === selectedJobId);
       const auditLogs = job?.audit_logs || [];
 
@@ -100,10 +107,10 @@ const fetchJobs = async () => {
           <label>📋 <strong>เลือกรายการ</strong></label>
           <select
             value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
+            onChange={(e) => handleJobSelect(e.target.value)}
             className="input-box"
           >
-            <option value="">-- เลือกรายการ --</option>
+            <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
                 {job.product_name} - {job.customer}
@@ -156,7 +163,6 @@ const fetchJobs = async () => {
         </div>
       </form>
 
-      {/* ✅ MODAL Confirm */}
       {showConfirm && (
         <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
