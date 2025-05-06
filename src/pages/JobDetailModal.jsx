@@ -16,7 +16,7 @@ export default function JobDetailModal({ job, onClose }) {
       dateStyle: "short",
       timeStyle: "short",
     });
-    return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
+    return `ผู้บันทึกล่าสุดของล่าสุด : ${lastLog.step} : ${timeStr}`;
   };
 
   const renderAuditLogs = () => {
