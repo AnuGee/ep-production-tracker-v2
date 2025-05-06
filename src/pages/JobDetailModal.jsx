@@ -63,7 +63,14 @@ return (
           <p><strong>BN PD:</strong> {job.batch_no_production || "–"}</p>
           <p><strong>🎨 Product:</strong> {job.product_name || "–"}</p>
           <p><strong>📍 Current Step:</strong> {job.currentStep || "–"}</p>
-          <p><strong>📊 Status:</strong> {job.status?.production || job.status?.warehouse || job.status?.qc_inspection || job.status?.sales || job.status?.account || "–"}</p>
+          <p><strong>📊 Status:</strong> {
+  job.currentStep === "Production" ? `${job.status?.production || "–"} (Production)` :
+  job.currentStep === "Warehouse" ? `${job.status?.warehouse || "–"} (Warehouse)` :
+  job.currentStep === "QC" ? `${job.status?.qc_inspection || "–"} (QC)` :
+  job.currentStep === "Sales" ? `${job.status?.sales || "–"} (Sales)` :
+  job.currentStep === "Account" ? `${job.status?.account || "–"} (Account)` :
+  "–"
+}</p>
           <p><strong>📦 Volume (KG):</strong> {job.volume || "–"}</p>
           <p><strong>🚚 Delivery Date:</strong> {job.delivery_date || "–"}</p>
           <p><strong>📌 Last Update:</strong> {renderLastUpdate()}</p>
