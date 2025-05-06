@@ -46,7 +46,7 @@ export default function JobDetailModal({ job, onClose }) {
           <p><strong>📊 Status:</strong> {getLatestStatus()}</p>
           <p><strong>📦 Volume (KG):</strong> {job.volume}</p>
           <p><strong>🚚 Delivery Date:</strong> {job.delivery_date}</p>
-          <p><strong>📌 Last Update:</strong> ผู้บันทึกล่าสุด : {getLastUpdatedDepartment()} : {getLastUpdatedTime()}</p>
+          <p><strong>📌 Last Update:</strong> ผู้บันทึกล่าสุดของล่าสุด : {getLastUpdatedDepartment()} : {getLastUpdatedTime()}</p>
         </div>
 
         {/* ตารางรายละเอียด */}
