@@ -1,31 +1,25 @@
 import React from "react";
 import "../styles/Responsive.css";
+
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
+
   const getStatusColor = (step, job) => {
     if (!job.status) return "#e5e7eb";
+
     const status = job.status;
     const currentStep = job.currentStep;
-    
-    // กรณีพิเศษ: เมื่อ Warehouse เลือก "มีของครบตามจำนวน" และข้ามไป QC
-    // ให้ Warehouse และ Production เป็นสีเขียว (เสร็จสิ้น)
-    if (status.warehouse === "มีของครบตามจำนวน" && 
-        ["QC", "COA", "Account", "Completed"].includes(currentStep)) {
-      if (step === "Warehouse" || step === "Production") {
-        return "#4ade80"; // สีเขียว - เสร็จสิ้น
-      }
-    }
-    
-    // กรณีที่ขั้นตอนปัจจุบันกำลังทำอยู่
+
     if (job.currentStep === step) {
-      return "#facc15"; // 🔶 กำลังทำ
+      return "#facc15"; // กำลังทำ
     }
-    
+
     switch (step) {
       case "Sales":
         return (job.product_name && job.po_number && job.volume && job.customer)
           ? "#4ade80"
           : "#e5e7eb";
+
       case "Warehouse":
         if (
           status.warehouse === "เบิกเสร็จ" ||
@@ -34,68 +28,78 @@ export default function ProgressBoard({ jobs }) {
           return "#4ade80";
         }
         return "#e5e7eb";
+
       case "Production":
-        // แก้ไขเงื่อนไขให้ข้าม Production เป็นสีเขียว
-        if (status.warehouse === "มีของครบตามจำนวน") {
-          return "#4ade80";
-        }
         if (status.production === "ผลิตเสร็จ") return "#4ade80";
+
+        if (
+          status.warehouse === "มีของครบตามจำนวน" &&
+          ["QC", "COA", "Account", "Completed"].includes(currentStep)
+        ) {
+          return "#4ade80"; // ✅ ข้าม Production ไป QC
+        }
+
         if (
           status.warehouse === "เบิกเสร็จ" &&
           ["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(status.production)
         ) {
           return "#facc15";
         }
+
         if (
           status.qc_inspection === "ตรวจผ่าน" &&
           status.production === "กำลังบรรจุ"
         ) {
           return "#facc15";
         }
+
         if (
           currentStep === "Warehouse" &&
           status.qc_inspection === "ตรวจไม่ผ่าน"
         ) {
           return "#e5e7eb"; // ❌ QC fail → กลับ Warehouse → รีเซ็ต Production
         }
+
         return "#e5e7eb";
+
       case "QC":
-        // เพิ่มเงื่อนไขพิเศษสำหรับ QC เมื่อมาจาก "มีของครบตามจำนวน"
-        if (status.warehouse === "มีของครบตามจำนวน" && 
-            currentStep === "QC") {
-          return "#facc15"; // กำลังทำ QC
-        }
         if (
           status.qc_inspection === "ตรวจผ่านแล้ว" &&
           status.qc_coa === "เตรียมพร้อมแล้ว"
         ) {
           return "#4ade80";
         }
+
         if (
           currentStep === "Warehouse" &&
           status.qc_inspection === "ตรวจไม่ผ่าน"
         ) {
           return "#e5e7eb"; // ❌ QC fail → กลับ Warehouse → รีเซ็ต QC
         }
+
         if (
           ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
           ["กำลังเตรียม"].includes(status.qc_coa)
         ) {
           return "#facc15";
         }
+
         return "#e5e7eb";
+
       case "Account":
         if (status.account === "Invoice ออกแล้ว") return "#4ade80";
         if (status.account === "Invoice ยังไม่ออก") return "#facc15";
         return "#e5e7eb";
+
       default:
         return "#e5e7eb";
     }
   };
-  // ✅ เรียงตามชื่อสินค้า
+
   const sortedJobs = [...jobs].sort((a, b) =>
     a.product_name?.localeCompare(b.product_name)
   );
+
   return (
     <div className="progress-table-wrapper">
       <table className="progress-table">
