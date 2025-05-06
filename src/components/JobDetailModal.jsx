@@ -1,4 +1,3 @@
-// src/pages/JobDetailModal.jsx
 import React from "react";
 import "./JobDetailModal.css";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +7,7 @@ export default function JobDetailModal({ job, onClose }) {
 
   const getBatchNo = (index) => job.batch_no_warehouse?.[index] || "–";
   const getRemark = (step) => job.remarks?.[step] || "–";
+
   const renderLastUpdate = () => {
     const logs = job.audit_logs;
     if (!logs || logs.length === 0) return "–";
@@ -16,7 +16,7 @@ export default function JobDetailModal({ job, onClose }) {
       dateStyle: "short",
       timeStyle: "short",
     });
-    return `ผู้บันทึกล่าสุดของล่าสุด : ${lastLog.step} : ${timeStr}`;
+    return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
   };
 
   const renderAuditLogs = () => {
@@ -44,15 +44,29 @@ export default function JobDetailModal({ job, onClose }) {
     );
   };
 
-return (
-  <div
-    className="modal-overlay"
-    onClick={onClose} // ✅ คลิกพื้นหลัง = ปิด popup
-  >
-    <div
-      className="modal-content"
-      onClick={(e) => e.stopPropagation()} // ✅ กันคลิกทะลุภายใน popup
-    >
+  const getCurrentStepStatus = () => {
+    const step = job.currentStep?.toLowerCase();
+    if (!step) return "–";
+
+    const stepMap = {
+      sales: "Sales",
+      warehouse: "Warehouse",
+      production: "Production",
+      qc: "QC",
+      account: "Account",
+    };
+
+    const status =
+      step === "sales"
+        ? "กรอกแล้ว"
+        : job.status?.[step] || "ยังไม่มีข้อมูล";
+
+    return `${status} (${stepMap[step] || step})`;
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h3>📄 รายละเอียดงาน</h3>
         <div>
           <p><strong>👤 Customer:</strong> {job.customer || "–"}</p>
@@ -63,14 +77,7 @@ return (
           <p><strong>BN PD:</strong> {job.batch_no_production || "–"}</p>
           <p><strong>🎨 Product:</strong> {job.product_name || "–"}</p>
           <p><strong>📍 Current Step:</strong> {job.currentStep || "–"}</p>
-          <p><strong>📊 Status:</strong> {
-  job.currentStep === "Warehouse" ? `${job.status?.sales || "–"} (Sales)` :
-  job.currentStep === "Production" ? `${job.status?.warehouse || "–"} (Warehouse)` :
-  job.currentStep === "QC" ? `${job.status?.production || "–"} (Production)` :
-  job.currentStep === "Account" ? `${job.status?.qc_coa || job.status?.qc_inspection || "–"} (QC)` :
-  job.currentStep === "Completed" ? `${job.status?.account || "–"} (Account)` :
-  "–"
-}</p>
+          <p><strong>📊 Status:</strong> {getCurrentStepStatus()}</p>
           <p><strong>📦 Volume (KG):</strong> {job.volume || "–"}</p>
           <p><strong>🚚 Delivery Date:</strong> {job.delivery_date || "–"}</p>
           <p><strong>📌 Last Update:</strong> {renderLastUpdate()}</p>
