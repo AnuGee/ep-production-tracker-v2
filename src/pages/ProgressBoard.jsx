@@ -62,29 +62,38 @@ export default function ProgressBoard({ jobs }) {
 
         return "#e5e7eb";
 
-      case "QC":
-        if (
-          status.qc_inspection === "ตรวจผ่านแล้ว" &&
-          status.qc_coa === "เตรียมพร้อมแล้ว"
-        ) {
-          return "#4ade80";
-        }
+case "QC":
+  if (
+    status.qc_inspection === "ตรวจผ่านแล้ว" &&
+    status.qc_coa === "เตรียมพร้อมแล้ว"
+  ) {
+    return "#4ade80"; // ✅ ผ่านทั้ง 2 หมวด
+  }
 
-        if (
-          currentStep === "Warehouse" &&
-          status.qc_inspection === "ตรวจไม่ผ่าน"
-        ) {
-          return "#e5e7eb"; // ❌ QC fail → กลับ Warehouse → รีเซ็ต QC
-        }
+  // ✅ เพิ่มเงื่อนไขใหม่: ถ้างานไป Account แล้ว และ QC มีค่า
+  if (
+    ["Account", "Completed"].includes(currentStep) &&
+    status.qc_inspection &&
+    status.qc_coa
+  ) {
+    return "#4ade80"; // ✅ ถือว่าผ่าน QC แล้ว
+  }
 
-        if (
-          ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
-          ["กำลังเตรียม"].includes(status.qc_coa)
-        ) {
-          return "#facc15";
-        }
+  if (
+    currentStep === "Warehouse" &&
+    status.qc_inspection === "ตรวจไม่ผ่าน"
+  ) {
+    return "#e5e7eb"; // ❌ ย้อนกลับ
+  }
 
-        return "#e5e7eb";
+  if (
+    ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
+    status.qc_coa === "กำลังเตรียม"
+  ) {
+    return "#facc15";
+  }
+
+  return "#e5e7eb";
 
       case "Account":
         if (status.account === "Invoice ออกแล้ว") return "#4ade80";
