@@ -40,22 +40,20 @@ export default function JobDetailModal({ job, onClose }) {
               <th>เวลา</th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.label}>
-                <td>{r.label}</td>
-                <td>
-                  {r.status
-                    ? job.currentStep === r.label
-                      ? `${r.status} (กำลังดำเนินการ)`
-                      : r.status
-                    : "-"}
-                </td>
-                <td>{r.remark || "-"}</td>
-                <td>{r.time || "-"}</td>
-              </tr>
-            ))}
-          </tbody>
+<tbody>
+  {rows.map((r) => (
+    <tr key={r.label}>
+      <td>{r.label}</td>
+      <td>
+        {r.status
+          ? `${r.status} (${job.currentStep === r.label ? "กำลังดำเนินการ" : r.label})`
+          : "-"}
+      </td>
+      <td>{r.remark || "-"}</td>
+      <td>{r.time || "-"}</td>
+    </tr>
+  ))}
+</tbody>
         </table>
 
         <button className="close-btn" onClick={onClose}>❌ ปิด</button>
