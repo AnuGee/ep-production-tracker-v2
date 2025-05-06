@@ -31,18 +31,23 @@ export default function Production() {
     setJobs(filtered);
   };
 
-  const handleJobSelect = (jobId) => {
-    setSelectedJobId(jobId);
-    const job = jobs.find((j) => j.id === jobId);
+const handleJobSelect = (jobId) => {
+  setSelectedJobId(jobId);
+  const job = jobs.find((j) => j.id === jobId);
 
-    // ✅ ถ้ามี batch_no_warehouse ให้รวมทั้งหมดมาใส่ในช่อง batchNo
-    if (job?.batch_no_warehouse?.length > 0) {
-      const combinedBatchNo = job.batch_no_warehouse.filter(Boolean).join(" / ");
-      setBatchNo(combinedBatchNo);
-    } else {
-      setBatchNo("");
-    }
-  };
+  if (job?.batch_no) {
+    setBatchNo(job.batch_no); // ✅ ดึงค่า batch_no ที่เคยกรอกไว้
+  } else if (job?.batch_no_warehouse?.length > 0) {
+    const combinedBatchNo = job.batch_no_warehouse.filter(Boolean).join(" / ");
+    setBatchNo(combinedBatchNo);
+  } else {
+    setBatchNo("");
+  }
+
+  // ✅ โหลดสถานะและหมายเหตุเก่าด้วย
+  setProductionStatus(job?.status?.production || "");
+  setRemark(job?.remarks?.production || "");
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
