@@ -12,35 +12,85 @@ export default function JobDetailModal({ job, onClose }) {
     }
   };
 
-  const getStatusDisplay = (label, status) => {
-    if (!status) return "-";
-    
-    if (job.currentStep === label) {
-      return `${status} (กำลังดำเนินการ)`;
-    } else {
-      return `${status} (${label})`;
+  // ฟังก์ชันตรวจสอบสถานะแบบละเอียด
+  const getDetailedStatus = (label) => {
+    switch (label) {
+      case "Sales":
+        return {
+          status: job.status?.sales || "กรอกแล้ว",
+          time: job.Timestamp_Sales,
+          remark: job.remarks?.sales
+        };
+      case "Warehouse":
+        return {
+          status: job.status?.warehouse,
+          time: job.Timestamp_Warehouse,
+          remark: job.remarks?.warehouse
+        };
+      case "Production":
+        return {
+          status: job.status?.production,
+          time: job.Timestamp_Production,
+          remark: job.remarks?.production
+        };
+      case "QC":
+        return {
+          status: job.status?.qc_inspection,
+          time: job.Timestamp_QC,
+          remark: job.remarks?.qc
+        };
+      case "COA":
+        return {
+          status: job.status?.qc_coa,
+          time: null,
+          remark: null
+        };
+      case "Account":
+        return {
+          status: job.status?.account,
+          time: job.Timestamp_Account,
+          remark: job.remarks?.account
+        };
+      default:
+        return { status: "-", time: null, remark: null };
     }
   };
 
   const rows = [
-    { label: "Sales", status: "กรอกแล้ว", remark: job.remarks?.sales, time: formatDate(job.Timestamp_Sales) },
-    { label: "Warehouse", status: job.status?.warehouse, remark: job.remarks?.warehouse, time: formatDate(job.Timestamp_Warehouse) },
-    { label: "Production", status: job.status?.production, remark: job.remarks?.production, time: formatDate(job.Timestamp_Production) },
-    { label: "QC", status: job.status?.qc_inspection, remark: job.remarks?.qc, time: formatDate(job.Timestamp_QC) },
-    { label: "COA", status: job.status?.qc_coa, remark: null, time: null },
-    { label: "Account", status: job.status?.account, remark: job.remarks?.account, time: formatDate(job.Timestamp_Account) },
-  ];
+    "Sales",
+    "Warehouse",
+    "Production",
+    "QC",
+    "COA",
+    "Account"
+  ].map(label => {
+    const { status, time, remark } = getDetailedStatus(label);
+    return {
+      label,
+      status,
+      time: formatDate(time),
+      remark: remark || "-"
+    };
+  });
+
+  // ฟังก์ชันแสดงสถานะปัจจุบัน
+  const renderCurrentStatus = () => {
+    if (job.currentStep === "QC" && job.status?.production) {
+      return `รอผลตรวจ (Production) → กำลังดำเนินการใน QC`;
+    }
+    if (job.currentStep === "Production" && job.status?.warehouse) {
+      return `เบิกเสร็จ (Warehouse) → กำลังดำเนินการใน Production`;
+    }
+    return "กำลังดำเนินการ";
+  };
 
   return (
     <div className="modal-backdrop">
       <div className="modal-content">
         <h2>🔍 รายละเอียดงาน</h2>
         <p><strong>📍 Current Step:</strong> {job.currentStep}</p>
-        <p><strong>📊 Status:</strong> {job.status?.warehouse ? `${job.status.warehouse} (Warehouse)` : "-"}</p>
+        <p><strong>📊 สถานะปัจจุบัน:</strong> {renderCurrentStatus()}</p>
         <p><strong>📦 Product:</strong> {job.product_name}</p>
-        <p><strong>👤 Customer:</strong> {job.customer}</p>
-        <p><strong>📅 Delivery:</strong> {job.delivery_date}</p>
-        <p><strong>🧪 Volume:</strong> {job.volume} KG</p>
         <p><strong>🔢 Batch No:</strong> {job.batch_no || "-"}</p>
         
         <table className="modal-table">
@@ -53,14 +103,26 @@ export default function JobDetailModal({ job, onClose }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.label}>
-                <td>{r.label}</td>
-                <td>{getStatusDisplay(r.label, r.status)}</td>
-                <td>{r.remark || "-"}</td>
-                <td>{r.time || "-"}</td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const isCurrent = job.currentStep === row.label;
+              const isCompleted = row.time !== "-";
+              
+              let statusDisplay = "-";
+              if (isCurrent) {
+                statusDisplay = `${row.status || "กำลังดำเนินการ"} (ปัจจุบัน)`;
+              } else if (isCompleted) {
+                statusDisplay = `${row.status} (${row.label})`;
+              }
+
+              return (
+                <tr key={row.label}>
+                  <td>{row.label}</td>
+                  <td>{statusDisplay}</td>
+                  <td>{row.remark}</td>
+                  <td>{row.time}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         <button className="close-btn" onClick={onClose}>❌ ปิด</button>
