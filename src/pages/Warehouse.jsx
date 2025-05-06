@@ -49,6 +49,18 @@ export default function Warehouse() {
     setShowConfirm(true);
   };
 
+    // ✅ แทรกฟังก์ชันนี้ตรงนี้เลย
+  const handleJobSelect = (jobId) => {
+    setSelectedJobId(jobId);
+    const job = jobs.find((j) => j.id === jobId);
+    setStock(job?.stock || "");
+    setStep(job?.status?.warehouse || "");
+    setBatch1(job?.batch_no_warehouse?.[0] || "");
+    setBatch2(job?.batch_no_warehouse?.[1] || "");
+    setBatch3(job?.batch_no_warehouse?.[2] || "");
+    setRemark(job?.remarks?.warehouse || "");
+  };
+  
   const handleFinalSubmit = async () => {
     try {
       const jobRef = doc(db, "production_workflow", selectedJobId);
@@ -112,7 +124,11 @@ export default function Warehouse() {
       <form onSubmit={handleSubmit} className="form-grid">
         <div className="form-group full-span">
           <label>📋 <strong>เลือกรายการ</strong></label>
-          <select value={selectedJobId} onChange={(e) => setSelectedJobId(e.target.value)} className="input-box">
+          <select
+  value={selectedJobId}
+  onChange={(e) => handleJobSelect(e.target.value)}  // ✅ เรียก handleJobSelect
+  className="input-box"
+>
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
