@@ -30,7 +30,6 @@ export default function JobDetailModal({ job, onClose }) {
         <p><strong>📅 Delivery:</strong> {job.delivery_date}</p>
         <p><strong>🧪 Volume:</strong> {job.volume} KG</p>
         <p><strong>🔢 Batch No:</strong> {job.batch_no || "-"}</p>
-        <p><strong>🚩 Current Step:</strong> {job.currentStep || "-"}</p>
 
         <table className="modal-table">
           <thead>
@@ -43,21 +42,14 @@ export default function JobDetailModal({ job, onClose }) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.label} className={job.currentStep === r.label ? "current-step-row" : ""}>
+              <tr key={r.label}>
                 <td>{r.label}</td>
                 <td>
-                  {r.status ? (
-                    <>
-                      {r.status}{" "}
-                      {job.currentStep === r.label ? (
-                        <span className="status-indicator">(กำลังดำเนินการ)</span>
-                      ) : (
-                        <span className="status-indicator">({r.label})</span>
-                      )}
-                    </>
-                  ) : (
-                    "-"
-                  )}
+                  {r.status
+                    ? job.currentStep?.toLowerCase() === r.label.toLowerCase()
+                      ? `${r.status} (${r.label} - กำลังดำเนินการ)`
+                      : `${r.status} (${r.label})`
+                    : "-"}
                 </td>
                 <td>{r.remark || "-"}</td>
                 <td>{r.time || "-"}</td>
