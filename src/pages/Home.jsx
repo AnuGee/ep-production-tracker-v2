@@ -155,32 +155,30 @@ export default function Home() {
           if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
           return "notStarted";
         }
-case "QC": {
-  const qc = status.qc_inspection;
-  if (qc === "ตรวจผ่านแล้ว") return "done";
-  if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
-  if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
-  return "notStarted";
-}
-break;
+  case "QC": {
+    const qc = status.qc_inspection;
+    if (qc === "ตรวจผ่านแล้ว") return "done";
+    if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
+    if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
+    return "notStarted";
+  } // ←❗ ต้องมีการปิดบล็อกก่อนเริ่ม case ถัดไป
 
-case "COA": {
-  const coa = status.qc_coa;
-  if (coa === "เตรียมพร้อมแล้ว") return "done";
-  if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
-  if (["Account", "Completed"].includes(currentStep)) return "done";
-  return "notStarted";
-}
-break;
- return "notStarted";
-       }
-      case "Account": {
-        const ac = status.account;
-        if (ac === "Invoice ออกแล้ว") return "done";
-        if (ac === "Invoice ยังไม่ออก") return "doing";
-        return "notStarted";
-      }
-      default: return "notStarted";
+  case "COA": {
+    const coa = status.qc_coa;
+    if (coa === "เตรียมพร้อมแล้ว") return "done";
+    if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
+    if (["Account", "Completed"].includes(currentStep)) return "done";
+    return "notStarted";
+  } // ←❗ สำคัญ: ปิดให้ครบก่อน case ถัดไป
+
+  case "Account": {
+    const ac = status.account;
+    if (ac === "Invoice ออกแล้ว") return "done";
+    if (ac === "Invoice ยังไม่ออก") return "doing";
+    return "notStarted";
+  }
+
+  default: return "notStarted";
     }
   };
 
