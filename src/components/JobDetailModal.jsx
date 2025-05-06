@@ -45,10 +45,11 @@ export default function JobDetailModal({ job, onClose }) {
     <tr key={r.label}>
       <td>{r.label}</td>
       <td>
-        {r.status
-          ? `${r.status} (${job.currentStep === r.label ? "กำลังดำเนินการ" : r.label})`
-          : "-"}
-      </td>
+<td>
+  {r.status
+    ? `${r.status} (${job.currentStep?.toLowerCase() === r.label.toLowerCase() ? "กำลังดำเนินการ" : r.label})`
+    : "-"}
+</td>
       <td>{r.remark || "-"}</td>
       <td>{r.time || "-"}</td>
     </tr>
