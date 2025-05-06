@@ -1,6 +1,6 @@
 import React from "react";
 import "./JobDetailModal.css";
-
+console.log('JobDetailModal loaded');
 export default function JobDetailModal({ job, onClose }) {
   if (!job) return null;
 
