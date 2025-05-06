@@ -12,6 +12,45 @@ export default function JobDetailModal({ job, onClose }) {
     }
   };
 
+  // หาสถานะของแผนกก่อนหน้า Current Step
+  const getPreviousStepStatus = () => {
+    if (!job.currentStep) return "-";
+    
+    // เรียงลำดับขั้นตอนการทำงาน
+    const workflowSteps = ["Sales", "Warehouse", "Production", "QC", "COA", "Account"];
+    const currentStepIndex = workflowSteps.findIndex(
+      step => step.toLowerCase() === job.currentStep.toLowerCase()
+    );
+    
+    // ถ้าเป็นขั้นตอนแรก หรือหาไม่เจอในลำดับขั้นตอน
+    if (currentStepIndex <= 0 || currentStepIndex === -1) return "-";
+    
+    // ดึงชื่อแผนกก่อนหน้า
+    const previousStep = workflowSteps[currentStepIndex - 1];
+    
+    // ดึงสถานะของแผนกก่อนหน้า
+    if (previousStep === "Sales") return "กรอกแล้ว";
+    if (previousStep === "Warehouse") return job.status?.warehouse || "-";
+    if (previousStep === "Production") return job.status?.production || "-";
+    if (previousStep === "QC") return job.status?.qc_inspection || "-";
+    if (previousStep === "COA") return job.status?.qc_coa || "-";
+    
+    return "-";
+  };
+
+  // ดึงชื่อแผนกก่อนหน้า
+  const getPreviousStepName = () => {
+    if (!job.currentStep) return "-";
+    
+    const workflowSteps = ["Sales", "Warehouse", "Production", "QC", "COA", "Account"];
+    const currentStepIndex = workflowSteps.findIndex(
+      step => step.toLowerCase() === job.currentStep.toLowerCase()
+    );
+    
+    if (currentStepIndex <= 0 || currentStepIndex === -1) return "-";
+    return workflowSteps[currentStepIndex - 1];
+  };
+
   const rows = [
     { label: "Sales", status: "กรอกแล้ว", remark: job.remarks?.sales, time: formatDate(job.Timestamp_Sales) },
     { label: "Warehouse", status: job.status?.warehouse, remark: job.remarks?.warehouse, time: formatDate(job.Timestamp_Warehouse) },
@@ -20,6 +59,10 @@ export default function JobDetailModal({ job, onClose }) {
     { label: "COA", status: job.status?.qc_coa, remark: null, time: null },
     { label: "Account", status: job.status?.account, remark: job.remarks?.account, time: formatDate(job.Timestamp_Account) },
   ];
+
+  // สถานะและชื่อแผนกก่อนหน้า
+  const previousStepStatus = getPreviousStepStatus();
+  const previousStepName = getPreviousStepName();
 
   return (
     <div className="modal-backdrop">
@@ -30,6 +73,15 @@ export default function JobDetailModal({ job, onClose }) {
         <p><strong>📅 Delivery:</strong> {job.delivery_date}</p>
         <p><strong>🧪 Volume:</strong> {job.volume} KG</p>
         <p><strong>🔢 Batch No:</strong> {job.batch_no || "-"}</p>
+        
+        {/* เพิ่ม Current Step และ Status */}
+        <p><strong>📍 Current Step:</strong> {job.currentStep || "-"}</p>
+        {previousStepStatus !== "-" && (
+          <p>
+            <strong>📊 Status:</strong> {previousStepStatus}{" "}
+            <span className="status-department">({previousStepName})</span>
+          </p>
+        )}
 
         <table className="modal-table">
           <thead>
@@ -57,7 +109,7 @@ export default function JobDetailModal({ job, onClose }) {
             ))}
           </tbody>
         </table>
-
+        
         <button className="close-btn" onClick={onClose}>❌ ปิด</button>
       </div>
     </div>
