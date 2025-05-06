@@ -155,12 +155,22 @@ export default function Home() {
           if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
           return "notStarted";
         }
-      case "QC": {
-        const qc = status.qc_inspection;
-        if (qc === "ตรวจผ่านแล้ว") return "done";
-        if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
-        if (["COA", "Account", "Completed"].includes(currentStep)) return "done"; // QC is done if COA started
-        return "notStarted";
+case "QC": {
+  const qc = status.qc_inspection;
+  const coa = status.qc_coa;
+  const currentStep = job.currentStep;
+
+  if (qc === "ตรวจผ่านแล้ว" && coa === "เตรียมพร้อมแล้ว") return "done";
+  if (qc === "ตรวจผ่านแล้ว" && coa !== "เตรียมพร้อมแล้ว") return "doing";
+  if (
+    ["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc) ||
+    ["กำลังเตรียม"].includes(coa)
+  ) return "doing";
+  if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
+
+  return "notStarted";
+}
+
       }
       // COA logic merged into QC and Account for summary chart simplicity if needed,
       // but kept separate for detailed status badge rendering logic.
@@ -589,7 +599,13 @@ export default function Home() {
         <BarChart layout="vertical" data={summaryPerStep} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <XAxis type="number" hide />
           <YAxis dataKey="name" type="category" width={80} /> {/* Adjust width if needed */}
-          <Tooltip />
+          <Tooltip
+  formatter={(value, name) => [
+    `${value} งาน`,
+    name === "done" ? "ผ่านแล้ว" : name === "doing" ? "กำลังทำ" : "ยังไม่เริ่ม",
+  ]}
+/>
+
           <Bar dataKey="done" stackId="a" fill="#4ade80" name="ผ่านแล้ว"/>
           <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ"/>
           <Bar dataKey="notStarted" stackId="a" fill="#d1d5db" name="ยังไม่เริ่ม"/>
