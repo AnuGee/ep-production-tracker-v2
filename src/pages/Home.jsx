@@ -590,12 +590,18 @@ export default function Home() {
         <BarChart layout="vertical" data={summaryPerStep} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <XAxis type="number" hide />
           <YAxis dataKey="name" type="category" width={80} /> {/* Adjust width if needed */}
-          <Tooltip
-  formatter={(value, name) => [
-    `${value} งาน`,
-    name === "done" ? "ผ่านแล้ว" : name === "doing" ? "กำลังทำ" : "ยังไม่เริ่ม",
-  ]}
+<Tooltip
+  formatter={(value, name, props) => {
+    const key = props?.dataKey;
+    const labelMap = {
+      done: "ผ่านแล้ว",
+      doing: "กำลังทำ",
+      notStarted: "ยังไม่เริ่ม"
+    };
+    return [`${value} งาน`, labelMap[key] || key];
+  }}
 />
+
 
           <Bar dataKey="done" stackId="a" fill="#4ade80" name="ผ่านแล้ว"/>
           <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ"/>
