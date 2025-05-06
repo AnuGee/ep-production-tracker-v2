@@ -157,29 +157,22 @@ export default function Home() {
         }
 case "QC": {
   const qc = status.qc_inspection;
-  const coa = status.qc_coa;
-  const currentStep = job.currentStep;
-
-  if (qc === "ตรวจผ่านแล้ว" && coa === "เตรียมพร้อมแล้ว") return "done";
-  if (qc === "ตรวจผ่านแล้ว" && coa !== "เตรียมพร้อมแล้ว") return "doing";
-  if (
-    ["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc) ||
-    ["กำลังเตรียม"].includes(coa)
-  ) return "doing";
+  if (qc === "ตรวจผ่านแล้ว") return "done";
+  if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
   if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
-
   return "notStarted";
 }
+break;
 
-      }
-      // COA logic merged into QC and Account for summary chart simplicity if needed,
-      // but kept separate for detailed status badge rendering logic.
-       case "COA": {
-          const coa = status.qc_coa;
-          if (coa === "เตรียมพร้อมแล้ว") return "done";
-          if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
-          if (["Account", "Completed"].includes(currentStep)) return "done"; // COA is done if Account started
-          return "notStarted";
+case "COA": {
+  const coa = status.qc_coa;
+  if (coa === "เตรียมพร้อมแล้ว") return "done";
+  if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
+  if (["Account", "Completed"].includes(currentStep)) return "done";
+  return "notStarted";
+}
+break;
+ return "notStarted";
        }
       case "Account": {
         const ac = status.account;
