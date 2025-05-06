@@ -50,11 +50,3 @@
   font-weight: bold;
   cursor: pointer;
 }
-
-.last-update-section {
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: 100%;
-  border: 1px solid red; /* เพิ่มเพื่อทดสอบ */
-}
