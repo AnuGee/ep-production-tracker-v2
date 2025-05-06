@@ -1,8 +1,6 @@
 import React from "react";
 import "../styles/Responsive.css";
 
-console.log("ProgressBoard loaded"); // ✅ ใส่บรรทัดนี้
-
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
@@ -25,7 +23,7 @@ export default function ProgressBoard({ jobs }) {
       case "Warehouse":
         if (
           status.warehouse === "เบิกเสร็จ" ||
-          status.warehouse === "มีของครบตามจำนวน"
+          status.warehouse === "มีครบตามจำนวน"
         ) {
           return "#4ade80";
         }
@@ -35,7 +33,7 @@ export default function ProgressBoard({ jobs }) {
         if (status.production === "ผลิตเสร็จ") return "#4ade80";
 
         if (
-          status.warehouse === "มีของครบตามจำนวน" &&
+          status.warehouse === "มีครบตามจำนวน" &&
           ["QC", "COA", "Account", "Completed"].includes(currentStep)
         ) {
           return "#4ade80"; // ✅ ข้าม Production ไป QC
