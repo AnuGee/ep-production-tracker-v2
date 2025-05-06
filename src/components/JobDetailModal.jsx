@@ -44,7 +44,13 @@ export default function JobDetailModal({ job, onClose }) {
             {rows.map((r) => (
               <tr key={r.label}>
                 <td>{r.label}</td>
-                <td>{r.status || "-"}</td>
+                <td>
+                  {r.status
+                    ? job.currentStep === r.label
+                      ? `${r.status} (กำลังดำเนินการ)`
+                      : r.status
+                    : "-"}
+                </td>
                 <td>{r.remark || "-"}</td>
                 <td>{r.time || "-"}</td>
               </tr>
