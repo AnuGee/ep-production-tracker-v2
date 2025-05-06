@@ -570,7 +570,7 @@ export default function Home() {
 
       {/* --- Summary Chart --- */}
       <hr style={{ margin: '2rem 0' }} />
-      <h3>📊 สรุปสถานะงานรายแผนก (ตามที่กรอง)</h3>
+      <h3>📊 สรุปสถานะงานรายแผนก</h3>
 <div className="legend" style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
     <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
