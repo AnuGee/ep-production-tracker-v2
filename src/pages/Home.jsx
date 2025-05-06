@@ -3,7 +3,7 @@
 // ✅ เพิ่ม Click & Drag Scroll ตาราง
 import React, { useEffect, useState, useRef, useCallback } from "react"; // <<< เพิ่ม useRef, useCallback
 import ProgressBoard from "./ProgressBoard";
-import JobDetailModal from "../JobDetailModal";
+import JobDetailModal from "./JobDetailModal";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
