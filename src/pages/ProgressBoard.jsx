@@ -1,6 +1,8 @@
 import React from "react";
 import "../styles/Responsive.css";
 
+console.log("ProgressBoard loaded"); // ✅ ใส่บรรทัดนี้
+
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
 
