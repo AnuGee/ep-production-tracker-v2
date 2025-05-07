@@ -157,17 +157,17 @@ export default function Home() {
         }
   case "QC": {
     const qc = status.qc_inspection;
-    if (qc === "ตรวจผ่านแล้ว") return "done";
-    if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
-    if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
-    return "notStarted";
-  } // ←❗ ต้องมีการปิดบล็อกก่อนเริ่ม case ถัดไป
-
-  case "COA": {
     const coa = status.qc_coa;
+  
+    if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
+    if (qc === "ตรวจผ่านแล้ว") return "done";
+  
+    // ✅ กรณีข้ามไป COA แล้วเริ่มทำ
     if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
     if (coa === "เตรียมพร้อมแล้ว") return "done";
-    if (["Account", "Completed"].includes(currentStep)) return "done";
+  
+    if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
+  
     return "notStarted";
   }
 
