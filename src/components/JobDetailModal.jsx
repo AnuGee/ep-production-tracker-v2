@@ -17,14 +17,29 @@ export default function JobDetailModal({ job, onClose }) {
   const getBatchNo = (index) => job.batch_no_warehouse?.[index] || "–";
   const getRemark = (step) => job.remarks?.[step] || "–";
 
-  const getCurrentStepStatus = () => {
-    const step = job.currentStep?.toLowerCase();
-    if (!step) return "–";
-    if (step === "sales") return "กรอกแล้ว";
-    if (step === "coa") return job.status?.qc_coa || "ยังไม่มีข้อมูล";
-    if (step === "qc") return job.status?.qc_inspection || "ยังไม่มีข้อมูล";
-    return job.status?.[step] || "ยังไม่มีข้อมูล";
-  };
+const getCurrentStepStatus = () => {
+  const step = job.currentStep?.toLowerCase();
+  if (!step) return "–";
+
+  if (step === "sales") return "กรอกแล้ว";
+
+  if (step === "qc") {
+    const qc_inspect = job.status?.qc_inspection;
+    const qc_coa = job.status?.qc_coa;
+
+    if (qc_inspect && qc_inspect !== "skip" && qc_inspect !== "ตรวจผ่าน") {
+      return `ตรวจสอบ: ${qc_inspect}`;
+    }
+
+    if (qc_coa) {
+      return `COA: ${qc_coa}`;
+    }
+
+    return "ยังไม่มีข้อมูล";
+  }
+
+  return job.status?.[step] || "ยังไม่มีข้อมูล";
+};
 
   const renderLastUpdate = () => {
     const logs = job.audit_logs;
