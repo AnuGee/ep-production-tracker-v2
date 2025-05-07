@@ -38,8 +38,13 @@ const getCurrentStepStatus = () => {
     return "ยังไม่มีข้อมูล";
   }
 
+  if (step === "completed") {
+    return "✅ งานเสร็จสิ้นแล้ว";
+  }
+
   return job.status?.[step] || "ยังไม่มีข้อมูล";
 };
+
 
   const renderLastUpdate = () => {
     const logs = job.audit_logs;
