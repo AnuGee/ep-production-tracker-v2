@@ -23,7 +23,7 @@ export default function Home() {
   const [selectedMonth, setSelectedMonth] = useState("ทั้งหมด");
   const [statusFilter, setStatusFilter] = useState("ทั้งหมด");
   const [searchText, setSearchText] = useState("");
-  const [sortColumn, setSortColumn] = useState("Delivery Date");
+  const [sortColumn, setSortColumn] = useState("customer");
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
