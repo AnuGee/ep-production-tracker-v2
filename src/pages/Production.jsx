@@ -68,7 +68,7 @@ const handleJobSelect = (jobId) => {
       }
 
       await updateDoc(jobRef, {
-        batch_no_production: batchNo,
+        batch_no: batchNo,
         "status.production": productionStatus,
         "remarks.production": remark,
         currentStep: nextStep,
@@ -90,7 +90,7 @@ await updateDoc(jobRef, {
     },
     {
       step: "Production", // ✅ บันทึก BN PD ด้วย
-      field: "batch_no_production",
+      field: "batch_no",
       value: batchNo,
       timestamp: new Date().toISOString(),
     },
