@@ -404,62 +404,6 @@ export default function Home() {
     );
   };
 
-  const exportToExcel = () => {
-     // Define headers matching the table display order
-     const headers = [
-        "Customer", "PO", "WH1", "WH2", "WH3", "PD", "Product",
-        "Current Step", "Status Badges", "Volume", "Delivery Date", "Last Update"
-    ];
-     const dataToExport = sortedJobs.map((job) => ({ // Use sortedJobs to match table
-        "Customer": job.customer || "–",
-        "PO": job.po_number || "–",
-        "WH1": getBatchNoWH(job, 0),
-        "WH2": getBatchNoWH(job, 1),
-        "WH3": getBatchNoWH(job, 2),
-        "PD": job.batch_no_production || "–",
-        "Product": job.product_name || "–",
-        "Current Step": job.currentStep || "–",
-         // Combine badge statuses into a single string or keep separate?
-         // Simple approach: just list current step's status if available
-         "Status Badges": job.status ?
-             (job.status[getStepKey(job.currentStep)?.toLowerCase()] || job.currentStep)
-             : job.currentStep || "–",
-        "Volume": job.volume || "–",
-        "Delivery Date": job.delivery_date || "–",
-        "Last Update": renderLastUpdate(job),
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs (Filtered)");
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, `EP_Production_Jobs_${selectedYear}_${selectedMonth}.xlsx`);
-  };
-
-  const exportAllToExcel = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    // Define headers for the "All Jobs" export
-     const headers = [
-        "No.", "Product", "Customer", "Volume (KG)", "Delivery Date", "Current Step",
-        "Sales Status", "WH Status", "PD Status", "QC Status", "COA Status", "ACC Status"
-    ];
-    const allData = snapshot.docs.map((doc, index) => {
-      const job = { id: doc.id, ...doc.data() }; // Include ID if needed
-      return {
-        "No.": index + 1,
-        "Product": job.product_name || "–",
-        "Customer": job.customer || "–",
-        "Volume (KG)": job.volume || "–",
-        "Delivery Date": job.delivery_date || "–",
-        "Current Step": job.currentStep || "–",
-        "Sales Status": job.status?.sales || (job.currentStep !== "Sales" ? "Done" : "Pending"), // Example logic
-        "WH Status": job.status?.warehouse || "–",
-        "PD Status": job.status?.production || "–",
-        "QC Status": job.status?.qc_inspection || "–",
-        "COA Status": job.status?.qc_coa || "–",
-        "ACC Status": job.status?.account || "–",
-      };
-    });
     const worksheet = XLSX.utils.json_to_sheet(allData, { header: headers });
     // Add auto-filter?
     // worksheet['!autofilter'] = { ref: worksheet['!ref'] };
