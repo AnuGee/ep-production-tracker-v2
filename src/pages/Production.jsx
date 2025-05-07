@@ -17,6 +17,7 @@ export default function Production() {
   const [productionStatus, setProductionStatus] = useState("");
   const [remark, setRemark] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isBackFromQC, setIsBackFromQC] = useState(false);
 
   useEffect(() => {
     fetchJobs();
@@ -47,7 +48,10 @@ const handleJobSelect = (jobId) => {
   // ✅ โหลดสถานะและหมายเหตุเก่าด้วย
   setProductionStatus(job?.status?.production || "");
   setRemark(job?.remarks?.production || "");
-};
+
+  // ✅ ตรวจว่ากลับจาก QC ไหม
+  setIsBackFromQC(job?.status?.qc_inspection === "ตรวจผ่าน");
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -148,11 +152,11 @@ await updateDoc(jobRef, {
             className="input-box"
           >
             <option value="">-- เลือกสถานะ --</option>
-            <option value="ยังไม่เริ่มผลิต">ยังไม่เริ่มผลิต</option>
-            <option value="กำลังผลิต">กำลังผลิต</option>
-            <option value="รอผลตรวจ">รอผลตรวจ</option>
-            <option value="กำลังบรรจุ">กำลังบรรจุ</option>
-            <option value="ผลิตเสร็จ">ผลิตเสร็จ</option>
+            <option value="ยังไม่เริ่มผลิต" disabled={isBackFromQC}>ยังไม่เริ่มผลิต</option>
+            <option value="กำลังผลิต" disabled={isBackFromQC}>กำลังผลิต</option>
+            <option value="รอผลตรวจ" disabled={isBackFromQC}>รอผลตรวจ</option>
+            <option value="กำลังบรรจุ" disabled={!isBackFromQC}>กำลังบรรจุ</option>
+            <option value="ผลิตเสร็จ" disabled={!isBackFromQC}>ผลิตเสร็จ</option>
           </select>
         </div>
 
