@@ -68,7 +68,7 @@ const handleJobSelect = (jobId) => {
       }
 
       await updateDoc(jobRef, {
-        batch_no: batchNo,
+        batch_no_production: batchNo,
         "status.production": productionStatus,
         "remarks.production": remark,
         currentStep: nextStep,
