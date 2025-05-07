@@ -38,9 +38,12 @@ const getCurrentStepStatus = () => {
     return "ยังไม่มีข้อมูล";
   }
 
-  if (step === "completed") {
-    return "✅ งานเสร็จสิ้นแล้ว";
-  }
+if (step === "completed") {
+  return job.batch_no_production
+    ? `✅ งานเสร็จสิ้นแล้ว (BN PD: ${job.batch_no_production})`
+    : "✅ งานเสร็จสิ้นแล้ว";
+}
+
 
   return job.status?.[step] || "ยังไม่มีข้อมูล";
 };
