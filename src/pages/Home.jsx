@@ -720,4 +720,3 @@ const exportAllToExcel = () => {
 
     </div> // End page-container
   );
-}
