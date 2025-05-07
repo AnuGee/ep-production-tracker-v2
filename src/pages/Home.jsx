@@ -403,7 +403,6 @@ export default function Home() {
       </span>
     );
   };
-  };
 
   const getStepKey = (currentStep) => { // Helper for status access
     switch (currentStep) {
