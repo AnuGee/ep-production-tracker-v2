@@ -51,32 +51,50 @@ export default function QC() {
     setShowConfirmCoa(true);
   };
 
-  const handleFinalInspectionSubmit = async () => {
-    const jobRef = doc(db, "production_workflow", selectedInspectionJobId);
-    let nextStep = "QC";
+const handleFinalInspectionSubmit = async () => {
+  const jobRef = doc(db, "production_workflow", selectedInspectionJobId);
+  let nextStep = "QC";
 
-    if (inspectionStatus === "ตรวจผ่าน") {
-      nextStep = "Production"; // กลับไปผลิตต่อ
-    } else if (inspectionStatus === "ตรวจไม่ผ่าน") {
-      nextStep = "Warehouse"; // ย้อนกลับไปเตรียมวัตถุดิบใหม่
-    }
+  if (inspectionStatus === "ตรวจผ่าน") {
+    nextStep = "Production";
+  } else if (inspectionStatus === "ตรวจไม่ผ่าน") {
+    nextStep = "Warehouse";
+  }
 
-    await updateDoc(jobRef, {
-      "status.qc_inspection": inspectionStatus,
-      "remarks.qc_inspection": inspectionRemark,
-      currentStep: nextStep,
-      Timestamp_QC: serverTimestamp(),
-      audit_logs: [
-        ...jobs.find((j) => j.id === selectedInspectionJobId)?.audit_logs || [],
-        {
-          step: "QC",
-          field: "qc_inspection",
-          value: inspectionStatus,
-          remark: inspectionRemark,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    });
+  const isFail = inspectionStatus === "ตรวจไม่ผ่าน"; // ✅ เช็กว่าตรวจไม่ผ่านไหม
+  const job = jobs.find((j) => j.id === selectedInspectionJobId);
+  const auditLogs = job?.audit_logs || [];
+
+  await updateDoc(jobRef, {
+    "status.qc_inspection": inspectionStatus,
+    "remarks.qc_inspection": inspectionRemark,
+    ...(isFail && { "status.production": "" }), // ✅ ล้าง production ถ้าตรวจไม่ผ่าน
+    currentStep: nextStep,
+    Timestamp_QC: serverTimestamp(),
+    audit_logs: [
+      ...auditLogs,
+      {
+        step: "QC",
+        field: "qc_inspection",
+        value: inspectionStatus,
+        remark: inspectionRemark,
+        timestamp: new Date().toISOString(),
+      },
+      ...(isFail
+        ? [
+            {
+              step: "QC",
+              field: "status.production",
+              value: "",
+              remark: "reset เพราะตรวจไม่ผ่าน",
+              timestamp: new Date().toISOString(),
+            },
+          ]
+        : []),
+    ],
+  });
+};
+
 
     toast.success("✅ บันทึกสถานะตรวจสอบสินค้าแล้ว");
     setSelectedInspectionJobId("");
