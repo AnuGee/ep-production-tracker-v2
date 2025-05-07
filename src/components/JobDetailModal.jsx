@@ -115,7 +115,7 @@ if (step === "completed") {
             <strong>BN WH3:</strong> {getBatchNo(2)}
           </p>
           <p>
-            <strong>BN PD:</strong> {job.batch_no_production || "–"}
+            <strong>BN PD:</strong> {job.batch_no || "–"}
           </p>
           <p>
             <strong>🎨 Product:</strong> {job.product_name || "–"}
