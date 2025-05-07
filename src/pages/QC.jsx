@@ -173,6 +173,8 @@ const handleFinalInspectionSubmit = async () => {
 ))}
           </select>
         </div>
+          );
+}
         <div className="form-group full-span">
           <label>🔍 สถานะการตรวจสอบ</label>
           <select
