@@ -237,11 +237,13 @@ export default function QC() {
         className="input-box"
       >
         <option value="">-- เลือกงาน --</option>
-        {coaJobs.map((job) => (
-          <option key={job.id} value={job.id}>
-            {job.product_name} - {job.customer}
-          </option>
-        ))}
+{coaJobs
+  .sort((a, b) => a.product_name.localeCompare(b.product_name))
+  .map((job) => (
+    <option key={job.id} value={job.id}>
+      {job.product_name} - {job.customer}
+    </option>
+))}
       </select>
     </div>
     <div className="form-group full-span">
