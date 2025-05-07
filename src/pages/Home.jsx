@@ -662,7 +662,7 @@ export default function Home() {
                 <td>{getBatchNoWH(job, 0)}</td>
                 <td>{getBatchNoWH(job, 1)}</td>
                 <td>{getBatchNoWH(job, 2)}</td>
-                <td>{job.batch_no_production || "–"}</td>
+                <td>{job.batch_no || "–"}</td>
                 <td>{job.product_name || "–"}</td>
                 <td>{job.currentStep || "–"}</td>
                 {/* Cell for Status Badges */}
