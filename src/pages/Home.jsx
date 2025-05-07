@@ -165,11 +165,11 @@ export default function Home() {
 
   case "COA": {
     const coa = status.qc_coa;
-    if (coa === "เตรียมพร้อมแล้ว") return "done";
     if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
+    if (coa === "เตรียมพร้อมแล้ว") return "done";
     if (["Account", "Completed"].includes(currentStep)) return "done";
     return "notStarted";
-  } // ←❗ สำคัญ: ปิดให้ครบก่อน case ถัดไป
+  }
 
   case "Account": {
     const ac = status.account;
