@@ -78,18 +78,24 @@ const handleJobSelect = (jobId) => {
       const job = jobs.find((job) => job.id === selectedJobId);
       const auditLogs = job?.audit_logs || [];
 
-      await updateDoc(jobRef, {
-        audit_logs: [
-          ...auditLogs,
-          {
-            step: "Production",
-            field: "status.production",
-            value: productionStatus,
-            remark,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
+await updateDoc(jobRef, {
+  audit_logs: [
+    ...auditLogs,
+    {
+      step: "Production",
+      field: "status.production",
+      value: productionStatus,
+      remark,
+      timestamp: new Date().toISOString(),
+    },
+    {
+      step: "Production", // ✅ บันทึก BN PD ด้วย
+      field: "batch_no_production",
+      value: batchNo,
+      timestamp: new Date().toISOString(),
+    },
+  ],
+});
 
       toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
       setSelectedJobId("");
