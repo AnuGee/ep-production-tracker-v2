@@ -220,12 +220,14 @@ export default function QC() {
 
 <form onSubmit={handleCoaSubmit} className="form-grid">
   <fieldset
+    className="no-border"
     disabled={coaJobs.length === 0}
     style={{
       opacity: coaJobs.length === 0 ? 0.6 : 1,
       pointerEvents: coaJobs.length === 0 ? "none" : "auto",
     }}
   >
+
     <h3>📄 เตรียมเอกสาร COA</h3>
     <div className="form-group full-span">
       <label>📋 เลือกรายการ</label>
