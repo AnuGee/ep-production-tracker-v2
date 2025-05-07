@@ -482,6 +482,71 @@ export default function Home() {
     }
   };
 
+  // ฟังก์ชัน Export
+const exportAllToExcel = () => {
+  // === สร้างข้อมูล sheet แรก ===
+  const jobData = sortedJobs.map((job) => {
+    const bn_wh = job.batch_no_warehouse || [];
+    const bn_pd = job.batch_no || bn_wh.filter(Boolean).join(" / ") || "–";
+
+    const lastUpdate = job.audit_logs?.length
+      ? job.audit_logs[job.audit_logs.length - 1]
+      : null;
+    const lastUpdateText = lastUpdate
+      ? `ผู้บันทึกล่าสุด : ${lastUpdate.step} : ${new Date(lastUpdate.timestamp).toLocaleString("th-TH")}`
+      : "–";
+
+    return {
+      Customer: job.customer || "–",
+      PO: job.po_number || "–",
+      "BN WH1": bn_wh[0] || "–",
+      "BN WH2": bn_wh[1] || "–",
+      "BN WH3": bn_wh[2] || "–",
+      "BN PD": bn_pd,
+      Product: job.product_name || "–",
+      "Current Step": job.currentStep || "–",
+      Status: renderTextStatus(job),
+      "Volume (KG)": job.volume || "–",
+      "Delivery Date": job.delivery_date || "–",
+      "Last Update": lastUpdateText,
+      "Sales Remark": job?.remarks?.sales || "–",
+      "Warehouse Remark": job?.remarks?.warehouse || "–",
+      "Production Remark": job?.remarks?.production || "–",
+      "QC Remark": job?.remarks?.qc || "–",
+      "Account Remark": job?.remarks?.account || "–"
+    };
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(jobData);
+  XLSX.utils.book_append_sheet(wb, ws, "Production Jobs");
+
+  // === ถ้า Admin: เพิ่ม sheet Audit Logs ===
+  if (role === "Admin") {
+    const auditData = [];
+    sortedJobs.forEach((job) => {
+      const logs = job.audit_logs || [];
+      logs.forEach((log) => {
+        auditData.push({
+          "Job ID": job.id,
+          Step: log.step || "–",
+          Field: log.field || "–",
+          Value: log.value || "–",
+          Remark: log.remark || "–",
+          Timestamp: new Date(log.timestamp).toLocaleString("th-TH"),
+        });
+      });
+    });
+
+    const auditSheet = XLSX.utils.json_to_sheet(auditData);
+    XLSX.utils.book_append_sheet(wb, auditSheet, "Audit Logs");
+  }
+
+  // === Export ===
+  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  saveAs(new Blob([wbout], { type: "application/octet-stream" }), `EP-Production-Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
+};
+
   // --- ส่วน JSX Return ---
   return (
     <div className="page-container">
