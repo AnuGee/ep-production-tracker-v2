@@ -93,16 +93,14 @@ const handleFinalInspectionSubmit = async () => {
         : []),
     ],
   });
+
+  toast.success("✅ บันทึกสถานะตรวจสอบสินค้าแล้ว");
+  setSelectedInspectionJobId("");
+  setInspectionStatus("");
+  setInspectionRemark("");
+  setShowConfirmInspection(false);
+  fetchJobs();
 };
-
-
-    toast.success("✅ บันทึกสถานะตรวจสอบสินค้าแล้ว");
-    setSelectedInspectionJobId("");
-    setInspectionStatus("");
-    setInspectionRemark("");
-    setShowConfirmInspection(false);
-    fetchJobs();
-  };
 
   const handleFinalCoaSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedCoaJobId);
