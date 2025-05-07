@@ -10,10 +10,80 @@ import {
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { doc, deleteDoc } from "firebase/firestore";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import "../styles/Responsive.css";
 import { useAuth } from "../context/AuthContext";
+
+// ฟังก์ชันใหม่
+const exportAllToExcel = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Production Jobs");
+
+  // Header row
+  worksheet.addRow([
+    "Customer", "PO", "BN WH1", "BN WH2", "BN WH3", "BN PD", "Product",
+    "Current Step", "Status", "Volume (KG)", "Delivery Date", "Last Update",
+    "Sales Remark", "Warehouse Remark", "Production Remark", "QC Remark", "Account Remark"
+  ]);
+
+  sortedJobs.forEach((job) => {
+    const bn_wh = job.batch_no_warehouse || [];
+    const bn_pd = job.batch_no || [
+      bn_wh?.filter(Boolean).join(" / ") || "–"
+    ];
+
+    const lastUpdate = job.audit_logs?.length
+      ? job.audit_logs[job.audit_logs.length - 1]
+      : null;
+    const lastUpdateText = lastUpdate
+      ? `ผู้บันทึกล่าสุด : ${lastUpdate.step} : ${new Date(lastUpdate.timestamp).toLocaleString("th-TH")}`
+      : "–";
+
+    worksheet.addRow([
+      job.customer || "–",
+      job.po_number || "–",
+      bn_wh[0] || "–",
+      bn_wh[1] || "–",
+      bn_wh[2] || "–",
+      bn_pd || "–",
+      job.product_name || "–",
+      job.currentStep || "–",
+      renderTextStatus(job),
+      job.volume || "–",
+      job.delivery_date || "–",
+      lastUpdateText,
+      job?.remarks?.sales || "–",
+      job?.remarks?.warehouse || "–",
+      job?.remarks?.production || "–",
+      job?.remarks?.qc || "–",
+      job?.remarks?.account || "–"
+    ]);
+  });
+
+  if (role === "Admin") {
+    const auditSheet = workbook.addWorksheet("Audit Logs");
+    auditSheet.addRow(["Job ID", "Step", "Field", "Value", "Remark", "Timestamp"]);
+
+    sortedJobs.forEach((job) => {
+      const logs = job.audit_logs || [];
+      logs.forEach((log) => {
+        auditSheet.addRow([
+          job.id,
+          log.step || "–",
+          log.field || "–",
+          log.value || "–",
+          log.remark || "–",
+          new Date(log.timestamp).toLocaleString("th-TH"),
+        ]);
+      });
+    });
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/octet-stream" });
+  saveAs(blob, `EP-Production-Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
+};
 
 export default function Home() {
   const { role } = useAuth();
