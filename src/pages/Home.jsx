@@ -403,15 +403,6 @@ export default function Home() {
       </span>
     );
   };
-
-    const worksheet = XLSX.utils.json_to_sheet(allData, { header: headers });
-    // Add auto-filter?
-    // worksheet['!autofilter'] = { ref: worksheet['!ref'] };
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "All EP Jobs");
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, `EP_All_Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const getStepKey = (currentStep) => { // Helper for status access
