@@ -10,7 +10,7 @@ import {
 import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { doc, deleteDoc } from "firebase/firestore";
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import "../styles/Responsive.css";
 import { useAuth } from "../context/AuthContext";
