@@ -406,31 +406,44 @@ export default function Home() {
 
   const exportToExcel = () => {
      // Define headers matching the table display order
-     const headers = [
-        "Customer", "PO", "WH1", "WH2", "WH3", "PD", "Product",
-        "Current Step", "Status Badges", "Volume", "Delivery Date", "Last Update"
-    ];
-     const dataToExport = sortedJobs.map((job) => ({ // Use sortedJobs to match table
-        "Customer": job.customer || "–",
-        "PO": job.po_number || "–",
-        "WH1": getBatchNoWH(job, 0),
-        "WH2": getBatchNoWH(job, 1),
-        "WH3": getBatchNoWH(job, 2),
-        "PD": job.batch_no_production || "–",
-        "Product": job.product_name || "–",
-        "Current Step": job.currentStep || "–",
-         // Combine badge statuses into a single string or keep separate?
-         // Simple approach: just list current step's status if available
-         "Status Badges": job.status ?
-             (job.status[getStepKey(job.currentStep)?.toLowerCase()] || job.currentStep)
-             : job.currentStep || "–",
-        "Volume": job.volume || "–",
-        "Delivery Date": job.delivery_date || "–",
-        "Last Update": renderLastUpdate(job),
-    }));
+	const headers = [
+            "Customer", "PO", "BN WH1", "BN WH2", "BN WH3", "BN PD", "Product",
+            "Current Step", "Status", "Volume (KG)", "Delivery Date", "Last Update",
+            "Sales Notes", "Warehouse Notes", "Production Notes", "QC Notes", "Account Notes"
+        ];
+     const dataToExport = sortedJobs.map((job) => ({
+            "Customer": job.customer || "–",
+            "PO": job.po_number || "–",
+            "BN WH1": getBatchNoWH(job, 0),
+            "BN WH2": getBatchNoWH(job, 1),
+            "BN WH3": getBatchNoWH(job, 2),
+            "BN PD": [getBatchNoWH(job, 0), getBatchNoWH(job, 1), getBatchNoWH(job, 2)].filter(bn => bn !== "–").join(" / ") || job.batch_no_production || "–",
+            "Product": job.product_name || "–",
+            "Current Step": job.currentStep || "–",
+            "Status": job.currentStep, // หรือจะแปลงเป็นข้อความที่อ่านง่ายกว่านี้
+            "Volume (KG)": job.volume || "–",
+            "Delivery Date": job.delivery_date || "–",
+            "Last Update": renderLastUpdate(job),
+            "Sales Notes": job.status?.sales || "–",
+            "Warehouse Notes": job.status?.warehouse || "–",
+            "Production Notes": job.status?.production || "–",
+            "QC Notes": job.status?.qc_inspection || "–",
+            "Account Notes": job.status?.account || "–"
+        }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs (Filtered)");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs (Filtered)");
+
+        if (role === "Admin") {
+            const auditLogsData = sortedJobs.map(job => ({
+                "Job ID": job.id,
+                "Product": job.product_name,
+                "Customer": job.customer,
+                "Audit Logs": job.audit_logs ? JSON.stringify(job.audit_logs, null, 2) : "No Logs"
+            }));
+            const auditLogsSheet = XLSX.utils.json_to_sheet(auditLogsData, { header: ["Job ID", "Product", "Customer", "Audit Logs"] });
+            XLSX.utils.book_append_sheet(workbook, auditLogsSheet, "Audit Logs");
+        }
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(blob, `EP_Production_Jobs_${selectedYear}_${selectedMonth}.xlsx`);
@@ -440,9 +453,10 @@ export default function Home() {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     // Define headers for the "All Jobs" export
      const headers = [
-        "No.", "Product", "Customer", "Volume (KG)", "Delivery Date", "Current Step",
-        "Sales Status", "WH Status", "PD Status", "QC Status", "COA Status", "ACC Status"
-    ];
+            "Customer", "PO", "BN WH1", "BN WH2", "BN WH3", "BN PD", "Product",
+            "Current Step", "Status", "Volume (KG)", "Delivery Date", "Last Update",
+            "Sales Notes", "Warehouse Notes", "Production Notes", "QC Notes", "Account Notes"
+        ];
     const allData = snapshot.docs.map((doc, index) => {
       const job = { id: doc.id, ...doc.data() }; // Include ID if needed
       return {
@@ -464,7 +478,18 @@ export default function Home() {
     // Add auto-filter?
     // worksheet['!autofilter'] = { ref: worksheet['!ref'] };
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "All EP Jobs");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs (Filtered)");
+
+        if (role === "Admin") {
+            const auditLogsData = sortedJobs.map(job => ({
+                "Job ID": job.id,
+                "Product": job.product_name,
+                "Customer": job.customer,
+                "Audit Logs": job.audit_logs ? JSON.stringify(job.audit_logs, null, 2) : "No Logs"
+            }));
+            const auditLogsSheet = XLSX.utils.json_to_sheet(auditLogsData, { header: ["Job ID", "Product", "Customer", "Audit Logs"] });
+            XLSX.utils.book_append_sheet(workbook, auditLogsSheet, "Audit Logs");
+        }
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(blob, `EP_All_Jobs_${new Date().toISOString().slice(0, 10)}.xlsx`);
