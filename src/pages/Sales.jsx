@@ -25,23 +25,33 @@ export default function Sales() {
   });
 
   const [jobs, setJobs] = useState([]);
+  const [allWorkflows, setAllWorkflows] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    fetchJobs();
+    fetchData();
   }, []);
 
-  const fetchJobs = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    setJobs(
-      data.filter(
-        (job) =>
-          job.currentStep !== "Completed" &&
-          (!job.po_number || !job.product_name || !job.volume || !job.customer || !job.delivery_date)
-      )
-    );
+  const fetchData = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "production_workflow"));
+      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      
+      // เก็บข้อมูลทั้งหมดเพื่อใช้ในการตรวจสอบรายการซ้ำ
+      setAllWorkflows(data);
+      
+      // กรองเฉพาะข้อมูลที่ยังไม่ "Completed" และข้อมูลยังไม่ครบ
+      setJobs(
+        data.filter(
+          (job) =>
+            job.currentStep !== "Completed" &&
+            (!job.po_number || !job.product_name || !job.volume || !job.customer || !job.delivery_date)
+        )
+      );
+    } catch (error) {
+      toast.error("❌ เกิดข้อผิดพลาดในการดึงข้อมูล");
+    }
   };
 
   const handleChange = (e) => {
@@ -65,6 +75,25 @@ export default function Sales() {
     setEditMode(true);
   };
 
+  // ฟังก์ชันตรวจสอบรายการซ้ำ
+  const checkDuplicate = () => {
+    // ถ้าอยู่ในโหมดแก้ไข ไม่ต้องตรวจสอบซ้ำกับข้อมูลปัจจุบัน
+    const dataToCheck = editMode 
+      ? allWorkflows.filter(item => item.id !== form.id) 
+      : allWorkflows;
+    
+    // ค้นหารายการที่มีข้อมูลเหมือนกันทั้งหมด (ยกเว้น id, po_date, remark และ po_number)
+    const duplicate = dataToCheck.find(
+      (item) =>
+        item.product_name === form.product_name &&
+        item.volume === form.volume &&
+        item.customer === form.customer &&
+        item.delivery_date === form.delivery_date
+    );
+
+    return duplicate;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const { product_name, volume, customer, delivery_date } = form;
@@ -72,6 +101,27 @@ export default function Sales() {
     if (!product_name || !volume || !customer || !delivery_date) {
       toast.error("❌ กรุณากรอกข้อมูลให้ครบทุกช่อง");
       return;
+    }
+
+    // ตรวจสอบข้อมูลซ้ำก่อนแสดงหน้าต่างยืนยัน
+    const duplicate = checkDuplicate();
+    
+    if (duplicate) {
+      const confirmDuplicate = window.confirm(
+        `⚠️ ข้อมูลนี้ซ้ำกับรายการที่มีอยู่แล้ว:\n\n` +
+        `Product: ${duplicate.product_name}\n` +
+        `Volume: ${duplicate.volume}\n` +
+        `Customer: ${duplicate.customer}\n` +
+        `Delivery Date: ${duplicate.delivery_date}\n\n` +
+        `ต้องการบันทึกข้อมูลซ้ำหรือไม่?`
+      );
+      
+      if (!confirmDuplicate) {
+        return;
+      }
+      
+      // แจ้งเตือนว่ากำลังบันทึกข้อมูลซ้ำ แต่ให้ดำเนินการต่อ
+      toast.success("⚠️ กำลังดำเนินการบันทึกข้อมูลซ้ำ");
     }
 
     setShowConfirm(true);
@@ -142,9 +192,10 @@ export default function Sales() {
         remark: "",
       });
       setEditMode(false);
-      fetchJobs();
+      fetchData(); // รีเฟรชข้อมูลทั้งหมด
       setShowConfirm(false);
     } catch (error) {
+      console.error("Error submitting form:", error);
       toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
       setShowConfirm(false);
     }
