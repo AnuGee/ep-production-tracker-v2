@@ -167,43 +167,6 @@ const handleFinalSubmit = async () => {
     setShowConfirm(false);
   }
 };
-      } else {
-        await addDoc(collection(db, "production_workflow"), {
-          po_date,
-          po_number,
-          product_name,
-          volume,
-          customer,
-          delivery_date,
-          batch_no: "",
-          currentStep: "Warehouse",
-          status: {
-            warehouse: "",
-            production: "",
-            qc_inspection: "",
-            qc_coa: "",
-            account: "",
-          },
-          remarks: {
-            sales: remark || "",
-            warehouse: "",
-            production: "",
-            qc: "",
-            account: "",
-          },
-          Timestamp_Sales: serverTimestamp(),
-          audit_logs: [
-            {
-              step: "Sales",
-              field: "currentStep",
-              value: "Warehouse",
-              remark: remark || "",
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        });
-        toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
-      }
 
       setForm({
         id: "",
