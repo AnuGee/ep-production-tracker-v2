@@ -77,94 +77,78 @@ export default function Sales() {
     setShowConfirm(true);
   };
 
-const handleFinalSubmit = async () => {
-  const { id, po_date, po_number, product_name, volume, customer, delivery_date, remark } = form;
+  const handleFinalSubmit = async () => {
+    const { id, po_date, po_number, product_name, volume, customer, delivery_date, remark } = form;
 
-  try {
-    if (editMode && id) {
-      const jobRef = doc(db, "production_workflow", id);
-      await updateDoc(jobRef, {
-        po_date,
-        po_number,
-        product_name,
-        volume,
-        customer,
-        delivery_date,
-        "remarks.sales": remark || "",
-      });
-      toast.success("✅ อัปเดตข้อมูลสำเร็จ");
-    } else {
-      // ✅ ป้องกันข้อมูลซ้ำ
-      const isDuplicate = jobs.some((job) =>
-        job.po_number === po_number &&
-        job.product_name === product_name &&
-        job.volume === volume &&
-        job.customer === customer &&
-        job.delivery_date === delivery_date
-      );
-
-      if (isDuplicate) {
-        toast.error("❌ ข้อมูลนี้ถูกกรอกไว้แล้ว");
-        setShowConfirm(false);
-        return;
+    try {
+      if (editMode && id) {
+        const jobRef = doc(db, "production_workflow", id);
+        await updateDoc(jobRef, {
+          po_date,
+          po_number,
+          product_name,
+          volume,
+          customer,
+          delivery_date,
+          "remarks.sales": remark || "",
+        });
+        toast.success("✅ อัปเดตข้อมูลสำเร็จ");
+      } else {
+        await addDoc(collection(db, "production_workflow"), {
+          po_date,
+          po_number,
+          product_name,
+          volume,
+          customer,
+          delivery_date,
+          batch_no: "",
+          currentStep: "Warehouse",
+          status: {
+            warehouse: "",
+            production: "",
+            qc_inspection: "",
+            qc_coa: "",
+            account: "",
+          },
+          remarks: {
+            sales: remark || "",
+            warehouse: "",
+            production: "",
+            qc: "",
+            account: "",
+          },
+          Timestamp_Sales: serverTimestamp(),
+          audit_logs: [
+            {
+              step: "Sales",
+              field: "currentStep",
+              value: "Warehouse",
+              remark: remark || "",
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        });
+        toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
       }
 
-      await addDoc(collection(db, "production_workflow"), {
-        po_date,
-        po_number,
-        product_name,
-        volume,
-        customer,
-        delivery_date,
-        batch_no: "",
-        currentStep: "Warehouse",
-        status: {
-          warehouse: "",
-          production: "",
-          qc_inspection: "",
-          qc_coa: "",
-          account: "",
-        },
-        remarks: {
-          sales: remark || "",
-          warehouse: "",
-          production: "",
-          qc: "",
-          account: "",
-        },
-        Timestamp_Sales: serverTimestamp(),
-        audit_logs: [
-          {
-            step: "Sales",
-            field: "currentStep",
-            value: "Warehouse",
-            remark: remark || "",
-            timestamp: new Date().toISOString(),
-          },
-        ],
+      setForm({
+        id: "",
+        po_date: new Date().toISOString().slice(0, 10),
+        po_number: "",
+        product_name: "",
+        volume: "",
+        customer: "",
+        delivery_date: "",
+        remark: "",
       });
-
-      toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
+      setEditMode(false);
+      fetchJobs();
+      setShowConfirm(false);
+    } catch (error) {
+      toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
+      setShowConfirm(false);
     }
-
-    setForm({
-      id: "",
-      po_date: new Date().toISOString().slice(0, 10),
-      po_number: "",
-      product_name: "",
-      volume: "",
-      customer: "",
-      delivery_date: "",
-      remark: "",
-    });
-    setEditMode(false);
-    fetchJobs();
-    setShowConfirm(false);
-  } catch (error) {
-    toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
-    setShowConfirm(false);
-  }
-};
+  };
 
   return (
     <div className="page-container">
