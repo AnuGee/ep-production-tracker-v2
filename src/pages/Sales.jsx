@@ -147,7 +147,6 @@ const handleFinalSubmit = async () => {
       toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
     }
 
-    // ✅ ตรงนี้ต้องอยู่ **ใน try** ไม่ปิด } ก่อน
     setForm({
       id: "",
       po_date: new Date().toISOString().slice(0, 10),
@@ -161,31 +160,11 @@ const handleFinalSubmit = async () => {
     setEditMode(false);
     fetchJobs();
     setShowConfirm(false);
-
   } catch (error) {
     toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
     setShowConfirm(false);
   }
 };
-
-      setForm({
-        id: "",
-        po_date: new Date().toISOString().slice(0, 10),
-        po_number: "",
-        product_name: "",
-        volume: "",
-        customer: "",
-        delivery_date: "",
-        remark: "",
-      });
-      setEditMode(false);
-      fetchJobs();
-      setShowConfirm(false);
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาดในการบันทึก");
-      setShowConfirm(false);
-    }
-  };
 
   return (
     <div className="page-container">
