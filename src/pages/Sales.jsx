@@ -94,7 +94,6 @@ const handleFinalSubmit = async () => {
       });
       toast.success("✅ อัปเดตข้อมูลสำเร็จ");
     } else {
-
       // ✅ ป้องกันข้อมูลซ้ำ
       const isDuplicate = jobs.some((job) =>
         job.po_number === po_number &&
@@ -148,7 +147,6 @@ const handleFinalSubmit = async () => {
       toast.success("✅ บันทึกเรียบร้อย และส่งต่อไปยัง Warehouse");
     }
 
-    // Reset form
     setForm({
       id: "",
       po_date: new Date().toISOString().slice(0, 10),
