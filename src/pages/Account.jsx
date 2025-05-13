@@ -80,7 +80,7 @@ setJobs(filtered);
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} | ลูกค้า: {job.customer}
+                {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"}`}
               </option>
             ))}
           </select>
