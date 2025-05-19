@@ -47,9 +47,7 @@ export default function Header() {
           gap: "8px",
         }}
       >
-        {menus
-          .filter((menu) => !menu.roles || menu.roles.includes(role)) // ตรวจสอบสิทธิ์ก่อนแสดง
-          .map((menu) => (
+        {menus.map((menu) => (
           <button
             key={menu.path}
             onClick={() => navigate(menu.path)}
