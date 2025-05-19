@@ -296,6 +296,13 @@ export default function Home() {
     }, 0);
   };
 
+  const getTotalDelivered = () => {
+    return filteredJobs.reduce((sum, job) => {
+      const delivered = Number(job.delivery_total);
+      return sum + (isNaN(delivered) ? 0 : delivered);
+    }, 0);
+  };
+
   const handleDeleteJob = async (id) => {
     const confirmDelete = window.confirm("❗ ยืนยันต้องการลบงานนี้หรือไม่?");
     if (!confirmDelete) return;
@@ -559,6 +566,9 @@ export default function Home() {
       <h3 className="total-volume">
         📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
       </h3>
+      <h4 style={{ marginTop: "0.5rem" }}>
+        📤 รวมยอดที่จัดส่งแล้ว: {getTotalDelivered().toLocaleString()} KG
+      </h4>
 
       {/* --- Progress Board --- */}
       <hr style={{ margin: '2rem 0' }} />
