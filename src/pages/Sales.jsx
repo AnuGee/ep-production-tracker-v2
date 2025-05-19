@@ -212,8 +212,7 @@ export default function Sales() {
             <option value="">-- เลือกรายการ --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
-                {job.product_name || "(ไม่ระบุสินค้า)"} - {job.customer || "(ไม่ระบุลูกค้า)"}
+                {`PO: ${job.po_number || "(ไม่ระบุหมายเลขคำสั่งซื้อ)"} | CU: ${job.customer || "(ไม่ระบุลูกค้า)"} | PN: ${job.product_name || "(ไม่ระบุสินค้า)"} | VO: ${job.volume || "(ไม่ระบุจำนวน)"}`}
               </option>
             ))}
           </select>
