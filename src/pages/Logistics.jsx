@@ -99,7 +99,7 @@ export default function Logistics() {
           <option value="">-- เลือกรายการ --</option>
           {jobs.map((job) => (
             <option key={job.id} value={job.id}>
-              {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+              {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | ส่งแล้ว: ${job.delivered_total || 0} | คงเหลือ: ${job.volume - (job.delivered_total || 0)}`}
             </option>
           ))}
         </select>
