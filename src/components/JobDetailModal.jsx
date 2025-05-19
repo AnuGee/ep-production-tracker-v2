@@ -94,6 +94,25 @@ if (step === "completed") {
     );
   };
 
+  const renderDeliveryLogs = () => {
+    if (!job.delivery_logs || job.delivery_logs.length === 0) return null;
+  
+    return (
+      <div style={{ marginTop: "1.5rem" }}>
+        <h4>🚚 ประวัติการจัดส่ง</h4>
+        <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+          {job.delivery_logs.map((log, idx) => (
+            <li key={idx} style={{ borderBottom: "1px solid #eee", padding: "8px 0" }}>
+              <div>📦 จำนวน: <strong>{log.kg || 0} KG</strong></div>
+              <div>📅 วันที่ส่ง: <strong>{log.date || "–"}</strong></div>
+              {log.remark && <div>📝 หมายเหตุ: {log.remark}</div>}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+  
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -149,6 +168,7 @@ if (step === "completed") {
         </div>
 
         {renderAuditLogs()}
+        {renderDeliveryLogs()}  {/* ✅ เพิ่มตรงนี้ */}
 
         <div style={{ textAlign: "right", marginTop: "1rem" }}>
           <button className="close-btn" onClick={onClose}>
