@@ -66,6 +66,14 @@ return (
             }
           />
           <Route
+            path="/logistics"
+            element={
+              <ProtectedRoute allowedRoles={["Admin", "Sales"]}>
+                <MainLayout><Logistics /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/account"
             element={
               <ProtectedRoute allowedRoles={["Admin", "Account"]}>
