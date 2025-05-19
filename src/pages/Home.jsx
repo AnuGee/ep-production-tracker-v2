@@ -563,12 +563,14 @@ export default function Home() {
 
       {/* --- Total Volume --- */}
       <hr style={{ margin: '2rem 0' }} />
-      <h3 className="total-volume">
-        📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
-      </h3>
-      <h4 style={{ marginTop: "0.5rem" }}>
-        📤 รวมยอดที่จัดส่งแล้ว: {getTotalDelivered().toLocaleString()} KG
-      </h4>
+      <div style={{ backgroundColor: "#e0f2fe", padding: "12px 16px", borderRadius: "8px", marginBottom: "1rem" }}>
+        <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "4px" }}>
+          📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
+        </div>
+        <div style={{ fontSize: "16px", fontWeight: "normal" }}>
+          📤 รวมยอดที่จัดส่งแล้ว: {getTotalDelivered().toLocaleString()} KG
+        </div>
+      </div>
 
       {/* --- Progress Board --- */}
       <hr style={{ margin: '2rem 0' }} />
