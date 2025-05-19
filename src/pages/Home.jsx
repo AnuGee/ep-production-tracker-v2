@@ -567,7 +567,7 @@ export default function Home() {
         <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "4px" }}>
           📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
         </div>
-        <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "4px" }}>
+        <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "4px" }}>
           📤 รวมยอดที่จัดส่งแล้ว: {getTotalDelivered().toLocaleString()} KG
         </div>
       </div>
