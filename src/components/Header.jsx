@@ -22,6 +22,7 @@ export default function Header() {
     { label: "🏭 Warehouse", path: "/warehouse" },
     { label: "🧪 Production", path: "/production" },
     { label: "🧬 QC", path: "/qc" },
+    { label: "🚚 Logistics", path: "/logistics", roles: ["Admin", "Sales"] },
     { label: "💰 Account", path: "/account" },
   ];
 
@@ -46,7 +47,9 @@ export default function Header() {
           gap: "8px",
         }}
       >
-        {menus.map((menu) => (
+        {menus
+          .filter((menu) => !menu.roles || menu.roles.includes(role)) // ตรวจสอบสิทธิ์ก่อนแสดง
+          .map((menu) => (
           <button
             key={menu.path}
             onClick={() => navigate(menu.path)}
