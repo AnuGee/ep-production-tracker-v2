@@ -2,7 +2,7 @@ import React from "react";
 import "../styles/Responsive.css";
 
 export default function ProgressBoard({ jobs }) {
-  const steps = ["Sales", "Warehouse", "Production", "QC", "Account"];
+  const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
 
   const getStatusColor = (step, job) => {
     if (!job.status) return "#e5e7eb";
@@ -62,38 +62,49 @@ export default function ProgressBoard({ jobs }) {
 
         return "#e5e7eb";
 
-case "QC":
-  if (
-    status.qc_inspection === "ตรวจผ่านแล้ว" &&
-    status.qc_coa === "เตรียมพร้อมแล้ว"
-  ) {
-    return "#4ade80"; // ✅ ผ่านทั้ง 2 หมวด
-  }
+      case "QC":
+        if (
+          status.qc_inspection === "ตรวจผ่านแล้ว" &&
+          status.qc_coa === "เตรียมพร้อมแล้ว"
+        ) {
+          return "#4ade80"; // ✅ ผ่านทั้ง 2 หมวด
+        }
+      
+        // ✅ เพิ่มเงื่อนไขใหม่: ถ้างานไป Account แล้ว และ QC มีค่า
+        if (
+          ["Account", "Completed"].includes(currentStep) &&
+          status.qc_inspection &&
+          status.qc_coa
+        ) {
+          return "#4ade80"; // ✅ ถือว่าผ่าน QC แล้ว
+        }
+      
+        if (
+          currentStep === "Warehouse" &&
+          status.qc_inspection === "ตรวจไม่ผ่าน"
+        ) {
+          return "#e5e7eb"; // ❌ ย้อนกลับ
+        }
+      
+        if (
+          ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
+          status.qc_coa === "กำลังเตรียม"
+        ) {
+          return "#facc15";
+        }
+      
+        return "#e5e7eb";
 
-  // ✅ เพิ่มเงื่อนไขใหม่: ถ้างานไป Account แล้ว และ QC มีค่า
-  if (
-    ["Account", "Completed"].includes(currentStep) &&
-    status.qc_inspection &&
-    status.qc_coa
-  ) {
-    return "#4ade80"; // ✅ ถือว่าผ่าน QC แล้ว
-  }
+      case "Logistics":
+        if (job.currentStep === "Logistics") return "#facc15"; // กำลังทำ
+        if (
+          ["Account", "Completed"].includes(currentStep) &&
+          job.delivery_total > 0
+        ) {
+          return "#4ade80"; // ✅ ผ่าน Logistics แล้ว
+        }
+        return "#e5e7eb";
 
-  if (
-    currentStep === "Warehouse" &&
-    status.qc_inspection === "ตรวจไม่ผ่าน"
-  ) {
-    return "#e5e7eb"; // ❌ ย้อนกลับ
-  }
-
-  if (
-    ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
-    status.qc_coa === "กำลังเตรียม"
-  ) {
-    return "#facc15";
-  }
-
-  return "#e5e7eb";
 
       case "Account":
         if (status.account === "Invoice ออกแล้ว") return "#4ade80";
