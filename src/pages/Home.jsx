@@ -564,10 +564,10 @@ export default function Home() {
       {/* --- Total Volume --- */}
       <hr style={{ margin: '2rem 0' }} />
       <div style={{ backgroundColor: "#e0f2fe", padding: "12px 16px", borderRadius: "8px", marginBottom: "1rem" }}>
-        <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "4px" }}>
+        <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "4px" }}>
           📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
         </div>
-        <div style={{ fontSize: "16px", fontWeight: "normal" }}>
+        <div style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "4px" }}>
           📤 รวมยอดที่จัดส่งแล้ว: {getTotalDelivered().toLocaleString()} KG
         </div>
       </div>
