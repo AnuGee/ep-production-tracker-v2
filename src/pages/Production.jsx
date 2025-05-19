@@ -128,7 +128,7 @@ await updateDoc(jobRef, {
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {job.product_name} - {job.customer}
+                {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
               </option>
             ))}
           </select>
