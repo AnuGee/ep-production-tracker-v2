@@ -121,10 +121,14 @@ export default function QC() {
   };
 
   const handleFinalCoaSubmit = async () => {
+    const job = jobs.find((j) => j.id === selectedCoaJobId);
+    const auditLogs = job?.audit_logs || [];
+    const inspectionStatus = job?.status?.qc_inspection || "";
+    
     const jobRef = doc(db, "production_workflow", selectedCoaJobId);
     let nextStep = "QC";
-    if (coaStatus === "เตรียมพร้อมแล้ว") {
-      nextStep = "Account";
+    if (inspectionStatus === "ตรวจผ่านแล้ว" && coaStatus === "เตรียมพร้อมแล้ว") {
+      nextStep = "Logistics"; // ส่งต่อไปยัง Logistics ก่อน Account
     }
 
     await updateDoc(jobRef, {
