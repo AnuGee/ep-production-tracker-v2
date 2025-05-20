@@ -166,7 +166,14 @@ export default function QC() {
     (job) =>
       job.currentStep === "QC" &&
       job.status.qc_coa !== "เตรียมพร้อมแล้ว" &&
-      (job.status.qc_inspection === "skip" || job.status.production === "ผลิตเสร็จ")
+      (
+        job.status.qc_inspection === "skip" || 
+        job.status.production === "ผลิตเสร็จ" ||
+        (
+          !job.status.production && // กรณีข้าม Production
+          job.status.qc_inspection === "ตรวจผ่าน"
+        )
+      )
   );
 
   return (
