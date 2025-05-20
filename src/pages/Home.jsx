@@ -296,13 +296,6 @@ export default function Home() {
     }, 0);
   };
 
-  const getTotalDelivered = () => {
-    return filteredJobs.reduce((sum, job) => {
-      const delivered = Number(job.delivery_total);
-      return sum + (isNaN(delivered) ? 0 : delivered);
-    }, 0);
-  };
-
   const handleDeleteJob = async (id) => {
     const confirmDelete = window.confirm("❗ ยืนยันต้องการลบงานนี้หรือไม่?");
     if (!confirmDelete) return;
@@ -563,14 +556,9 @@ export default function Home() {
 
       {/* --- Total Volume --- */}
       <hr style={{ margin: '2rem 0' }} />
-      <div style={{ backgroundColor: "#e0f2fe", padding: "12px 16px", borderRadius: "8px", marginBottom: "1rem" }}>
-        <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "4px" }}>
-          📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
-        </div>
-        <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "4px" }}>
-          📤 รวมยอดที่จัดส่งแล้ว: {getTotalDelivered().toLocaleString()} KG
-        </div>
-      </div>
+      <h3 className="total-volume">
+        📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
+      </h3>
 
       {/* --- Progress Board --- */}
       <hr style={{ margin: '2rem 0' }} />
