@@ -120,17 +120,18 @@ export default function QC() {
     fetchJobs();
   };
 
-  const handleFinalCoaSubmit = async () => {
-    const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-    let nextStep = "QC";
-    if (coaStatus === "เตรียมพร้อมแล้ว") {
-      nextStep = "Account";
-    }
+const handleFinalCoaSubmit = async () => {
+  const jobRef = doc(db, "production_workflow", selectedCoaJobId);
+  let nextStep = "QC";
+  if (coaStatus === "เตรียมพร้อมแล้ว") {
+    nextStep = "Account";
+  }
 
-    console.log("Job ID ที่กำลังจะอัปเดต (QC):", selectedCoaJobId);
-    console.log("สถานะ COA ที่เลือก:", coaStatus);
-    console.log("ค่า nextStep ที่คำนวณได้:", nextStep); // 🚨 ตัวนี้ต้องเป็น "Account"
+  console.log("Job ID ที่กำลังจะอัปเดต (QC):", selectedCoaJobId);
+  console.log("สถานะ COA ที่เลือก:", coaStatus);
+  console.log("ค่า nextStep ที่คำนวณได้:", nextStep);
 
+  try {
     await updateDoc(jobRef, {
       "status.qc_coa": coaStatus,
       "remarks.qc_coa": coaRemark,
@@ -138,38 +139,35 @@ export default function QC() {
       Timestamp_QC: serverTimestamp(),
       audit_logs: [
         ...(jobs.find((j) => j.id === selectedCoaJobId)?.audit_logs || []),
-          {
+        {
           step: "QC",
           field: "qc_coa",
           value: coaStatus,
           remark: coaRemark,
           timestamp: new Date().toISOString(),
         },
-// 🚨 เพิ่ม log สำหรับ currentStep_change เพื่อยืนยันใน Firebase Audit Logs
-          {
-            step: "QC",
-            field: "currentStep_change",
-            value: nextStep,
-            remark: `workflow changed to ${nextStep}`,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
-
-      toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
-    } catch (error) {
-      // 🚨 สำคัญมาก: ดักจับและแสดงข้อผิดพลาดที่นี่
-      console.error("❌ Error ในการอัปเดตสถานะ COA หรือ currentStep:", error);
-      toast.error("❌ เกิดข้อผิดพลาดในการบันทึกสถานะ COA");
-    } finally {
-      // ส่วนนี้จะทำงานเสมอ ไม่ว่าจะเกิด error หรือไม่
-      setSelectedCoaJobId("");
-      setCoaStatus("");
-      setCoaRemark("");
-      setShowConfirmCoa(false);
-      fetchJobs(); // โหลดงานใหม่หลังจากบันทึก
-    }
-  };
+        // เพิ่ม log สำหรับ currentStep_change เพื่อยืนยันใน Firebase Audit Logs
+        {
+          step: "QC",
+          field: "currentStep_change",
+          value: nextStep,
+          remark: `workflow changed to ${nextStep}`,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
+    toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
+  } catch (error) { // 🚨 ตรวจสอบบรรทัดนี้และบรรทัดก่อนหน้า (ที่สิ้นสุด try block)
+    console.error("❌ Error ในการอัปเดตสถานะ COA หรือ currentStep:", error);
+    toast.error("❌ เกิดข้อผิดพลาดในการบันทึกสถานะ COA");
+  } finally {
+    setSelectedCoaJobId("");
+    setCoaStatus("");
+    setCoaRemark("");
+    setShowConfirmCoa(false);
+    fetchJobs();
+  }
+};
 
   const inspectionJobs = jobs.filter(
     (job) =>
