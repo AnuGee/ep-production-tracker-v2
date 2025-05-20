@@ -120,44 +120,37 @@ export default function QC() {
     fetchJobs();
   };
 
-const handleFinalCoaSubmit = async () => {
-  const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-  const job = jobs.find((j) => j.id === selectedCoaJobId);
-  const auditLogs = job?.audit_logs || [];
+  const handleFinalCoaSubmit = async () => {
+    const jobRef = doc(db, "production_workflow", selectedCoaJobId);
+    let nextStep = "QC";
+    if (coaStatus === "เตรียมพร้อมแล้ว") {
+      nextStep = "Account";
+    }
 
-  const inspectionPassed = job?.status?.qc_inspection === "ตรวจผ่าน";
-  const skipInspection = job?.status?.qc_inspection === "skip";
+    await updateDoc(jobRef, {
+      "status.qc_coa": coaStatus,
+      "remarks.qc_coa": coaRemark,
+      currentStep: nextStep,
+      Timestamp_QC: serverTimestamp(),
+      audit_logs: [
+        ...jobs.find((j) => j.id === selectedCoaJobId)?.audit_logs || [],
+        {
+          step: "QC",
+          field: "qc_coa",
+          value: coaStatus,
+          remark: coaRemark,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
 
-  let nextStep = "QC";
-
-  if ((inspectionPassed || skipInspection) && coaStatus === "เตรียมพร้อมแล้ว") {
-    nextStep = "Account";
-  }
-
-  await updateDoc(jobRef, {
-    "status.qc_coa": coaStatus,
-    "remarks.qc_coa": coaRemark,
-    currentStep: nextStep,
-    Timestamp_QC: serverTimestamp(),
-    audit_logs: [
-      ...auditLogs,
-      {
-        step: "QC",
-        field: "qc_coa",
-        value: coaStatus,
-        remark: coaRemark,
-        timestamp: new Date().toISOString(),
-      },
-    ],
-  });
-
-  toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
-  setSelectedCoaJobId("");
-  setCoaStatus("");
-  setCoaRemark("");
-  setShowConfirmCoa(false);
-  fetchJobs();
-};
+    toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
+    setSelectedCoaJobId("");
+    setCoaStatus("");
+    setCoaRemark("");
+    setShowConfirmCoa(false);
+    fetchJobs();
+  };
 
   const inspectionJobs = jobs.filter(
     (job) =>
@@ -170,14 +163,7 @@ const handleFinalCoaSubmit = async () => {
     (job) =>
       job.currentStep === "QC" &&
       job.status.qc_coa !== "เตรียมพร้อมแล้ว" &&
-      (
-        job.status.qc_inspection === "skip" || 
-        job.status.production === "ผลิตเสร็จ" ||
-        (
-          !job.status.production && // กรณีข้าม Production
-          job.status.qc_inspection === "ตรวจผ่าน"
-        )
-      )
+      (job.status.qc_inspection === "skip" || job.status.production === "ผลิตเสร็จ")
   );
 
   return (
@@ -198,7 +184,7 @@ const handleFinalCoaSubmit = async () => {
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
   .map((job) => (
     <option key={job.id} value={job.id}>
-      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+      {job.product_name} - {job.customer}{`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
     </option>
 ))}
           </select>
