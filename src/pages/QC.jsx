@@ -139,7 +139,7 @@ export default function QC() {
   // ✅ เงื่อนไขเปลี่ยน currentStep → "Account" เมื่อผ่านทั้ง QC และ COA
   if (
     (inspectionStatus === "skip" && coaStatus === "เตรียมพร้อมแล้ว") ||
-    (inspectionStatus === "ตรวจผ่านแล้ว" && coaStatus === "เตรียมพร้อมแล้ว")
+    (inspectionStatus === "ตรวจผ่าน" && coaStatus === "เตรียมพร้อมแล้ว")
   ) {
     nextStep = "Account";
   }
