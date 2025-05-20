@@ -120,41 +120,37 @@ export default function QC() {
     fetchJobs();
   };
 
-const handleFinalCoaSubmit = async () => {
-  const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-  const job = jobs.find((j) => j.id === selectedCoaJobId);
-  const inspectionStatus = job?.status?.qc_inspection || "";
-  const auditLogs = job?.audit_logs || [];
+  const handleFinalCoaSubmit = async () => {
+    const jobRef = doc(db, "production_workflow", selectedCoaJobId);
+    let nextStep = "QC";
+    if (coaStatus === "เตรียมพร้อมแล้ว") {
+      nextStep = "Account";
+    }
 
-  let nextStep = "QC";
-  if (inspectionStatus === "ตรวจผ่านแล้ว" && coaStatus === "เตรียมพร้อมแล้ว") {
-    nextStep = "Logistics"; // ✅ ส่งต่อไป Logistics
-  }
+    await updateDoc(jobRef, {
+      "status.qc_coa": coaStatus,
+      "remarks.qc_coa": coaRemark,
+      currentStep: nextStep,
+      Timestamp_QC: serverTimestamp(),
+      audit_logs: [
+        ...jobs.find((j) => j.id === selectedCoaJobId)?.audit_logs || [],
+        {
+          step: "QC",
+          field: "qc_coa",
+          value: coaStatus,
+          remark: coaRemark,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
 
-  await updateDoc(jobRef, {
-    "status.qc_coa": coaStatus,
-    "remarks.qc_coa": coaRemark,
-    currentStep: nextStep,
-    Timestamp_QC: serverTimestamp(),
-    audit_logs: [
-      ...auditLogs,
-      {
-        step: "QC",
-        field: "qc_coa",
-        value: coaStatus,
-        remark: coaRemark,
-        timestamp: new Date().toISOString(),
-      },
-    ],
-  });
-
-  toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
-  setSelectedCoaJobId("");
-  setCoaStatus("");
-  setCoaRemark("");
-  setShowConfirmCoa(false);
-  fetchJobs();
-};
+    toast.success("✅ บันทึกสถานะ COA เรียบร้อยแล้ว");
+    setSelectedCoaJobId("");
+    setCoaStatus("");
+    setCoaRemark("");
+    setShowConfirmCoa(false);
+    fetchJobs();
+  };
 
   const inspectionJobs = jobs.filter(
     (job) =>
@@ -188,7 +184,7 @@ const handleFinalCoaSubmit = async () => {
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
   .map((job) => (
     <option key={job.id} value={job.id}>
-      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+      {job.product_name} - {job.customer}
     </option>
 ))}
           </select>
@@ -245,7 +241,7 @@ const handleFinalCoaSubmit = async () => {
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
   .map((job) => (
     <option key={job.id} value={job.id}>
-      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+      {job.product_name} - {job.customer}
     </option>
 ))}
       </select>
