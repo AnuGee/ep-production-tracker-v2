@@ -136,6 +136,7 @@ import {
   getDocs,
   updateDoc,
   serverTimestamp,
+} from "firebase/firestore";
 import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
@@ -257,7 +258,7 @@ await updateDoc(jobRef, {
             <option value="">-- เลือกงาน --</option>
             {jobs.map((job) => (
               <option key={job.id} value={job.id}>
-                {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+                {job.product_name} - {job.customer}
               </option>
             ))}
           </select>
