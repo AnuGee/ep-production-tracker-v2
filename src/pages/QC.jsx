@@ -123,7 +123,10 @@ export default function QC() {
   const handleFinalCoaSubmit = async () => {
     const jobRef = doc(db, "production_workflow", selectedCoaJobId);
     let nextStep = "QC";
-    if (coaStatus === "เตรียมพร้อมแล้ว") {
+    const job = jobs.find((j) => j.id === selectedCoaJobId);
+    const inspectionPassed = job?.status?.qc_inspection === "ตรวจผ่าน";
+    
+    if (inspectionPassed && coaStatus === "เตรียมพร้อมแล้ว") {
       nextStep = "Account";
     }
 
