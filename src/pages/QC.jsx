@@ -199,11 +199,12 @@ const handleFinalCoaSubmit = async () => {
             <option value="">-- เลือกงาน --</option>
 {inspectionJobs
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
-  .map((job) => (
-    const deliveryDate = job.delivery_date || "-"; // ✅ ประกาศที่นี่
-    <option key={job.id} value={job.id}>
-      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | DD: ${deliveryDate}`}
-    </option>
+  .map((job) => {
+    const deliveryDate = job.delivery_date || "-";
+    return (
+      <option key={job.id} value={job.id}>
+        {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | DD: ${deliveryDate}`}
+      </option>
     );
   })}
           </select>
@@ -258,13 +259,15 @@ const handleFinalCoaSubmit = async () => {
         <option value="">-- เลือกงาน --</option>
 {coaJobs
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
-  .map((job) => (
-    const deliveryDate = job.delivery_date || "-"; // ✅ ประกาศที่นี่
-    <option key={job.id} value={job.id}>
-      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | DD: ${deliveryDate}`}
-    </option>
+  .map((job) => {
+    const deliveryDate = job.delivery_date || "-";
+    return (
+      <option key={job.id} value={job.id}>
+        {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | DD: ${deliveryDate}`}
+      </option>
     );
   })}
+
       </select>
     </div>
     <div className="form-group full-span">
