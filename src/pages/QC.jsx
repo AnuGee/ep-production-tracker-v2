@@ -201,7 +201,7 @@ const handleFinalCoaSubmit = async () => {
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
   .map((job) => (
     <option key={job.id} value={job.id}>
-      {job.product_name} - {job.customer}{`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
     </option>
 ))}
           </select>
@@ -258,7 +258,7 @@ const handleFinalCoaSubmit = async () => {
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
   .map((job) => (
     <option key={job.id} value={job.id}>
-      {job.product_name} - {job.customer}{`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
     </option>
 ))}
       </select>
