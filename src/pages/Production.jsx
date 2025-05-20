@@ -136,7 +136,7 @@ import {
   getDocs,
   updateDoc,
   serverTimestamp,
-} from "firebase/firestore";
+from "firebase/firestore";
 import toast from "react-hot-toast";
 import "../styles/Responsive.css";
 
