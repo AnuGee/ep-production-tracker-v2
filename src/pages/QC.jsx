@@ -120,53 +120,20 @@ export default function QC() {
     fetchJobs();
   };
 
-  // const handleFinalCoaSubmit = async () => {
-  // const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-  // let nextStep = "QC";
-  // const job = jobs.find((j) => j.id === selectedCoaJobId);
-  // const inspectionStatus = job?.status?.qc_inspection || "";
-    
-  // if (inspectionStatus === "skip" && coaStatus === "เตรียมพร้อมแล้ว") {
-  // nextStep = "Account";
-  // }
-
-    const handleFinalCoaSubmit = async () => {
-  const jobRef = doc(db, "production_workflow", selectedCoaJobId);
-  const job = jobs.find((j) => j.id === selectedCoaJobId);
-  const inspectionStatus = job?.status?.qc_inspection || "";
-  let nextStep = "QC";
-
-  // ✅ เงื่อนไขเปลี่ยน currentStep → "Account" เมื่อผ่านทั้ง QC และ COA
-  if (
-    (inspectionStatus === "skip" && coaStatus === "เตรียมพร้อมแล้ว") ||
-    (inspectionStatus === "ตรวจผ่าน" && coaStatus === "เตรียมพร้อมแล้ว")
-  ) {
-    nextStep = "Account";
-  }
+  const handleFinalCoaSubmit = async () => {
+    const jobRef = doc(db, "production_workflow", selectedCoaJobId);
+    let nextStep = "QC";
+    if (coaStatus === "เตรียมพร้อมแล้ว") {
+      nextStep = "Account";
+    }
 
     await updateDoc(jobRef, {
       "status.qc_coa": coaStatus,
       "remarks.qc_coa": coaRemark,
-      currentStep: nextStep, // ✅ สำคัญที่สุด!
-      audit_logs: [
-        ...(job.audit_logs || []),
-        {
-          step: "QC",
-          field: "qc_coa",
-          value: coaStatus,
-          remark: coaRemark,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    });
-      
-    await updateDoc(jobRef, {
-      "status.qc_coa": coaStatus,
-      "remarks.qc_coa": coaRemark,
-      currentStep: nextStep, // ✅ สำคัญที่สุด!
+      currentStep: nextStep,
       Timestamp_QC: serverTimestamp(),
       audit_logs: [
-        ...(job.audit_logs || []),
+        ...jobs.find((j) => j.id === selectedCoaJobId)?.audit_logs || [],
         {
           step: "QC",
           field: "qc_coa",
@@ -274,7 +241,7 @@ export default function QC() {
   .sort((a, b) => a.product_name.localeCompare(b.product_name))
   .map((job) => (
     <option key={job.id} value={job.id}>
-      {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+      {job.product_name} - {job.customer}{`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
     </option>
 ))}
       </select>
