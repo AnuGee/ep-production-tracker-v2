@@ -22,7 +22,6 @@ export default function Header() {
     { label: "🏭 Warehouse", path: "/warehouse" },
     { label: "🧪 Production", path: "/production" },
     { label: "🧬 QC", path: "/qc" },
-    { label: "🚚 Logistics", path: "/logistics", roles: ["Admin", "Sales"] },
     { label: "💰 Account", path: "/account" },
   ];
 
