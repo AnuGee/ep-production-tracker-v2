@@ -25,13 +25,11 @@ export default function Logistics() {
   const fetchJobs = async () => {
     const snapshot = await getDocs(collection(db, "production_workflow"));
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const readyJobs = data.filter((job) => {
-      const status = job.status || {};
-      const passedQC = status.qc_inspection === "ตรวจผ่านแล้ว" && status.qc_coa === "เตรียมพร้อมแล้ว";
-      const totalDelivered = (job.delivery_logs || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0);
-      return passedQC && totalDelivered < Number(job.volume || 0);
-    });
-    setJobs(readyJobs);
+  
+    // ✅ โหลดเฉพาะงานที่อยู่ในขั้น Logistics
+    const logisticsJobs = data.filter((job) => job.currentStep === "Logistics");
+  
+    setJobs(logisticsJobs);
   };
 
   const handleSubmit = async () => {
