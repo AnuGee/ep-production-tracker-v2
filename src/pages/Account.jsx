@@ -38,22 +38,7 @@ setJobs(filtered);
   const handleFinalSubmit = async () => {
     try {
       const jobRef = doc(db, "production_workflow", selectedJobId);
-      await updateDoc(jobRef, {
-        "status.account": accountStatus,
-        "remarks.account": remark || "",
-        currentStep: accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
-        Timestamp_Account: serverTimestamp(),
-        audit_logs: [
-          ...jobs.find((j) => j.id === selectedJobId)?.audit_logs || [],
-          {
-            step: "Account",
-            field: "status.account",
-            value: accountStatus,
-            remark: remark || "",
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
+        
       toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
       setSelectedJobId("");
       setAccountStatus("");
