@@ -9,6 +9,7 @@ import Sales from "./pages/Sales";
 import Warehouse from "./pages/Warehouse";
 import Production from "./pages/Production";
 import QC from "./pages/QC";
+import Logistics from "./pages/Logistics";
 import Account from "./pages/Account";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -62,6 +63,14 @@ return (
             element={
               <ProtectedRoute allowedRoles={["Admin", "QC"]}>
                 <MainLayout><QC /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/logistics"
+            element={
+              <ProtectedRoute allowedRoles={["Admin", "Sales"]}>
+                <MainLayout><Logistics /></MainLayout>
               </ProtectedRoute>
             }
           />
