@@ -42,10 +42,11 @@ export default function Logistics() {
     if (!job) return;
 
     const currentDelivered = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0),
+      (sum, log) => sum + Number(log.quantity || 0),
       0
     );
-    const remainingQty = Number(job.volume || 0) - currentDelivered;
+    
+    const updatedDelivered = currentDelivered + Number(deliveryQty); // ✅ วางตรงนี้
 
     if (Number(deliveryQty) > remainingQty) {
       toast.error("❌ จำนวนที่จัดส่งเกินจำนวนที่เหลือ");
@@ -55,25 +56,15 @@ export default function Logistics() {
     try {
       const jobRef = doc(db, "production_workflow", selectedId);
       await updateDoc(jobRef, {
-        delivery_logs: [
-          ...(job.delivery_logs || []),
-          {
-            quantity: Number(deliveryQty),
-            date: deliveryDate,
-            remark: remark || "",
-          },
-        ],
-        audit_logs: [
-          ...(job.audit_logs || []),
-          {
-            step: "Logistics",
-            field: "delivery",
-            value: `${deliveryQty} KG`,
-            remark: remark || "",
-            timestamp: new Date().toISOString(),
-          },
-        ],
-        Timestamp_Logistics: serverTimestamp(),
+        delivered_total: updatedDelivered, // ✅ เก็บยอดสะสมที่ส่งไปแล้วทั้งหมด
+        delivery_logs: updatedLogs,        // ✅ บันทึกประวัติการจัดส่งแบบหลายรอบ
+        audit_logs: arrayUnion({           // ✅ เพิ่ม log ประวัติแบบไม่ลบทับของเก่า
+          step: "Logistics",
+          field: "delivery_logs",
+          value: `${deliveryQty} kg`,
+          remark: remark || "",
+          timestamp: new Date().toISOString(),
+        }),
       });
       toast.success("✅ บันทึกข้อมูลการจัดส่งสำเร็จ");
       setSelectedId("");
