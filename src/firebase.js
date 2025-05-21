@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth"; // ✅ เพิ่มตรงนี�
 
 // 🔥 Config จาก Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyAxfBdSNyvtbozLPagdg6AtCj3Sd2YsMcU",
-  authDomain: "logistics-test-5d6cd.firebaseapp.com",
-  projectId: "logistics-test-5d6cd",
-  storageBucket: "logistics-test-5d6cd.firebasestorage.app",
-  messagingSenderId: "38432977031",
-  appId: "1:38432977031:web:ad99cba2ff2c57b1fa0822"
+  apiKey: "AIzaSyCZOBE24iUSeZAfBTzrn7SFbjNftK268_I",
+  authDomain: "ep-pd-tracker.firebaseapp.com",
+  projectId: "ep-pd-tracker",
+  storageBucket: "ep-pd-tracker.firebasestorage.app",
+  messagingSenderId: "154336258483",
+  appId: "1:154336258483:web:d5ca2385824283f42e43c6"
 };
 
 // 🔧 Initialize Firebase
