@@ -22,7 +22,14 @@ export default function Logistics() {
     const querySnapshot = await getDocs(collection(db, "production_workflow"));
     const data = querySnapshot.docs
       .map((doc) => ({ id: doc.id, ...doc.data() }))
-      .filter((job) => job.currentStep === "Logistics");
+      .filter(
+        (job) =>
+          job.currentStep === "Logistics" &&
+          (job.delivery_logs || []).reduce(
+            (sum, log) => sum + Number(log.quantity || 0),
+            0
+          ) < Number(job.volume || 0)
+      );
     setJobs(data);
   };
 
