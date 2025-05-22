@@ -181,32 +181,30 @@ export default function Logistics() {
           />
         </div>
 
-        <div className="form-group full-span">
-          <button className="submit-btn" onClick={() => setShowConfirm(true)}>
-            ✅ บันทึกข้อมูลการจัดส่ง
-          </button>
-        </div>
-        </div> {/* ปิด .form-grid */}
-        
-        
-        {/* ✅ Modal ยืนยันก่อนบันทึก */}
-        {showConfirm && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h3>ยืนยันการจัดส่ง?</h3>
-              <p><strong>PO:</strong> {jobs.find((j) => j.id === selectedId)?.po_number || "-"}</p>
-              <p><strong>จำนวนที่จัดส่ง:</strong> {deliveryQty} KG</p>
-              <p><strong>วันที่จัดส่ง:</strong> {deliveryDate}</p>
-              <p><strong>หมายเหตุ:</strong> {remark || "-"}</p>
-        
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
-                <button className="submit-btn" onClick={handleSubmit}>✅ ยืนยัน</button>
-                <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
-              </div>
-            </div>
+      <div className="form-group full-span">
+        <button className="submit-btn" onClick={() => setShowConfirm(true)}>
+          ✅ บันทึกข้อมูลการจัดส่ง
+        </button>
+      </div>
+    </div> {/* ปิด .form-grid */}
+
+    {/* ✅ Modal ยืนยันก่อนบันทึก */}
+    {showConfirm && (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h3>ยืนยันการจัดส่ง?</h3>
+          <p><strong>PO:</strong> {jobs.find((j) => j.id === selectedId)?.po_number || "-"}</p>
+          <p><strong>จำนวนที่จัดส่ง:</strong> {deliveryQty} KG</p>
+          <p><strong>วันที่จัดส่ง:</strong> {deliveryDate}</p>
+          <p><strong>หมายเหตุ:</strong> {remark || "-"}</p>
+
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
+            <button className="submit-btn" onClick={handleSubmit}>✅ ยืนยัน</button>
+            <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
           </div>
-        )}
-        
-        </div> {/* ปิด .page-container */}
-        );
-        }
+        </div>
+      </div>
+    )}
+  </div> // ✅ ปิด .page-container
+  );
+} // ✅ ปิดฟังก์ชัน Logistics
