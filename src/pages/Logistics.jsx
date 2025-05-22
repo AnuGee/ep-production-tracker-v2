@@ -113,6 +113,7 @@ export default function Logistics() {
       });
 
       toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
+      setShowConfirm(false); // ✅ ปิด popup
       setDeliveryQty("");
       setDeliveryDate("");
       setRemark("");
@@ -190,15 +191,16 @@ export default function Logistics() {
 
     {/* ✅ Modal ยืนยันก่อนบันทึก */}
     {showConfirm && (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h3>ยืนยันการจัดส่ง?</h3>
-          <p><strong>PO:</strong> {jobs.find((j) => j.id === selectedId)?.po_number || "-"}</p>
-          <p><strong>จำนวนที่จัดส่ง:</strong> {deliveryQty} KG</p>
-          <p><strong>วันที่จัดส่ง:</strong> {deliveryDate}</p>
-          <p><strong>หมายเหตุ:</strong> {remark || "-"}</p>
-
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px" }}>
+      <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <h3>📋 <strong>ยืนยันข้อมูลก่อนบันทึก</strong></h3>
+          <ul style={{ textAlign: "left", marginTop: "1rem" }}>
+            <li><strong>PO:</strong> {jobs.find((j) => j.id === selectedId)?.po_number || "-"}</li>
+            <li><strong>จำนวนที่จัดส่ง:</strong> {deliveryQty} KG</li>
+            <li><strong>วันที่จัดส่ง:</strong> {deliveryDate}</li>
+            {remark && <li><strong>หมายเหตุ:</strong> {remark}</li>}
+          </ul>
+          <div className="button-row">
             <button className="submit-btn" onClick={handleSubmit}>✅ ยืนยัน</button>
             <button className="cancel-btn" onClick={() => setShowConfirm(false)}>❌ ยกเลิก</button>
           </div>
