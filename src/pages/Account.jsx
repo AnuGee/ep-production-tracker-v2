@@ -35,20 +35,27 @@ setJobs(filtered);
     setShowConfirm(true); // เปิด popup ยืนยัน
   };
 
-  const handleFinalSubmit = async () => {
-    try {
-      const jobRef = doc(db, "production_workflow", selectedJobId);
-        
-      toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
-      setSelectedJobId("");
-      setAccountStatus("");
-      setRemark("");
-      setShowConfirm(false);
-      fetchJobs();
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาด");
-    }
-  };
+const handleFinalSubmit = async () => {
+  try {
+    const jobRef = doc(db, "production_workflow", selectedJobId);
+
+    await updateDoc(jobRef, {
+      "status.account": accountStatus,
+      "remarks.account": remark || "",
+      currentStep: accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
+      Timestamp_Account: serverTimestamp(),
+    });
+
+    toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
+    setSelectedJobId("");
+    setAccountStatus("");
+    setRemark("");
+    setShowConfirm(false);
+    fetchJobs();
+  } catch (error) {
+    toast.error("❌ เกิดข้อผิดพลาด");
+  }
+};
 
   return (
     <div className="page-container">
