@@ -153,11 +153,13 @@ export default function Home() {
 
 case "Logistics": {
   const volume = Number(job.volume || 0);
-  const delivered = (job.delivery_logs || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0);
-  if (delivered === 0) notStarted++;
-  else if (delivered >= volume) done++;
-  else doing++;
-  break;
+  const delivered = (job.delivery_logs || []).reduce(
+    (sum, d) => sum + Number(d.quantity || 0), 0
+  );
+
+  if (delivered === 0) return "notStarted";
+  else if (delivered >= volume) return "done";
+  else return "doing";
 }
         
   case "Account": {
