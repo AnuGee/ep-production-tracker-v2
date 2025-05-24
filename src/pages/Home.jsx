@@ -39,7 +39,7 @@ export default function Home() {
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   const years = ["ทั้งหมด", "2025", "2026", "2027", "2028", "2029", "2030"];
-  const steps = ["Sales", "Warehouse", "Production", "QC", "Account"]; // Removed COA as it's part of QC visually
+  const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"]; // Removed COA as it's part of QC visually
 
   // --- Handlers สำหรับการลาก (เพิ่มเข้ามา) ---
   const handleMouseDown = (e) => {
@@ -151,6 +151,15 @@ export default function Home() {
     return "notStarted";
   }
 
+case "Logistics": {
+  const volume = Number(job.volume || 0);
+  const delivered = (job.delivery_logs || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0);
+  if (delivered === 0) notStarted++;
+  else if (delivered >= volume) done++;
+  else doing++;
+  break;
+}
+        
   case "Account": {
     const ac = status.account;
     if (ac === "Invoice ออกแล้ว") return "done";
@@ -221,18 +230,43 @@ export default function Home() {
     }
   };
 
-  const filteredJobs = jobs
-    .filter(filterJobs)
-    .filter((job) => {
-      const search = searchText.toLowerCase();
-      const productNameMatch = job.product_name?.toLowerCase().includes(search);
-      const customerMatch = job.customer?.toLowerCase().includes(search);
-      const batchNoProdMatch = job.batch_no_production?.toLowerCase().includes(search);
-      const batchNoWHMatch = Array.isArray(job.batch_no_warehouse) &&
-                             job.batch_no_warehouse.some(bn => bn?.toLowerCase().includes(search));
+const filteredJobs = jobs
+  .filter(filterJobs)
+  .filter((job) => {
+    const search = searchText.toLowerCase();
+    const productNameMatch = job.product_name?.toLowerCase().includes(search);
+    const customerMatch = job.customer?.toLowerCase().includes(search);
+    const batchNoProdMatch = job.batch_no_production?.toLowerCase().includes(search);
+    const batchNoWHMatch = Array.isArray(job.batch_no_warehouse) &&
+      job.batch_no_warehouse.some(bn => bn?.toLowerCase().includes(search));
+    return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
+  })
+  .filter((job) => {
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+    const deliveryTotal = (job.delivery_logs || []).reduce(
+      (sum, d) => sum + Number(d.quantity || 0),
+      0
+    );
+    const volume = Number(job.volume || 0);
+    if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
+    return true;
+  });
+  
+const progressJobs = filteredJobs.filter((job) => {
+  const po = job.po_number || "";
+  const hasKG = po.includes("KG");
+  const deliveryTotal = (job.delivery_logs || []).reduce(
+    (sum, d) => sum + Number(d.quantity || 0),
+    0
+  );
+  const volume = Number(job.volume || 0);
 
-      return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
-    });
+  if (!hasKG && (deliveryTotal === 0 || deliveryTotal === volume)) return true;
+  if (hasKG) return true;
+
+  return false;
+});
 
   const summaryPerStep = steps.map((step) => {
     let notStarted = 0;
