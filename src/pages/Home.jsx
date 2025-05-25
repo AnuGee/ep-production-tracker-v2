@@ -742,6 +742,7 @@ const progressJobs = filteredJobs.filter((job) => {
                   {renderStatusBadge("PD", "Production", job)} {' '}
                   {renderStatusBadge("QC", "QC", job)} {' '}
                   {renderStatusBadge("COA", "COA", job)} {' '}
+                  {renderStatusBadge("LO", "Logistics", job)} {' '}
                   {renderStatusBadge("AC", "Account", job)}
                 </td>
                 <td>{job.volume || "–"}</td>
