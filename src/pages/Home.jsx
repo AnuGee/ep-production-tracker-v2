@@ -254,7 +254,7 @@ const filteredJobs = jobs
     if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
     return true;
   });
-    .filter((job) => {
+  .filter((job) => {
     const po = job.po_number || "";
     const hasKG = po.includes("KG");
     const deliveryTotal = (job.delivery_logs || []).reduce(
