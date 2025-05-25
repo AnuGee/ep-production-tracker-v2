@@ -347,7 +347,7 @@ const progressJobs = filteredJobs.filter((job) => {
 
   const renderStatusBadge = (label, step, job) => {
     if (!job || !job.currentStep) return null;
-    const stepOrder = ["Sales", "Warehouse", "Production", "QC", "COA", "Account", "Completed"];
+    const stepOrder = ["Sales", "Warehouse", "Production", "QC", "COA", "Logistics", "Account", "Completed"];
     const currentIndex = stepOrder.indexOf(job.currentStep);
     const stepIndex = stepOrder.indexOf(step);
     let badgeClass = "status-badge pending";
@@ -368,6 +368,17 @@ const progressJobs = filteredJobs.filter((job) => {
             case "Production": specificStatus = job.status.production || ""; break;
             case "QC": specificStatus = job.status.qc_inspection || ""; break;
             case "COA": specificStatus = job.status.qc_coa || ""; break;
+            case "Logistics": {
+              const volume = Number(job.volume || 0);
+              const delivered = (job.delivery_logs || []).reduce(
+                (sum, d) => sum + Number(d.quantity || 0),
+                0
+              );
+              if (delivered === 0) specificStatus = "ยังไม่ส่ง";
+              else if (delivered >= volume) specificStatus = "ส่งครบแล้ว";
+              else specificStatus = `ส่งบางส่วน`;
+              break;
+            }
             case "Account": specificStatus = job.status.account || ""; break;
         }
 
@@ -380,6 +391,8 @@ const progressJobs = filteredJobs.filter((job) => {
                 statusValue = "ตรวจผ่านแล้ว";
             } else if (step === "COA" && job.status.qc_coa === "เตรียมพร้อมแล้ว"){
                 statusValue = "พร้อมแล้ว";
+              } else if (step === "Logistics") {
+                statusValue = "ส่งครบแล้ว";
             } else if (step === "Account" && job.status.account === "Invoice ออกแล้ว"){
                 statusValue = "Inv. ออกแล้ว";
             }
