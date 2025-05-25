@@ -121,6 +121,22 @@ export default function ProgressBoard({ jobs }) {
     a.product_name?.localeCompare(b.product_name)
   );
 
+  // ✅ วางตรงนี้เลย
+const progressJobs = sortedJobs.filter((job) => {
+  const po = job.po_number || "";
+  const hasKG = po.includes("KG");
+  const delivered = (job.delivery_logs || []).reduce(
+    (sum, d) => sum + Number(d.quantity || 0), 0
+  );
+  const volume = Number(job.volume || 0);
+
+  // ✅ แสดงเฉพาะ -xxxKG หรือส่งครบในรอบเดียว
+  if (hasKG) return true;
+  if (delivered === 0 || delivered === volume) return true;
+
+  return false;
+});
+
   return (
     <div className="progress-table-wrapper">
       <table className="progress-table">
@@ -136,7 +152,7 @@ export default function ProgressBoard({ jobs }) {
           {sortedJobs.map((job) => (
             <tr key={job.id || job.docId}>
               <td>
-                <span className="product-label">📄 {job.po_number} ({job.product_name})</span>
+                <span className="product-label">📄 {job.product_name}</span>
               </td>
               {steps.map((step) => (
                 <td key={step}>
