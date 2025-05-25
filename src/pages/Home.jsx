@@ -254,6 +254,19 @@ const filteredJobs = jobs
     if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
     return true;
   });
+    .filter((job) => {
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+    const deliveryTotal = (job.delivery_logs || []).reduce(
+      (sum, d) => sum + Number(d.quantity || 0), 0
+    );
+    const volume = Number(job.volume || 0);
+
+    // ❌ ซ่อน job ชื่อเดิม ถ้าเคยส่งบางส่วนแล้ว
+    if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
+
+    return true;
+  });
   
 const progressJobs = filteredJobs.filter((job) => {
   const po = job.po_number || "";
@@ -747,7 +760,7 @@ const progressJobs = filteredJobs.filter((job) => {
                 <td>{getBatchNoWH(job, 1)}</td>
                 <td>{getBatchNoWH(job, 2)}</td>
                 <td>{job.batch_no || "–"}</td>
-                <td>{job.product_name || "–"}</td>
+                <td>{job.product_name || job.po_number || "–"}</td>
                 <td>{job.currentStep || "–"}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
                   {renderStatusBadge("SL", "Sales", job)} {' '}
