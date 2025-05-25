@@ -1,90 +1,129 @@
 import React from "react";
+import "../styles/Responsive.css";
 
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
 
-  // กรอง job ที่ควรแสดงใน progress board
-  const filteredJobs = jobs
-    .filter((job) => job.product_name)
-    .filter((job) => {
-      const po = job.po_number || "";
-      const hasKG = po.includes("KG");
-      const deliveryTotal = (job.delivery_logs || []).reduce(
-        (sum, d) => sum + Number(d.quantity || 0),
-        0
-      );
-      const volume = Number(job.volume || 0);
-
-      // แสดง PO ปกติ ถ้ายังไม่ส่งเลย หรือ ส่งเต็มในรอบเดียว
-      if (!hasKG && (deliveryTotal === 0 || deliveryTotal === volume)) return true;
-
-      // แสดง PO -xxxKG เสมอ
-      if (hasKG) return true;
-
-      return false; // ซ่อนรายการชื่อเฉยๆ ที่ส่งบางส่วนไปแล้ว
-    });
-
   const getStatusColor = (step, job) => {
-    const status = job.status || {};
-    const currentStep = job.currentStep || "";
-    const deliveryTotal = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0),
-      0
-    );
-    const volume = Number(job.volume || 0);
+    if (!job.status) return "#e5e7eb";
+
+    const status = job.status;
+    const currentStep = job.currentStep;
+
+    if (job.currentStep === step) {
+      return "#facc15"; // กำลังทำ
+    }
 
     switch (step) {
       case "Sales":
-        return status.sales ? "#4ade80" : "#e5e7eb"; // เขียวถ้ามี status
-      case "Warehouse":
-        return status.warehouse === "เบิกเสร็จ" ? "#4ade80" : status.warehouse ? "#facc15" : "#e5e7eb";
-      case "Production":
-        return status.production === "ผลิตเสร็จ"
+        return (job.product_name && job.po_number && job.volume && job.customer)
           ? "#4ade80"
-          : status.production
-          ? "#facc15"
           : "#e5e7eb";
-      case "QC":
-        // ถ้าไป Logistics แล้ว แต่ QC ผ่านแล้ว → แสดงเป็นเขียว
+
+      case "Warehouse":
         if (
-          ["Logistics", "Account", "Completed"].includes(currentStep) &&
+          status.warehouse === "เบิกเสร็จ" ||
+          status.warehouse === "มีครบตามจำนวน"
+        ) {
+          return "#4ade80";
+        }
+        return "#e5e7eb";
+
+      case "Production":
+        if (status.production === "ผลิตเสร็จ") return "#4ade80";
+
+        if (
+          status.warehouse === "มีครบตามจำนวน" &&
+          ["QC", "COA", "Account", "Completed"].includes(currentStep)
+        ) {
+          return "#4ade80"; // ✅ ข้าม Production ไป QC
+        }
+
+        if (
+          status.warehouse === "เบิกเสร็จ" &&
+          ["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(status.production)
+        ) {
+          return "#facc15";
+        }
+
+        if (
+          status.qc_inspection === "ตรวจผ่าน" &&
+          status.production === "กำลังบรรจุ"
+        ) {
+          return "#facc15";
+        }
+
+        if (
+          currentStep === "Warehouse" &&
+          status.qc_inspection === "ตรวจไม่ผ่าน"
+        ) {
+          return "#e5e7eb"; // ❌ QC fail → กลับ Warehouse → รีเซ็ต Production
+        }
+
+        return "#e5e7eb";
+
+      case "QC":
+        if (
+          status.qc_inspection === "ตรวจผ่านแล้ว" &&
+          status.qc_coa === "เตรียมพร้อมแล้ว"
+        ) {
+          return "#4ade80";
+        }
+
+        if (
+          ["Account", "Completed"].includes(currentStep) &&
           status.qc_inspection &&
           status.qc_coa
         ) {
           return "#4ade80";
         }
-        return status.qc_inspection === "ตรวจผ่าน" && status.qc_coa === "เตรียมพร้อมแล้ว"
-          ? "#4ade80"
-          : status.qc_inspection || status.qc_coa
-          ? "#facc15"
-          : "#e5e7eb";
-      case "Logistics":
-        if (currentStep === "Logistics" || currentStep === "Account" || currentStep === "Completed") {
-          if (deliveryTotal >= volume) return "#4ade80"; // ส่งครบ
-          if (deliveryTotal > 0) return "#facc15"; // ส่งบางส่วน
+
+        if (
+          currentStep === "Warehouse" &&
+          status.qc_inspection === "ตรวจไม่ผ่าน"
+        ) {
+          return "#e5e7eb";
         }
+
+        if (
+          ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
+          status.qc_coa === "กำลังเตรียม"
+        ) {
+          return "#facc15";
+        }
+
         return "#e5e7eb";
+
+      case "Logistics": {
+        const volume = Number(job.volume || 0);
+        const delivered = (job.delivery_logs || []).reduce(
+          (sum, d) => sum + Number(d.quantity || 0), 0
+        );
+        if (delivered === 0) return "#e5e7eb";
+        if (delivered >= volume) return "#4ade80";
+        return "#facc15";
+      }
+
       case "Account":
-        return currentStep === "Completed"
-          ? "#4ade80"
-          : currentStep === "Account"
-          ? "#facc15"
-          : "#e5e7eb";
+        if (status.account === "Invoice ออกแล้ว") return "#4ade80";
+        if (status.account === "Invoice ยังไม่ออก") return "#facc15";
+        return "#e5e7eb";
+
       default:
         return "#e5e7eb";
     }
   };
 
-  const sortedJobs = [...filteredJobs].sort((a, b) =>
-    (a.product_name || "").localeCompare(b.product_name || "")
+  const sortedJobs = [...jobs].sort((a, b) =>
+    a.product_name?.localeCompare(b.product_name)
   );
 
   return (
-    <div style={{ overflowX: "auto", marginTop: "1.5rem" }}>
+    <div className="progress-table-wrapper">
       <table className="progress-table">
         <thead>
           <tr>
-            <th>📦 Product</th>
+            <th>Product</th>
             {steps.map((step) => (
               <th key={step}>{step}</th>
             ))}
@@ -92,7 +131,7 @@ export default function ProgressBoard({ jobs }) {
         </thead>
         <tbody>
           {sortedJobs.map((job) => (
-            <tr key={job.docId || job.id}>
+            <tr key={job.id || job.docId}>
               <td>
                 <span className="product-label">📄 {job.product_name}</span>
               </td>
