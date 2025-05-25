@@ -64,11 +64,13 @@ export default function ProgressBoard({ jobs }) {
 
       case "QC":
         if (
-          status.qc_inspection === "ตรวจผ่านแล้ว" &&
+          status.qc_inspection === "ตรวจผ่าน" &&
           status.qc_coa === "เตรียมพร้อมแล้ว"
-        ) {
-          return "#4ade80";
-        }
+        ) return "#4ade80";
+      
+        if (status.qc_inspection || status.qc_coa) return "#facc15";
+      
+        return "#e5e7eb";
 
         if (
           ["Account", "Completed"].includes(currentStep) &&
@@ -97,13 +99,14 @@ export default function ProgressBoard({ jobs }) {
       case "Logistics": {
         const volume = Number(job.volume || 0);
         const delivered = (job.delivery_logs || []).reduce(
-          (sum, d) => sum + Number(d.quantity || 0), 0
+          (sum, d) => sum + Number(d.quantity || 0),
+          0
         );
-        if (delivered === 0) return "#e5e7eb";
-        if (delivered >= volume) return "#4ade80";
-        return "#facc15";
+      
+        if (delivered === 0) return "#e5e7eb";      // ยังไม่ส่ง
+        if (delivered >= volume) return "#4ade80";  // ส่งครบ
+        return "#facc15";                           // ส่งบางส่วน
       }
-
       case "Account":
         if (status.account === "Invoice ออกแล้ว") return "#4ade80";
         if (status.account === "Invoice ยังไม่ออก") return "#facc15";
@@ -133,7 +136,7 @@ export default function ProgressBoard({ jobs }) {
           {sortedJobs.map((job) => (
             <tr key={job.id || job.docId}>
               <td>
-                <span className="product-label">📄 {job.product_name}</span>
+                <span className="product-label">📄 {job.po_number} ({job.product_name})</span>
               </td>
               {steps.map((step) => (
                 <td key={step}>
