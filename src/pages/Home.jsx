@@ -239,21 +239,12 @@ const filteredJobs = jobs
     const productNameMatch = job.product_name?.toLowerCase().includes(search);
     const customerMatch = job.customer?.toLowerCase().includes(search);
     const batchNoProdMatch = job.batch_no_production?.toLowerCase().includes(search);
-    const batchNoWHMatch = Array.isArray(job.batch_no_warehouse) &&
-      job.batch_no_warehouse.some(bn => bn?.toLowerCase().includes(search));
+    const batchNoWHMatch =
+      Array.isArray(job.batch_no_warehouse) &&
+      job.batch_no_warehouse.some((bn) => bn?.toLowerCase().includes(search));
+
     return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
   })
-  .filter((job) => {
-    const po = job.po_number || "";
-    const hasKG = po.includes("KG");
-    const deliveryTotal = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0),
-      0
-    );
-    const volume = Number(job.volume || 0);
-    if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
-    return true;
-  });
   .filter((job) => {
     const po = job.po_number || "";
     const hasKG = po.includes("KG");
@@ -262,7 +253,7 @@ const filteredJobs = jobs
     );
     const volume = Number(job.volume || 0);
 
-    // ❌ ซ่อน job ชื่อเดิม ถ้าเคยส่งบางส่วนแล้ว
+    // ซ่อน job ชื่อเดิม ถ้าเคยส่งแล้วบางส่วน (แต่ยังไม่ครบ)
     if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
 
     return true;
