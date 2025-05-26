@@ -82,17 +82,15 @@ return (
               </ProtectedRoute>
             }
           />
-          
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute allowedRoles={["Admin"]}>
+                <MainLayout><Search /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-<Route
-  path="/search"
-  element={
-    <ProtectedRoute allowedRoles={["Admin"]}>
-      <MainLayout><Search /></MainLayout>
-    </ProtectedRoute>
-  }
-/>
-</Routes>
       </Router>
     </AuthProvider>
   );
