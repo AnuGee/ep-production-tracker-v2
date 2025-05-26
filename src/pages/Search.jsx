@@ -47,6 +47,7 @@ export default function Search() {
         <table className="job-table">
           <thead>
             <tr>
+              <th>Doc ID</th>
               <th>Customer</th>
               <th>PO</th>
               <th>Product</th>
@@ -58,6 +59,7 @@ export default function Search() {
           <tbody>
             {filteredJobs.map((job) => (
               <tr key={job.id}>
+                <td>{job.id}</td>
                 <td>{job.customer || "–"}</td>
                 <td>{job.po_number || "–"}</td>
                 <td>{job.product_name || "–"}</td>
