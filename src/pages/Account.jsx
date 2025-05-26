@@ -27,19 +27,19 @@ export default function Account() {
     setJobs(data);
   };
 
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-  
-  useEffect(() => {
-    if (selectedId) {
-      const selectedJob = jobs.find((job) => job.docId === selectedId);
-      if (selectedJob) {
-        setAccountStatus(selectedJob.status?.account || "");
-        setRemark(selectedJob.remarks?.account || "");
+    useEffect(() => {
+      fetchJobs();
+    }, []);
+    
+    useEffect(() => {
+      if (selectedId) {
+        const selectedJob = jobs.find((job) => job.docId === selectedId);
+        if (selectedJob) {
+          setAccountStatus(selectedJob.status?.account || "");
+          setRemark(selectedJob.remarks?.account || "");
+        }
       }
-    }
-  }, [selectedId, jobs]);
+    }, [selectedId, jobs]);
 
   const handleSubmit = async () => {
     try {
