@@ -30,6 +30,16 @@ export default function Account() {
   useEffect(() => {
     fetchJobs();
   }, []);
+  
+  useEffect(() => {
+    if (selectedId) {
+      const selectedJob = jobs.find((job) => job.docId === selectedId);
+      if (selectedJob) {
+        setAccountStatus(selectedJob.status?.account || "");
+        setRemark(selectedJob.remarks?.account || "");
+      }
+    }
+  }, [selectedId, jobs]);
 
   const handleSubmit = async () => {
     try {
