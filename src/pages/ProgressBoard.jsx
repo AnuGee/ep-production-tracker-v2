@@ -62,39 +62,39 @@ export default function ProgressBoard({ jobs }) {
 
         return "#e5e7eb";
 
-      case "QC":
-        if (
-          status.qc_inspection === "ตรวจผ่าน" &&
-          status.qc_coa === "เตรียมพร้อมแล้ว"
-        ) return "#4ade80";
-      
-        if (status.qc_inspection || status.qc_coa) return "#facc15";
-      
-        return "#e5e7eb";
+case "QC": {
+  if (
+    status.qc_inspection === "ตรวจผ่านแล้ว" &&
+    status.qc_coa === "เตรียมพร้อมแล้ว"
+  ) {
+    return "#4ade80"; // ✅ ผ่าน QC + COA แล้ว
+  }
 
-        if (
-          ["Account", "Completed"].includes(currentStep) &&
-          status.qc_inspection &&
-          status.qc_coa
-        ) {
-          return "#4ade80";
-        }
+  // ✅ ถ้ามาถึง Logistics หรือ Account แล้ว และมีทั้ง qc_inspection / qc_coa → ถือว่าผ่าน
+  if (
+    ["Logistics", "Account", "Completed"].includes(currentStep) &&
+    status.qc_inspection &&
+    status.qc_coa
+  ) {
+    return "#4ade80";
+  }
 
-        if (
-          currentStep === "Warehouse" &&
-          status.qc_inspection === "ตรวจไม่ผ่าน"
-        ) {
-          return "#e5e7eb";
-        }
+  if (
+    currentStep === "Warehouse" &&
+    status.qc_inspection === "ตรวจไม่ผ่าน"
+  ) {
+    return "#e5e7eb"; // ❌ กลับไป Warehouse → ถือว่า QC ยังไม่เริ่ม
+  }
 
-        if (
-          ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
-          status.qc_coa === "กำลังเตรียม"
-        ) {
-          return "#facc15";
-        }
+  if (
+    ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
+    status.qc_coa === "กำลังเตรียม"
+  ) {
+    return "#facc15"; // 🟡 QC ยังดำเนินอยู่
+  }
 
-        return "#e5e7eb";
+  return "#e5e7eb"; // 🔲 Default
+}
 
       case "Logistics": {
         const volume = Number(job.volume || 0);
