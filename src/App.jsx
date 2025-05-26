@@ -10,6 +10,7 @@ import Warehouse from "./pages/Warehouse";
 import Production from "./pages/Production";
 import QC from "./pages/QC";
 import Account from "./pages/Account";
+import Search from "./pages/Search";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ NEW
@@ -83,6 +84,14 @@ return (
           />
           
         </Routes>
+        <Route
+  path="/search"
+  element={
+    <ProtectedRoute allowedRoles={["Admin"]}>
+      <MainLayout><Search /></MainLayout>
+    </ProtectedRoute>
+  }
+/>
       </Router>
     </AuthProvider>
   );
