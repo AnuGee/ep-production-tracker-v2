@@ -84,7 +84,7 @@ return (
           />
           
         </Routes>
-        <Route
+<Route
   path="/search"
   element={
     <ProtectedRoute allowedRoles={["Admin"]}>
@@ -92,6 +92,7 @@ return (
     </ProtectedRoute>
   }
 />
+</Routes>
       </Router>
     </AuthProvider>
   );
