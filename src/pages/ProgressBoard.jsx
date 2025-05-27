@@ -1,8 +1,4 @@
 // src/pages/ProgressBoard.jsx
-// ✅ รับ jobs ที่ถูกเตรียม (รวม, เรียงลำดับ, กรอง, แบ่งหน้า) มาจาก Home.jsx โดยตรง
-// ✅ ลบตรรกะการรวมงาน, การเรียงลำดับ, และการกรองที่ซ้ำซ้อนในไฟล์นี้ออก
-// ✅ ปรับปรุง getStatusColor ตามที่คุยกัน
-
 import React from "react";
 import "../styles/Responsive.css"; // ตรวจสอบเส้นทางไฟล์ CSS ว่าถูกต้อง
 
@@ -36,11 +32,11 @@ export default function ProgressBoard({ jobs }) { // รับ jobs ที่ถ
 
       case "Warehouse":
         // Warehouse จะเป็นสีเขียว ถ้า status.warehouse เป็น "เบิกเสร็จ" หรือ "มีครบตามจำนวน"
-        // หรือถ้า currentStep ได้ก้าวไปข้างหน้าแล้ว (Production, QC, COA, Logistics, Account)
+        // หรือถ้า currentStep ได้ก้าวไปข้างหน้าแล้ว (Production, QC, Logistics, Account)
         if (
           status.warehouse === "เบิกเสร็จ" ||
           status.warehouse === "มีครบตามจำนวน" ||
-          ["Production", "QC", "Logistics", "Account"].includes(currentStep) // เอา "COA" ออกเพราะ QC ครอบคลุมแล้ว, เอา "Completed" ออกเพราะมีเงื่อนไขด้านบนสุด
+          ["Production", "QC", "Logistics", "Account"].includes(currentStep)
         ) {
           return "#4ade80"; // เขียว: ผ่านแล้ว
         }
@@ -54,13 +50,13 @@ export default function ProgressBoard({ jobs }) { // รับ jobs ที่ถ
         // และ Warehouse มีครบตามจำนวน
         if (
           status.warehouse === "มีครบตามจำนวน" &&
-          ["QC", "Logistics", "Account"].includes(currentStep) // เอา "COA" และ "Completed" ออก
+          ["QC", "Logistics", "Account"].includes(currentStep)
         ) {
           return "#4ade80"; // เขียว: ข้าม Production ไปแล้ว
         }
         
         // Production จะเป็นสีเขียว ถ้า currentStep ได้ก้าวไปถึง QC หรือสูงกว่า (แสดงว่า Production ผ่านแล้ว)
-        if (["QC", "Logistics", "Account"].includes(currentStep)) { // เอา "COA" และ "Completed" ออก
+        if (["QC", "Logistics", "Account"].includes(currentStep)) {
           return "#4ade80"; // เขียว: ผ่านแล้ว
         }
 
@@ -155,11 +151,6 @@ export default function ProgressBoard({ jobs }) { // รับ jobs ที่ถ
     }
   };
 
-  // ✅ ลบโค้ดส่วนนี้ออกทั้งหมด: ไม่ต้องมีการเรียงลำดับ (sortedJobs) หรือกรอง (progressJobs) ในไฟล์นี้แล้ว
-  //    เพราะ Home.jsx จะจัดการและส่งข้อมูลที่พร้อมใช้งานมาให้แล้ว
-  // const sortedJobs = [...jobs].sort((a, b) => a.product_name?.localeCompare(b.product_name));
-  // const progressJobs = sortedJobs.filter((job) => { /* ... */ });
-
   return (
     <div className="progress-table-wrapper">
       <table className="progress-table">
@@ -172,29 +163,37 @@ export default function ProgressBoard({ jobs }) { // รับ jobs ที่ถ
           </tr>
         </thead>
         <tbody>
-          {/* ✅ ใช้ jobs prop โดยตรง ซึ่งถูกกรองและรวมมาจาก Home.jsx แล้ว */}
+          {/* ใช้ jobs prop โดยตรง ซึ่งถูกกรองและรวมมาจาก Home.jsx แล้ว */}
           {/* job.id || job.docId เพื่อให้แน่ใจว่ามี key ที่ไม่ซ้ำกัน */}
-          {jobs.map((job) => (
-            <tr key={job.id || job.docId}>
-              <td>
-                {/* แสดง product_name ซึ่งควรจะถูกอัปเดตให้มี suffix -xxxKG แล้วโดย Home.jsx */}
-                <span className="product-label">📄 {job.product_name}</span>
-              </td>
-              {steps.map((step) => (
-                <td key={step}>
-                  <div
-                    style={{
-                      backgroundColor: getStatusColor(step, job),
-                      height: "20px",
-                      width: "110px",
-                      borderRadius: "6px",
-                      margin: "auto",
-                    }}
-                  ></div>
+          {jobs.length > 0 ? ( // ✅ เพิ่มเงื่อนไขตรวจสอบว่า jobs มีข้อมูลหรือไม่
+            jobs.map((job) => (
+              <tr key={job.id || job.docId}>
+                <td>
+                  {/* แสดง product_name ซึ่งควรจะถูกอัปเดตให้มี suffix -xxxKG แล้วโดย Home.jsx */}
+                  <span className="product-label">📄 {job.product_name}</span>
                 </td>
-              ))}
+                {steps.map((step) => (
+                  <td key={step}>
+                    <div
+                      style={{
+                        backgroundColor: getStatusColor(step, job),
+                        height: "20px",
+                        width: "110px",
+                        borderRadius: "6px",
+                        margin: "auto",
+                      }}
+                    ></div>
+                  </td>
+                ))}
+              </tr>
+            ))
+          ) : ( // ✅ ถ้าไม่มีข้อมูล
+            <tr>
+              <td colSpan={steps.length + 1} style={{ textAlign: 'center', padding: '20px' }}>
+                ไม่พบงานที่ตรงกับเงื่อนไข
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
