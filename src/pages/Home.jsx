@@ -245,19 +245,21 @@ const filteredJobs = jobs
 
     return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
   })
-  .filter((job) => {
-    const po = job.po_number || "";
-    const hasKG = po.includes("KG");
-    const deliveryTotal = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0), 0
-    );
-    const volume = Number(job.volume || 0);
-
-    // ซ่อน job ชื่อเดิม ถ้าเคยส่งแล้วบางส่วน (แต่ยังไม่ครบ)
-    if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
-
-    return true;
-  });
+    .filter((job) => {
+      const po = job.po_number || "";
+      const hasKG = po.includes("KG");
+    
+      const deliveryTotal = (job.delivery_logs || []).reduce(
+        (sum, log) => sum + Number(log.quantity || 0),
+        0
+      );
+      const volume = Number(job.volume || 0);
+    
+      // ❌ ซ่อน PO ต้นฉบับ ถ้าเคยส่งออกบางส่วนหรือครบแล้ว
+      if (!hasKG && deliveryTotal > 0) return false;
+    
+      return true;
+    });
   
 const progressJobs = filteredJobs.filter((job) => {
   const po = job.po_number || "";
