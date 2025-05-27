@@ -130,8 +130,8 @@ const progressJobs = sortedJobs.filter((job) => {
   );
   const volume = Number(job.volume || 0);
 
-  // แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
-  return hasKG || delivered === 0;
+  // แสดงเฉพาะงานที่มีการจัดส่งหลายรอบหรือมี -KG ในชื่อ
+  return hasKG || (delivered > 0 && delivered < volume);
 });
 
 return (
@@ -146,28 +146,40 @@ return (
         </tr>
       </thead>
       <tbody>
-        {progressJobs.map((job) => (
-          <tr key={job.id || job.docId}>
-            <td>
-              <span className="product-label">
-                📄 {(job.po_number || "").includes("KG") ? job.po_number : job.product_name}
-              </span>
-            </td>
-            {steps.map((step) => (
-              <td key={step}>
-                <div
-                  style={{
-                    backgroundColor: getStatusColor(step, job),
-                    height: "20px",
-                    width: "110px",
-                    borderRadius: "6px",
-                    margin: "auto",
-                  }}
-                ></div>
+        {progressJobs.map((job) => {
+          const po = job.po_number || "";
+          const hasKG = po.includes("KG");
+          const delivered = (job.delivery_logs || []).reduce(
+            (sum, d) => sum + Number(d.quantity || 0), 0
+          );
+          const volume = Number(job.volume || 0);
+          const isMultiDelivery = delivered > 0 && delivered < volume;
+
+          return (
+            <tr key={job.id || job.docId}>
+              <td>
+                <span className="product-label">
+                  📄 {isMultiDelivery || hasKG ? 
+                    (job.po_number || job.product_name) : 
+                    job.product_name}
+                </span>
               </td>
-            ))}
-          </tr>
-        ))}
+              {steps.map((step) => (
+                <td key={step}>
+                  <div
+                    style={{
+                      backgroundColor: getStatusColor(step, job),
+                      height: "20px",
+                      width: "110px",
+                      borderRadius: "6px",
+                      margin: "auto",
+                    }}
+                  ></div>
+                </td>
+              ))}
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   </div>
