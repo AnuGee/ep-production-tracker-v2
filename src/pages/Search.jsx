@@ -168,8 +168,8 @@ export default function Search() {
   </div>
 </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1rem", alignItems: "center" }}>
-              <button onClick={() => setShowModal(false)} className="cancel-btn modal-btn">❌ ยกเลิก</button>
               <button onClick={handleUpdate} className="submit-btn modal-btn">💾 บันทึก</button>
+              <button onClick={() => setShowModal(false)} className="cancel-btn modal-btn">❌ ยกเลิก</button>
             </div>
           </div>
         </div>
