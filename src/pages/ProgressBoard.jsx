@@ -1,3 +1,4 @@
+// src/pages/ProgressBoard.jsx
 import React from "react";
 import "../styles/Responsive.css";
 
@@ -102,7 +103,7 @@ case "QC": {
           (sum, d) => sum + Number(d.quantity || 0),
           0
         );
-      
+
         if (delivered === 0) return "#e5e7eb";      // ยังไม่ส่ง
         if (delivered >= volume) return "#4ade80";  // ส่งครบ
         return "#facc15";                           // ส่งบางส่วน
@@ -121,21 +122,20 @@ case "QC": {
     a.product_name?.localeCompare(b.product_name)
   );
 
-  // ✅ วางตรงนี้เลย
-const progressJobs = sortedJobs.filter((job) => {
-  const po = job.po_number || "";
-  const hasKG = po.includes("KG");
-  const delivered = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0), 0
-  );
-  const volume = Number(job.volume || 0);
+  // Remove the internal progressJobs filtering as it's now handled in Home.jsx
+  // const progressJobs = sortedJobs.filter((job) => {
+  //   const po = job.po_number || "";
+  //   const hasKG = po.includes("KG");
+  //   const delivered = (job.delivery_logs || []).reduce(
+  //     (sum, d) => sum + Number(d.quantity || 0), 0
+  //   );
+  //   const volume = Number(job.volume || 0);
 
-  // ✅ แสดงเฉพาะ -xxxKG หรือส่งครบในรอบเดียว
-  if (hasKG) return true;
-  if (delivered === 0 || delivered === volume) return true;
+  //   if (hasKG) return true;
+  //   if (delivered === 0 || delivered === volume) return true;
 
-  return false;
-});
+  //   return false;
+  // });
 
   return (
     <div className="progress-table-wrapper">
@@ -148,20 +148,30 @@ const progressJobs = sortedJobs.filter((job) => {
             ))}
           </tr>
         </thead>
-<tbody>
-  {progressJobs.map((job) => (
-    <tr key={job.id}>
-      <td><span className="product-label">📄 {job.product_name}</span></td>
-      <td>{renderProgress("Sales", job)}</td>
-      <td>{renderProgress("Warehouse", job)}</td>
-      <td>{renderProgress("Production", job)}</td>
-      <td>{renderProgress("QC", job)}</td>
-      <td>{renderProgress("COA", job)}</td>
-      <td>{renderProgress("Logistics", job)}</td>
-      <td>{renderProgress("Account", job)}</td>
-    </tr>
-  ))}
-</tbody>
+        <tbody>
+          {/* Use the `jobs` prop directly, which is already filtered and consolidated from Home.jsx */}
+          {sortedJobs.map((job) => (
+            <tr key={job.id || job.docId}>
+              <td>
+                {/* Display product_name, which should now correctly reflect the -xxxKG suffix */}
+                <span className="product-label">📄 {job.product_name}</span>
+              </td>
+              {steps.map((step) => (
+                <td key={step}>
+                  <div
+                    style={{
+                      backgroundColor: getStatusColor(step, job),
+                      height: "20px",
+                      width: "110px",
+                      borderRadius: "6px",
+                      margin: "auto",
+                    }}
+                  ></div>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
       </table>
     </div>
   );
