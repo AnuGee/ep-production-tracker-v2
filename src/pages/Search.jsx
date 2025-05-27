@@ -14,6 +14,7 @@ export default function Search() {
   const [searchText, setSearchText] = useState("");
   const [editingJob, setEditingJob] = useState(null);
   const [formData, setFormData] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -43,6 +44,7 @@ export default function Search() {
       volume: job.volume || "",
       currentStep: job.currentStep || ""
     });
+    setShowModal(true);
   };
 
   const handleInputChange = (e) => {
@@ -64,6 +66,7 @@ export default function Search() {
       toast.success("✅ อัปเดตข้อมูลสำเร็จแล้ว");
       setEditingJob(null);
       setFormData({});
+      setShowModal(false);
       const refreshed = await getDocs(collection(db, "production_workflow"));
       setJobs(refreshed.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
@@ -125,66 +128,69 @@ export default function Search() {
         </table>
       </div>
 
-      {editingJob && (
-        <div style={{ marginTop: "2rem" }}>
-          <h3>🛠 แก้ไขข้อมูล (Doc ID: {editingJob.id})</h3>
-          <div className="form-grid">
-            <input
-              name="customer"
-              value={formData.customer}
-              onChange={handleInputChange}
-              placeholder="Customer"
-              className="input-field"
-            />
-            <input
-              name="po_number"
-              value={formData.po_number}
-              onChange={handleInputChange}
-              placeholder="PO Number"
-              className="input-field"
-            />
-            <input
-              name="product_name"
-              value={formData.product_name}
-              onChange={handleInputChange}
-              placeholder="Product Name"
-              className="input-field"
-            />
-            <input
-              name="delivery_date"
-              value={formData.delivery_date}
-              onChange={handleInputChange}
-              placeholder="Delivery Date"
-              className="input-field"
-              type="date"
-            />
-            <input
-              name="volume"
-              value={formData.volume}
-              onChange={handleInputChange}
-              placeholder="Volume"
-              className="input-field"
-              type="number"
-            />
-            <select
-              name="currentStep"
-              value={formData.currentStep}
-              onChange={handleInputChange}
-              className="input-field"
-            >
-              <option value="">-- Current Step --</option>
-              <option value="Sales">Sales</option>
-              <option value="Warehouse">Warehouse</option>
-              <option value="Production">Production</option>
-              <option value="QC">QC</option>
-              <option value="Logistics">Logistics</option>
-              <option value="Account">Account</option>
-              <option value="Completed">Completed</option>
-            </select>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>🛠 แก้ไขข้อมูล (Doc ID: {editingJob.id})</h3>
+            <div className="form-grid">
+              <input
+                name="customer"
+                value={formData.customer}
+                onChange={handleInputChange}
+                placeholder="Customer"
+                className="input-field"
+              />
+              <input
+                name="po_number"
+                value={formData.po_number}
+                onChange={handleInputChange}
+                placeholder="PO Number"
+                className="input-field"
+              />
+              <input
+                name="product_name"
+                value={formData.product_name}
+                onChange={handleInputChange}
+                placeholder="Product Name"
+                className="input-field"
+              />
+              <input
+                name="delivery_date"
+                value={formData.delivery_date}
+                onChange={handleInputChange}
+                placeholder="Delivery Date"
+                className="input-field"
+                type="date"
+              />
+              <input
+                name="volume"
+                value={formData.volume}
+                onChange={handleInputChange}
+                placeholder="Volume"
+                className="input-field"
+                type="number"
+              />
+              <select
+                name="currentStep"
+                value={formData.currentStep}
+                onChange={handleInputChange}
+                className="input-field"
+              >
+                <option value="">-- Current Step --</option>
+                <option value="Sales">Sales</option>
+                <option value="Warehouse">Warehouse</option>
+                <option value="Production">Production</option>
+                <option value="QC">QC</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Account">Account</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1rem" }}>
+              <button onClick={() => setShowModal(false)} className="cancel-btn">❌ ยกเลิก</button>
+              <button onClick={handleUpdate} className="submit-btn">💾 บันทึก</button>
+            </div>
           </div>
-          <button onClick={handleUpdate} className="submit-btn" style={{ marginTop: "1rem" }}>
-            💾 บันทึกการเปลี่ยนแปลง
-          </button>
         </div>
       )}
     </div>
