@@ -245,22 +245,23 @@ const filteredJobs = jobs
 
     return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
   })
-    .filter((job) => {
-      const po = job.po_number || "";
-      const hasKG = po.includes("KG");
-    
-      const deliveryTotal = (job.delivery_logs || []).reduce(
-        (sum, log) => sum + Number(log.quantity || 0),
-        0
-      );
-      const volume = Number(job.volume || 0);
-    
-      // ❌ ซ่อน PO ต้นฉบับ ถ้าเคยส่งออกบางส่วนหรือครบแล้ว
-      if (!hasKG && deliveryTotal > 0) return false;
-    
-      return true;
-    });
-  
+  .filter((job) => {
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+
+    const deliveryTotal = (job.delivery_logs || []).reduce(
+      (sum, log) => sum + Number(log.quantity || 0),
+      0
+    );
+    const volume = Number(job.volume || 0);
+
+    // ❌ ซ่อน Document ต้นฉบับ ถ้ามีการส่งแล้ว
+    if (!hasKG && deliveryTotal > 0) return false;
+
+    return true;
+  });
+
+// ✅ ต้องมี block นี้เพิ่มเข้ามาด้วย
 const progressJobs = filteredJobs.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
