@@ -24,6 +24,11 @@ export default function Header() {
     { label: "🧬 QC", path: "/qc" },
     { label: "💰 Account", path: "/account" },
   ];
+  
+  const allowSearch = ["Admin", "Sales"].includes(role);
+  if (allowSearch) {
+    menus.push({ label: "🔍 Search", path: "/search" });
+  }
 
   return (
     <div className="header-container" style={{ maxWidth: "1200px", margin: "auto", padding: "1rem" }}>
