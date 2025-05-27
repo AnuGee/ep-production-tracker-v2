@@ -1,10 +1,4 @@
 // src/pages/Home.jsx
-// ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
-// ✅ เพิ่ม Click & Drag Scroll ตาราง
-// ✅ เพิ่มตรรกะการรวมงาน (ProcessedJobs) จาก ProgressBoard มาที่นี่
-// ✅ เพิ่มการเรียงลำดับ ProcessedJobs เพื่อให้แสดงผลถูกต้องใน Pagination ของ ProgressBoard
-// ✅ ปรับ ProgressBoard ให้รับข้อมูลที่ถูกเตรียมแล้ว
-
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import ProgressBoard from "./ProgressBoard"; // ตรวจสอบว่า import ถูกต้อง
 import JobDetailModal from "../components/JobDetailModal";
@@ -16,7 +10,7 @@ import { collection, getDocs } from "firebase/firestore";
 import { doc, deleteDoc } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import "../styles/Responsive.css";
+import "../styles/Responsive.css"; // ตรวจสอบว่าไฟล์ CSS นี้มีอยู่จริงและเส้นทางถูกต้อง
 import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
@@ -30,9 +24,9 @@ export default function Home() {
   const [sortColumn, setSortColumn] = useState("customer");
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
-  const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10); // ยังคง 10 ไว้ตามที่คุณต้องการ
+  const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
 
-  // --- State และ Ref สำหรับการลาก (เพิ่มเข้ามา) ---
+  // --- State และ Ref สำหรับการลาก ---
   const tableWrapperRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -40,7 +34,7 @@ export default function Home() {
 
   // Pagination states สำหรับตารางหลัก (ไม่ใช่ Progress Board)
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // 10, 25, 50, all
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const handleMouseDown = useCallback((e) => {
     setIsDragging(true);
@@ -149,7 +143,13 @@ export default function Home() {
       return jobList[0];
     }
   )
-  .sort((a, b) => a.product_name?.localeCompare(b.product_name)); // <<<< ✅ เพิ่มการเรียงลำดับตรงนี้!
+  .sort((a, b) => {
+      // จัดเรียงตาม product_name. localeCompare ใช้สำหรับสตริง (รองรับภาษาไทย)
+      // ใส่ ?. เพื่อป้องกัน error ถ้า product_name เป็น undefined/null
+      const productNameA = a.product_name || '';
+      const productNameB = b.product_name || '';
+      return productNameA.localeCompare(productNameB);
+  }); // <<<< ✅ เพิ่มการเรียงลำดับตรงนี้!
 
   // ----------------------------------------------------------------------
   // ✅ สิ้นสุดส่วนตรรกะการรวมงาน
@@ -191,8 +191,9 @@ export default function Home() {
     // 3. OR show jobs that have been fully delivered (delivered === volume)
     if (delivered === volume) return true;
 
-    // You can adjust this filter as needed. For example, if you want to show ALL jobs regardless of delivery status:
-    // return true; // Uncomment this and comment out the if conditions above if you want to display all jobs
+    // หากคุณต้องการแสดงทุกงานใน ProgressBoard (ไม่ว่าจะมี -KG หรือยังไม่ส่ง/ส่งครบ)
+    // สามารถ uncomment บรรทัดล่างนี้ และ comment 3 บรรทัดบน (if (hasKG)...)
+    // return true;
 
     return false; // Default: do not display if none of the above conditions are met
   });
@@ -206,6 +207,7 @@ export default function Home() {
     const aValue = a[sortColumn];
     const bValue = b[sortColumn];
 
+    // Handle undefined/null values for sorting
     if (aValue === undefined || aValue === null) return sortDirection === "asc" ? 1 : -1;
     if (bValue === undefined || bValue === null) return sortDirection === "asc" ? -1 : 1;
 
@@ -486,7 +488,6 @@ export default function Home() {
 
   const getJobStatus = (job) => {
     // This function seems to be primarily for charting or summary, not the badge colors
-    // It's fine to keep it as is, or adjust based on your needs for "status_count"
     return job.currentStep || "ยังไม่เริ่ม";
   };
 
@@ -725,7 +726,7 @@ export default function Home() {
                       {renderStatusBadge("WH", "Warehouse", job)} {' '}
                       {renderStatusBadge("PR", "Production", job)} {' '}
                       {renderStatusBadge("QC", "QC", job)} {' '}
-                      {renderStatusBadge("COA", "COA", job)} {' '}_
+                      {renderStatusBadge("COA", "COA", job)} {' '}
                       {renderStatusBadge("LO", "Logistics", job)} {' '}
                       {renderStatusBadge("AC", "Account", job)}
                     </td>
