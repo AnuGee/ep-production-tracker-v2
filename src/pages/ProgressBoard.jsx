@@ -149,7 +149,7 @@ const progressJobs = sortedJobs.filter((job) => {
           </tr>
         </thead>
         <tbody>
-          {sortedJobs.map((job) => (
+          {progressJobs.map((job) => (
             <tr key={job.id || job.docId}>
               <td>
                 <span className="product-label">📄 {job.product_name}</span>
