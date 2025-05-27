@@ -732,45 +732,102 @@ const progressJobs = filteredJobs.filter((job) => {
             </tr>
           </thead>
 <tbody>
-  {sortedJobs.length > 0 ? sortedJobs.map((job) => (
-    <tr
-      key={job.id}
-      onClick={() => {
-        if (!wasDragging) {
-          setSelectedJob(job);
-        }
-      }}
-      style={{ cursor: "pointer" }}
-    >
-      {/* คอลัมน์ Customer - แสดงชื่อเดิมตามที่ Sales กรอก ไม่มี -KG */}
-      <td>{job.customer?.replace(/-.*KG/, "") || "–"}</td>
-      
-      {/* คอลัมน์ PO - แสดงชื่อเดิมตามที่ Sales กรอก ไม่มี -KG */}
-      <td>{job.po_number?.replace(/-.*KG/, "") || "–"}</td>
-      
-      {/* คอลัมน์อื่นๆ... */}
-      <td>{getBatchNoWH(job, 0)}</td>
-      <td>{getBatchNoWH(job, 1)}</td>
-      <td>{getBatchNoWH(job, 2)}</td>
-      <td>{job.batch_no || "–"}</td>
-      
-      {/* คอลัมน์ Product - แสดงชื่อที่มี -KG ถ้ามี */}
-      <td>{(job.po_number || "").includes("KG") ? job.po_number : job.product_name || "–"}</td>
-      
-      {/* คอลัมน์อื่นๆ... */}
-      <td>{job.currentStep || "–"}</td>
-      <td style={{ whiteSpace: 'nowrap' }}>
-        {/* ... ส่วน Status Badges ... */}
-      </td>
-      <td>{job.volume || "–"}</td>
-      <td>{job.delivery_date || "–"}</td>
-      <td>{renderLastUpdate(job)}</td>
-      <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-        {/* ... ส่วนปุ่มลบ ... */}
+  {sortedJobs.length > 0 ? sortedJobs.map((job) => {
+    // ตรวจสอบสถานะการจัดส่ง
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+    const deliveryLogs = job.delivery_logs || [];
+    const deliveredTotal = deliveryLogs.reduce((sum, d) => sum + Number(d.quantity || 0), 0);
+    const volume = Number(job.volume || 0);
+    const isMultiDelivery = deliveredTotal > 0 && deliveredTotal < volume;
+
+    // กำหนดชื่อที่จะแสดงในคอลัมน์ Product
+    const displayProductName = isMultiDelivery || hasKG 
+      ? (hasKG ? po : `${job.product_name}-${deliveredTotal}KG`) 
+      : job.product_name;
+
+    return (
+      <tr
+        key={job.id}
+        onClick={() => {
+          if (!wasDragging) {
+            setSelectedJob(job);
+          }
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        {/* คอลัมน์ Customer - แสดงชื่อเดิมเสมอ */}
+        <td>{job.customer || "–"}</td>
+        
+        {/* คอลัมน์ PO - แสดงชื่อเดิมเสมอ */}
+        <td>{po.replace(/-.*KG/, "") || "–"}</td>
+        
+        {/* คอลัมน์ BN WH1-3 */}
+        <td>{getBatchNoWH(job, 0)}</td>
+        <td>{getBatchNoWH(job, 1)}</td>
+        <td>{getBatchNoWH(job, 2)}</td>
+        
+        {/* คอลัมน์ BN PD */}
+        <td>{job.batch_no || "–"}</td>
+        
+        {/* คอลัมน์ Product - แสดงตามเงื่อนไขการจัดส่ง */}
+        <td>{displayProductName || "–"}</td>
+        
+        {/* คอลัมน์ Current Step */}
+        <td>{job.currentStep || "–"}</td>
+        
+        {/* คอลัมน์ Status */}
+        <td style={{ whiteSpace: 'nowrap' }}>
+          {renderStatusBadge("SL", "Sales", job)} {' '}
+          {renderStatusBadge("WH", "Warehouse", job)} {' '}
+          {renderStatusBadge("PD", "Production", job)} {' '}
+          {renderStatusBadge("QC", "QC", job)} {' '}
+          {renderStatusBadge("COA", "COA", job)} {' '}
+          {renderStatusBadge("LO", "Logistics", job)} {' '}
+          {renderStatusBadge("AC", "Account", job)}
+        </td>
+        
+        {/* คอลัมน์ Volume */}
+        <td>{job.volume || "–"}</td>
+        
+        {/* คอลัมน์ Delivery Date */}
+        <td>{job.delivery_date || "–"}</td>
+        
+        {/* คอลัมน์ Last Update */}
+        <td>{renderLastUpdate(job)}</td>
+        
+        {/* คอลัมน์ Delete */}
+        <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
+          {(role === "Admin" || role === "Sales") && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteJob(job.id);
+              }}
+              style={{
+                backgroundColor: "#ef4444",
+                color: "white", 
+                border: "none", 
+                borderRadius: "6px",
+                padding: "4px 12px", 
+                fontWeight: "bold", 
+                cursor: "pointer", 
+                fontSize: '12px'
+              }}
+              title="Delete Job"
+            >
+              ลบ
+            </button>
+          )}
+        </td>
+      </tr>
+    );
+  }) : (
+    <tr>
+      <td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>
+        No jobs found matching your criteria.
       </td>
     </tr>
-  )) : (
-    <tr><td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>No jobs found matching your criteria.</td></tr>
   )}
 </tbody>
           </table>
