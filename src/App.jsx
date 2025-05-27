@@ -85,7 +85,7 @@ return (
           <Route
             path="/search"
             element={
-              <ProtectedRoute allowedRoles={["Admin"]}>
+              <ProtectedRoute allowedRoles={["Admin", "Sales"]}>
                 <MainLayout><Search /></MainLayout>
               </ProtectedRoute>
             }
