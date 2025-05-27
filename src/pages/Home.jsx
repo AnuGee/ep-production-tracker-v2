@@ -786,6 +786,7 @@ const progressJobs = filteredJobs.filter((job) => {
     <tr><td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>No jobs found matching your criteria.</td></tr>
   )}
 </tbody>
+          </table>
       </div>
 
       {/* --- Modal --- */}
