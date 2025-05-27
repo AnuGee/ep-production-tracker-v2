@@ -1,7 +1,5 @@
 // src/pages/Home.jsx
-// ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
-// ✅ เพิ่ม Click & Drag Scroll ตาราง
-import React, { useEffect, useState, useRef, useCallback } from "react"; // <<< เพิ่ม useRef, useCallback
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "../components/JobDetailModal";
 import {
@@ -39,7 +37,7 @@ export default function Home() {
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   const years = ["ทั้งหมด", "2025", "2026", "2027", "2028", "2029", "2030"];
-  const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"]; // Removed COA as it's part of QC visually
+  const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
 
   // --- Handlers สำหรับการลาก (เพิ่มเข้ามา) ---
   const handleMouseDown = (e) => {
@@ -119,7 +117,7 @@ export default function Home() {
       }
       case "Production": {
         const pd = status.production;
-        
+
        // ✅ เพิ่มเงื่อนไขพิเศษ: กรณีมีของครบใน WH → ข้าม Production → ไป COA เลย
           const skipProduction =
             Array.isArray(job.batch_no_warehouse) &&
@@ -127,9 +125,9 @@ export default function Home() {
             !pd &&
             !status.qc_inspection &&  // ยังไม่ได้ตรวจ
             ["QC", "COA", "Account", "Completed"].includes(currentStep);
-        
+
           if (skipProduction) return "done";
-        
+
           if (currentStep === "QC" && status.qc_inspection === "skip") return "done";
           if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "doing";
           if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
@@ -138,16 +136,16 @@ export default function Home() {
   case "QC": {
     const qc = status.qc_inspection;
     const coa = status.qc_coa;
-  
+
     if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
     if (qc === "ตรวจผ่านแล้ว") return "done";
-  
+
     // ✅ กรณีข้ามไป COA แล้วเริ่มทำ
     if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
     if (coa === "เตรียมพร้อมแล้ว") return "done";
-  
+
     if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
-  
+
     return "notStarted";
   }
 
@@ -161,7 +159,7 @@ case "Logistics": {
   else if (delivered >= volume) return "done";
   else return "doing";
 }
-        
+
   case "Account": {
     const ac = status.account;
     if (ac === "Invoice ออกแล้ว") return "done";
@@ -199,42 +197,33 @@ case "Logistics": {
     setSearchText("");
   };
 
-  const filterJobs = (job) => {
-    if (!job.delivery_date) return false; // Handle jobs without delivery date
+  const initialFilteredJobs = jobs.filter((job) => {
+    if (!job.delivery_date) return false;
     try {
-        const date = new Date(job.delivery_date);
-        if (isNaN(date.getTime())) {
-             console.warn(`Invalid date for job ${job.id}: ${job.delivery_date}`);
-             return false;
-        }
-        const jobYear = date.getFullYear().toString();
-        const jobMonth = date.getMonth();
-        const selectedMonthIndex = months.indexOf(selectedMonth);
-
-        // Year filter
-        if (selectedYear !== "ทั้งหมด" && jobYear !== selectedYear) return false;
-        // Month filter
-        if (selectedMonth !== "ทั้งหมด" && jobMonth !== selectedMonthIndex) return false;
-
-        // Status filter based on currentStep
-        if (statusFilter !== "ทั้งหมด") {
-            const current = job.currentStep;
-            if (statusFilter === "ยังไม่ถึง" && current !== "Sales") return false;
-            if (statusFilter === "กำลังทำ" && (current === "Sales" || current === "Completed")) return false;
-            if (statusFilter === "เสร็จแล้ว" && current !== "Completed") return false;
-        }
-
-        return true;
-
-    } catch (error) {
-        console.error(`Error processing date for job ${job.id}: ${job.delivery_date}`, error);
+      const date = new Date(job.delivery_date);
+      if (isNaN(date.getTime())) {
+        console.warn(`Invalid date for job ${job.id}: ${job.delivery_date}`);
         return false;
-    }
-  };
+      }
+      const jobYear = date.getFullYear().toString();
+      const jobMonth = date.getMonth();
+      const selectedMonthIndex = months.indexOf(selectedMonth);
 
-const filteredJobs = jobs
-  .filter(filterJobs)
-  .filter((job) => {
+      if (selectedYear !== "ทั้งหมด" && jobYear !== selectedYear) return false;
+      if (selectedMonth !== "ทั้งหมด" && jobMonth !== selectedMonthIndex) return false;
+
+      if (statusFilter !== "ทั้งหมด") {
+        const current = job.currentStep;
+        if (statusFilter === "ยังไม่ถึง" && current !== "Sales") return false;
+        if (statusFilter === "กำลังทำ" && (current === "Sales" || current === "Completed")) return false;
+        if (statusFilter === "เสร็จแล้ว" && current !== "Completed") return false;
+      }
+      return true;
+    } catch (error) {
+      console.error(`Error processing date for job ${job.id}: ${job.delivery_date}`, error);
+      return false;
+    }
+  }).filter((job) => {
     const search = searchText.toLowerCase();
     const productNameMatch = job.product_name?.toLowerCase().includes(search);
     const customerMatch = job.customer?.toLowerCase().includes(search);
@@ -244,37 +233,71 @@ const filteredJobs = jobs
       job.batch_no_warehouse.some((bn) => bn?.toLowerCase().includes(search));
 
     return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
-  })
-  .filter((job) => {
+  });
+
+  // --- NEW LOGIC FOR CONSOLIDATING JOBS ---
+  const processedJobs = (() => {
+    const jobMap = new Map(); // Key: original PO number, Value: array of related jobs
+    const originalPoRegex = /^(.*?)(-\d+KG)?$/;
+
+    initialFilteredJobs.forEach(job => {
+        const poMatch = job.po_number?.match(originalPoRegex);
+        const basePo = poMatch ? poMatch[1] : job.po_number;
+
+        if (!jobMap.has(basePo)) {
+            jobMap.set(basePo, []);
+        }
+        jobMap.get(basePo).push(job);
+    });
+
+    const consolidatedJobs = [];
+    jobMap.forEach((relatedJobs, basePo) => {
+        const kgJobs = relatedJobs.filter(j => j.po_number?.includes("KG"));
+        const originalJobs = relatedJobs.filter(j => !j.po_number?.includes("KG"));
+
+        if (kgJobs.length > 0) {
+            // If there are KG jobs, only display the KG jobs and ensure they have the right display name
+            kgJobs.forEach(kgJob => {
+                // Ensure product_name also reflects the KG suffix for display
+                const displayProductName = kgJob.product_name?.includes("KG") ? kgJob.product_name : `${kgJob.product_name || basePo}-${kgJob.po_number.split('-').pop()}`;
+                consolidatedJobs.push({
+                    ...kgJob,
+                    product_name: displayProductName,
+                    po_number: kgJob.po_number, // Keep the PO as is for this one
+                });
+            });
+        } else {
+            // If no KG jobs, just display the original jobs
+            consolidatedJobs.push(...originalJobs);
+        }
+    });
+    return consolidatedJobs;
+  })();
+
+  const filteredJobs = processedJobs.filter((job) => {
     const po = job.po_number || "";
     const hasKG = po.includes("KG");
-
     const deliveryTotal = (job.delivery_logs || []).reduce(
-      (sum, log) => sum + Number(log.quantity || 0),
-      0
+      (sum, d) => sum + Number(d.quantity || 0), 0
     );
     const volume = Number(job.volume || 0);
 
-    // ❌ ซ่อน Document ต้นฉบับ ถ้ามีการส่งแล้ว
-    if (!hasKG && deliveryTotal > 0) return false;
-
+    // This filter now mostly serves to ensure 'Completed' jobs are shown correctly
+    // It's less about hiding originals, as processedJobs already handles that.
+    if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) {
+        // If it's an original PO with partial delivery, and it hasn't been replaced by a KG job, hide it.
+        // This scenario should be rare if processedJobs works correctly.
+        return false;
+    }
     return true;
   });
 
-// ✅ ต้องมี block นี้เพิ่มเข้ามาด้วย
-const progressJobs = filteredJobs.filter((job) => {
-  const po = job.po_number || "";
-  const hasKG = po.includes("KG");
-  const deliveryTotal = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0),
-    0
-  );
-  const volume = Number(job.volume || 0);
-
-  if (!hasKG && (deliveryTotal === 0 || deliveryTotal === volume)) return true;
-  if (hasKG) return true;
-
-  return false;
+// The `progressJobs` is now simpler, as the consolidation happened earlier.
+const progressJobsForProgressBoard = filteredJobs.filter((job) => {
+    // This filter can be simplified, as the consolidation ensures we mainly see KG jobs
+    // for partially delivered items.
+    // We want to show all jobs relevant to the progress board.
+    return true; // Or add specific logic if there are still cases to hide from progress board
 });
 
   const summaryPerStep = steps.map((step) => {
@@ -366,7 +389,7 @@ const progressJobs = filteredJobs.filter((job) => {
     } else if (currentIndex === stepIndex) {
         badgeClass = "status-badge working";
     }
-    
+
     if (job.status) {
         let specificStatus = "";
         switch (step) {
@@ -411,7 +434,7 @@ const progressJobs = filteredJobs.filter((job) => {
     if (step === "Sales" && currentIndex > stepIndex) {
         statusValue = "กรอกแล้ว";
     }
-    
+
     if (step === "Production" && job.currentStep === "QC" && job.status?.qc_inspection === "skip"){
         badgeClass = "status-badge completed";
         statusValue = "ข้าม";
@@ -427,10 +450,10 @@ const progressJobs = filteredJobs.filter((job) => {
   // ฟังก์ชัน Export ที่ปรับปรุงใหม่
   const exportToExcel = () => {
     const headers = [
-      "Customer", "PO", "BN WH1", "BN WH2", "BN WH3", 
-      "BN PD", "Product", "Current Step", "Status", 
+      "Customer", "PO", "BN WH1", "BN WH2", "BN WH3",
+      "BN PD", "Product", "Current Step", "Status",
       "Volume (KG)", "Delivery Date", "Last Update",
-      "Sales Note", "Warehouse Note", "Production Note", 
+      "Sales Note", "Warehouse Note", "Production Note",
       "QC Note", "Account Note"
     ];
 
@@ -438,9 +461,9 @@ const progressJobs = filteredJobs.filter((job) => {
       headers.push("Audit Logs");
     }
 
-    const dataToExport = sortedJobs.map((job) => {
+    const dataToExport = sortedJobs.map((job) => { // Use sortedJobs here
       const bnPd = job.batch_no_warehouse?.filter(Boolean).join(" / ") || "–";
-      
+
       let statusText = "–";
       if (job.currentStep === "Completed") {
         statusText = "✅ งานเสร็จสิ้นแล้ว";
@@ -469,7 +492,7 @@ const progressJobs = filteredJobs.filter((job) => {
       };
 
       if (role === "Admin" && job.audit_logs) {
-        const formattedLogs = job.audit_logs.map(log => 
+        const formattedLogs = job.audit_logs.map(log =>
           `${new Date(log.timestamp).toLocaleString("th-TH")} - ${log.step}: ${log.action || "อัปเดตสถานะ"}`
         ).join("\n");
         rowData["Audit Logs"] = formattedLogs;
@@ -479,7 +502,7 @@ const progressJobs = filteredJobs.filter((job) => {
     });
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-    
+
     const colWidths = [
       { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
       { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 20 },
@@ -496,10 +519,10 @@ const progressJobs = filteredJobs.filter((job) => {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs (Filtered)");
-    
+
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    
+
     const now = new Date();
     const timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
     saveAs(blob, `EP_Jobs_Export_${timestamp}.xlsx`);
@@ -511,14 +534,14 @@ const progressJobs = filteredJobs.filter((job) => {
       "No.", "Product", "Customer", "Volume (KG)", "Delivery Date", "Current Step",
       "Sales Status", "WH Status", "PD Status", "QC Status", "COA Status", "ACC Status"
     ];
-    
+
     if (role === "Admin") {
       headers.push("Audit Logs");
     }
 
     const allData = snapshot.docs.map((doc, index) => {
       const job = { id: doc.id, ...doc.data() };
-      
+
       const rowData = {
         "No.": index + 1,
         "Product": job.product_name || "–",
@@ -535,7 +558,7 @@ const progressJobs = filteredJobs.filter((job) => {
       };
 
       if (role === "Admin" && job.audit_logs) {
-        const formattedLogs = job.audit_logs.map(log => 
+        const formattedLogs = job.audit_logs.map(log =>
           `${new Date(log.timestamp).toLocaleString("th-TH")} - ${log.step}: ${log.action || "อัปเดตสถานะ"}`
         ).join("\n");
         rowData["Audit Logs"] = formattedLogs;
@@ -545,7 +568,7 @@ const progressJobs = filteredJobs.filter((job) => {
     });
 
     const worksheet = XLSX.utils.json_to_sheet(allData, { header: headers });
-    
+
     const colWidths = [
       { wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 15 },
       { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
@@ -560,10 +583,10 @@ const progressJobs = filteredJobs.filter((job) => {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "All EP Jobs");
-    
+
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    
+
     const now = new Date();
     const timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
     saveAs(blob, `EP_All_Jobs_${timestamp}.xlsx`);
@@ -624,15 +647,16 @@ const progressJobs = filteredJobs.filter((job) => {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div> <span>กำลังทำ</span> </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div> <span>ยังไม่เริ่ม</span> </div>
       </div>
-<ProgressBoard
-  jobs={itemsPerPageProgress === "All"
-    ? progressJobs
-    : progressJobs.slice(
-        (currentPageProgress - 1) * Number(itemsPerPageProgress),
-        currentPageProgress * Number(itemsPerPageProgress)
-      )
-  }
-/>
+      <ProgressBoard
+        // Pass the filteredJobs (which now includes the consolidation logic)
+        jobs={itemsPerPageProgress === "All"
+          ? progressJobsForProgressBoard
+          : progressJobsForProgressBoard.slice(
+              (currentPageProgress - 1) * Number(itemsPerPageProgress),
+              currentPageProgress * Number(itemsPerPageProgress)
+            )
+        }
+      />
       {/* Progress Pagination Controls */}
       <div style={{ marginTop: "1rem", display: 'flex', alignItems: 'center', gap: '10px' }}>
            <span>แสดง:</span>
@@ -650,9 +674,9 @@ const progressJobs = filteredJobs.filter((job) => {
                 <option value="All">ทั้งหมด</option>
             </select>
            <span>รายการ</span>
-           {itemsPerPageProgress !== "All" && Math.ceil(sortedJobs.length / itemsPerPageProgress) > 1 && (
+           {itemsPerPageProgress !== "All" && Math.ceil(progressJobsForProgressBoard.length / itemsPerPageProgress) > 1 && (
               <div className="pagination" style={{ marginLeft: 'auto' }}>
-                {Array.from({ length: Math.ceil(sortedJobs.length / itemsPerPageProgress) }, (_, i) => (
+                {Array.from({ length: Math.ceil(progressJobsForProgressBoard.length / itemsPerPageProgress) }, (_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentPageProgress(i + 1)}
