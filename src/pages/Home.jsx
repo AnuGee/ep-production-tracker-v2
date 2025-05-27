@@ -623,15 +623,15 @@ const progressJobs = filteredJobs.filter((job) => {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div> <span>กำลังทำ</span> </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div> <span>ยังไม่เริ่ม</span> </div>
       </div>
-      <ProgressBoard
-        jobs={itemsPerPageProgress === "All"
-          ? filteredJobs
-          : sortedJobs.slice(
-              (currentPageProgress - 1) * Number(itemsPerPageProgress),
-              currentPageProgress * Number(itemsPerPageProgress)
-            )
-        }
-      />
+<ProgressBoard
+  jobs={itemsPerPageProgress === "All"
+    ? progressJobs
+    : progressJobs.slice(
+        (currentPageProgress - 1) * Number(itemsPerPageProgress),
+        currentPageProgress * Number(itemsPerPageProgress)
+      )
+  }
+/>
       {/* Progress Pagination Controls */}
       <div style={{ marginTop: "1rem", display: 'flex', alignItems: 'center', gap: '10px' }}>
            <span>แสดง:</span>
