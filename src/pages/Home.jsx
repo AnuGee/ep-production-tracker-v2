@@ -200,29 +200,26 @@ case "Logistics": {
   };
 
   const filterJobs = (job) => {
-    if (!job.delivery_date) return false; // Handle jobs without delivery date
+    if (!job.delivery_date) return false;
     try {
-        const date = new Date(job.delivery_date);
-        if (isNaN(date.getTime())) {
-             console.warn(`Invalid date for job ${job.id}: ${job.delivery_date}`);
-             return false;
-        }
-        const jobYear = date.getFullYear().toString();
-        const jobMonth = date.getMonth();
-        const selectedMonthIndex = months.indexOf(selectedMonth);
-
-        // Year filter
-        if (selectedYear !== "ทั้งหมด" && jobYear !== selectedYear) return false;
-        // Month filter
-        if (selectedMonth !== "ทั้งหมด" && jobMonth !== selectedMonthIndex) return false;
-
-        // Status filter based on currentStep
-        if (statusFilter !== "ทั้งหมด") {
-            const current = job.currentStep;
-            if (statusFilter === "ยังไม่ถึง" && current !== "Sales") return false;
-            if (statusFilter === "กำลังทำ" && (current === "Sales" || current === "Completed")) return false;
-            if (statusFilter === "เสร็จแล้ว" && current !== "Completed") return false;
-        }
+      const date = new Date(job.delivery_date);
+      if (isNaN(date.getTime())) {
+        console.warn(`Invalid date for job ${job.id}: ${job.delivery_date}`);
+        return false;
+      }
+      const jobYear = date.getFullYear().toString();
+      const jobMonth = date.getMonth();
+      const selectedMonthIndex = months.indexOf(selectedMonth);
+  
+      if (selectedYear !== "ทั้งหมด" && jobYear !== selectedYear) return false;
+      if (selectedMonth !== "ทั้งหมด" && jobMonth !== selectedMonthIndex) return false;
+  
+      if (statusFilter !== "ทั้งหมด") {
+        const current = job.currentStep;
+        if (statusFilter === "ยังไม่ถึง" && current !== "Sales") return false;
+        if (statusFilter === "กำลังทำ" && (current === "Sales" || current === "Completed")) return false;
+        if (statusFilter === "เสร็จแล้ว" && current !== "Completed") return false;
+      }
 
         return true;
 
@@ -253,10 +250,12 @@ const filteredJobs = jobs
     );
     const volume = Number(job.volume || 0);
 
-    // ซ่อน job ชื่อเดิม ถ้าเคยส่งแล้วบางส่วน (แต่ยังไม่ครบ)
-    if (!hasKG && deliveryTotal > 0 && deliveryTotal < volume) return false;
-
-    return true;
+    // แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
+    if (hasKG) return true; // แสดงงานที่มี -KG
+    if (deliveryTotal === 0) return true; // แสดงงานที่ยังไม่มีการจัดส่ง
+    
+    // ไม่แสดงงานที่ไม่มี -KG และมีการจัดส่งแล้ว (ไม่ว่าจะครบหรือไม่ครบ)
+    return false;
   });
   
 const progressJobs = filteredJobs.filter((job) => {
@@ -268,10 +267,8 @@ const progressJobs = filteredJobs.filter((job) => {
   );
   const volume = Number(job.volume || 0);
 
-  if (!hasKG && (deliveryTotal === 0 || deliveryTotal === volume)) return true;
-  if (hasKG) return true;
-
-  return false;
+  // แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
+  return hasKG || deliveryTotal === 0;
 });
 
   const summaryPerStep = steps.map((step) => {
