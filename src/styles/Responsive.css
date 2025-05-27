@@ -406,6 +406,7 @@ input::placeholder {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 0.75rem; /* ✅ เพิ่มบรรทัดนี้เพื่อเว้นช่องว่าง */
 }
 
 .edit-form-row label {
