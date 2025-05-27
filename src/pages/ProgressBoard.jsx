@@ -148,28 +148,20 @@ const progressJobs = sortedJobs.filter((job) => {
             ))}
           </tr>
         </thead>
-        <tbody>
-          {sortedJobs.map((job) => (
-            <tr key={job.id || job.docId}>
-              <td>
-                <span className="product-label">📄 {job.product_name}</span>
-              </td>
-              {steps.map((step) => (
-                <td key={step}>
-                  <div
-                    style={{
-                      backgroundColor: getStatusColor(step, job),
-                      height: "20px",
-                      width: "110px",
-                      borderRadius: "6px",
-                      margin: "auto",
-                    }}
-                  ></div>
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
+<tbody>
+  {progressJobs.map((job) => (
+    <tr key={job.id}>
+      <td><span className="product-label">📄 {job.product_name}</span></td>
+      <td>{renderProgress("Sales", job)}</td>
+      <td>{renderProgress("Warehouse", job)}</td>
+      <td>{renderProgress("Production", job)}</td>
+      <td>{renderProgress("QC", job)}</td>
+      <td>{renderProgress("COA", job)}</td>
+      <td>{renderProgress("Logistics", job)}</td>
+      <td>{renderProgress("Account", job)}</td>
+    </tr>
+  ))}
+</tbody>
       </table>
     </div>
   );
