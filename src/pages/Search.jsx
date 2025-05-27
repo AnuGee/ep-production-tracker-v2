@@ -167,7 +167,7 @@ export default function Search() {
     <input name="delivery_date" value={formData.delivery_date} onChange={handleInputChange} className="input-field" type="date" />
   </div>
 </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1rem", alignItems: "center" }}>
               <button onClick={() => setShowModal(false)} className="cancel-btn modal-btn">❌ ยกเลิก</button>
               <button onClick={handleUpdate} className="submit-btn modal-btn">💾 บันทึก</button>
             </div>
