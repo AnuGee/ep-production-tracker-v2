@@ -132,73 +132,41 @@ export default function Search() {
         <div className="modal-overlay">
           <div className="modal">
             <h3>🛠 แก้ไขข้อมูล (Doc ID: {editingJob.id})</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <label>
-                Customer :
-                <input
-                  name="customer"
-                  value={formData.customer}
-                  onChange={handleInputChange}
-                  className="input-field"
-                />
-              </label>
-              <label>
-                PO :
-                <input
-                  name="po_number"
-                  value={formData.po_number}
-                  onChange={handleInputChange}
-                  className="input-field"
-                />
-              </label>
-              <label>
-                Product :
-                <input
-                  name="product_name"
-                  value={formData.product_name}
-                  onChange={handleInputChange}
-                  className="input-field"
-                />
-              </label>
-              <label>
-                Current Step :
-                <select
-                  name="currentStep"
-                  value={formData.currentStep}
-                  onChange={handleInputChange}
-                  className="input-field"
-                >
-                  <option value="">-- Current Step --</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Warehouse">Warehouse</option>
-                  <option value="Production">Production</option>
-                  <option value="QC">QC</option>
-                  <option value="Logistics">Logistics</option>
-                  <option value="Account">Account</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </label>
-              <label>
-                Volume :
-                <input
-                  name="volume"
-                  value={formData.volume}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  type="number"
-                />
-              </label>
-              <label>
-                Delivery Date :
-                <input
-                  name="delivery_date"
-                  value={formData.delivery_date}
-                  onChange={handleInputChange}
-                  className="input-field"
-                  type="date"
-                />
-              </label>
-            </div>
+<div className="edit-form">
+  <div className="edit-form-row">
+    <label>Customer :</label>
+    <input name="customer" value={formData.customer} onChange={handleInputChange} className="input-field" />
+  </div>
+  <div className="edit-form-row">
+    <label>PO :</label>
+    <input name="po_number" value={formData.po_number} onChange={handleInputChange} className="input-field" />
+  </div>
+  <div className="edit-form-row">
+    <label>Product :</label>
+    <input name="product_name" value={formData.product_name} onChange={handleInputChange} className="input-field" />
+  </div>
+  <div className="edit-form-row">
+    <label>Current Step :</label>
+    <select name="currentStep" value={formData.currentStep} onChange={handleInputChange} className="input-field">
+      <option value="">-- Current Step --</option>
+      <option value="Sales">Sales</option>
+      <option value="Warehouse">Warehouse</option>
+      <option value="Production">Production</option>
+      <option value="QC">QC</option>
+      <option value="Logistics">Logistics</option>
+      <option value="Account">Account</option>
+      <option value="Completed">Completed</option>
+    </select>
+  </div>
+  <div className="edit-form-row">
+    <label>Volume :</label>
+    <input name="volume" value={formData.volume} onChange={handleInputChange} className="input-field" type="number" />
+  </div>
+  <div className="edit-form-row">
+    <label>Delivery Date :</label>
+    <input name="delivery_date" value={formData.delivery_date} onChange={handleInputChange} className="input-field" type="date" />
+  </div>
+</div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "1rem" }}>
               <button onClick={() => setShowModal(false)} className="cancel-btn">❌ ยกเลิก</button>
               <button onClick={handleUpdate} className="submit-btn">💾 บันทึก</button>
