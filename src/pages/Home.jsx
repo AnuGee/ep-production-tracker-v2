@@ -731,7 +731,6 @@ const progressJobs = filteredJobs.filter((job) => {
               <th style={{ minWidth: "60px" }}>Delete</th>
             </tr>
           </thead>
-// ในส่วนของตารางรายการงานทั้งหมด ให้แก้ไขในส่วน render ดังนี้
 <tbody>
   {sortedJobs.length > 0 ? sortedJobs.map((job) => (
     <tr
