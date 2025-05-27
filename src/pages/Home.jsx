@@ -731,6 +731,7 @@ const progressJobs = filteredJobs.filter((job) => {
               <th style={{ minWidth: "60px" }}>Delete</th>
             </tr>
           </thead>
+// ในส่วนของตารางรายการงานทั้งหมด ให้แก้ไขในส่วน render ดังนี้
 <tbody>
   {sortedJobs.length > 0 ? sortedJobs.map((job) => (
     <tr
@@ -742,43 +743,31 @@ const progressJobs = filteredJobs.filter((job) => {
       }}
       style={{ cursor: "pointer" }}
     >
-      <td>{(job.po_number || "").includes("KG") ? job.po_number : job.product_name || "–"}</td>
-      <td>{job.po_number.replace(/-.*KG/, "") || "–"}</td>
+      {/* คอลัมน์ Customer - แสดงชื่อเดิมตามที่ Sales กรอก ไม่มี -KG */}
+      <td>{job.customer?.replace(/-.*KG/, "") || "–"}</td>
+      
+      {/* คอลัมน์ PO - แสดงชื่อเดิมตามที่ Sales กรอก ไม่มี -KG */}
+      <td>{job.po_number?.replace(/-.*KG/, "") || "–"}</td>
+      
+      {/* คอลัมน์อื่นๆ... */}
       <td>{getBatchNoWH(job, 0)}</td>
       <td>{getBatchNoWH(job, 1)}</td>
       <td>{getBatchNoWH(job, 2)}</td>
       <td>{job.batch_no || "–"}</td>
+      
+      {/* คอลัมน์ Product - แสดงชื่อที่มี -KG ถ้ามี */}
       <td>{(job.po_number || "").includes("KG") ? job.po_number : job.product_name || "–"}</td>
+      
+      {/* คอลัมน์อื่นๆ... */}
       <td>{job.currentStep || "–"}</td>
       <td style={{ whiteSpace: 'nowrap' }}>
-        {renderStatusBadge("SL", "Sales", job)} {' '}
-        {renderStatusBadge("WH", "Warehouse", job)} {' '}
-        {renderStatusBadge("PD", "Production", job)} {' '}
-        {renderStatusBadge("QC", "QC", job)} {' '}
-        {renderStatusBadge("COA", "COA", job)} {' '}
-        {renderStatusBadge("LO", "Logistics", job)} {' '}
-        {renderStatusBadge("AC", "Account", job)}
+        {/* ... ส่วน Status Badges ... */}
       </td>
       <td>{job.volume || "–"}</td>
       <td>{job.delivery_date || "–"}</td>
       <td>{renderLastUpdate(job)}</td>
       <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-        {(role === "Admin" || role === "Sales") && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteJob(job.id);
-            }}
-            style={{
-              backgroundColor: "#ef4444",
-              color: "white", border: "none", borderRadius: "6px",
-              padding: "4px 12px", fontWeight: "bold", cursor: "pointer", fontSize: '12px'
-            }}
-            title="Delete Job"
-          >
-            ลบ
-          </button>
-        )}
+        {/* ... ส่วนปุ่มลบ ... */}
       </td>
     </tr>
   )) : (
