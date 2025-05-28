@@ -31,82 +31,53 @@ export default function ProgressBoard({ jobs }) {
 
       case "Production":
         if (status.production === "ผลิตเสร็จ") return "#4ade80";
-
         if (
           status.warehouse === "มีครบตามจำนวน" &&
           ["QC", "COA", "Account", "Completed"].includes(currentStep)
         ) {
-          return "#4ade80"; // ✅ ข้าม Production ไป QC
+          return "#4ade80";
         }
-
         if (
           status.warehouse === "เบิกเสร็จ" &&
           ["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(status.production)
         ) {
           return "#facc15";
         }
+        return "#e5e7eb";
 
+      case "QC":
         if (
-          status.qc_inspection === "ตรวจผ่าน" &&
-          status.production === "กำลังบรรจุ"
+          status.qc_inspection === "ตรวจผ่านแล้ว" &&
+          status.qc_coa === "เตรียมพร้อมแล้ว"
+        ) {
+          return "#4ade80";
+        }
+        if (
+          ["Logistics", "Account", "Completed"].includes(currentStep) &&
+          status.qc_inspection &&
+          status.qc_coa
+        ) {
+          return "#4ade80";
+        }
+        if (
+          ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
+          status.qc_coa === "กำลังเตรียม"
         ) {
           return "#facc15";
         }
-
-        if (
-          currentStep === "Warehouse" &&
-          status.qc_inspection === "ตรวจไม่ผ่าน"
-        ) {
-          return "#e5e7eb"; // ❌ QC fail → กลับ Warehouse → รีเซ็ต Production
-        }
-
         return "#e5e7eb";
-
-case "QC": {
-  if (
-    status.qc_inspection === "ตรวจผ่านแล้ว" &&
-    status.qc_coa === "เตรียมพร้อมแล้ว"
-  ) {
-    return "#4ade80"; // ✅ ผ่าน QC + COA แล้ว
-  }
-
-  // ✅ ถ้ามาถึง Logistics หรือ Account แล้ว และมีทั้ง qc_inspection / qc_coa → ถือว่าผ่าน
-  if (
-    ["Logistics", "Account", "Completed"].includes(currentStep) &&
-    status.qc_inspection &&
-    status.qc_coa
-  ) {
-    return "#4ade80";
-  }
-
-  if (
-    currentStep === "Warehouse" &&
-    status.qc_inspection === "ตรวจไม่ผ่าน"
-  ) {
-    return "#e5e7eb"; // ❌ กลับไป Warehouse → ถือว่า QC ยังไม่เริ่ม
-  }
-
-  if (
-    ["กำลังตรวจ (รอปรับ)", "กำลังตรวจ (Hold)"].includes(status.qc_inspection) ||
-    status.qc_coa === "กำลังเตรียม"
-  ) {
-    return "#facc15"; // 🟡 QC ยังดำเนินอยู่
-  }
-
-  return "#e5e7eb"; // 🔲 Default
-}
 
       case "Logistics": {
         const volume = Number(job.volume || 0);
         const delivered = (job.delivery_logs || []).reduce(
-          (sum, d) => sum + Number(d.quantity || 0),
-          0
+          (sum, d) => sum + Number(d.quantity || 0), 0
         );
       
-        if (delivered === 0) return "#e5e7eb";      // ยังไม่ส่ง
-        if (delivered >= volume) return "#4ade80";  // ส่งครบ
-        return "#facc15";                           // ส่งบางส่วน
+        if (delivered === 0) return "#e5e7eb";
+        if (delivered >= volume) return "#4ade80";
+        return "#facc15";
       }
+
       case "Account":
         if (status.account === "Invoice ออกแล้ว") return "#4ade80";
         if (status.account === "Invoice ยังไม่ออก") return "#facc15";
@@ -117,71 +88,50 @@ case "QC": {
     }
   };
 
-  const sortedJobs = [...jobs].sort((a, b) =>
-    a.product_name?.localeCompare(b.product_name)
-  );
+  return (
+    <div className="progress-table-wrapper">
+      <table className="progress-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            {steps.map((step) => (
+              <th key={step}>{step}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {jobs.map((job) => {
+            const po = job.po_number || "";
+            const hasKG = po.includes("KG");
+            const delivered = (job.delivery_logs || []).reduce(
+              (sum, d) => sum + Number(d.quantity || 0), 0
+            );
 
-  // ✅ วางตรงนี้เลย
-const progressJobs = sortedJobs.filter((job) => {
-  const po = job.po_number || "";
-  const hasKG = po.includes("KG");
-  const delivered = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0), 0
-  );
-  const volume = Number(job.volume || 0);
-
-  // แสดงเฉพาะงานที่มีการจัดส่งหลายรอบหรือมี -KG ในชื่อ
-  return hasKG || (delivered > 0 && delivered < volume);
-});
-
-return (
-  <div className="progress-table-wrapper">
-    <table className="progress-table">
-      <thead>
-        <tr>
-          <th>Product</th>
-          {steps.map((step) => (
-            <th key={step}>{step}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {progressJobs.map((job) => {
-          const po = job.po_number || "";
-          const hasKG = po.includes("KG");
-          const delivered = (job.delivery_logs || []).reduce(
-            (sum, d) => sum + Number(d.quantity || 0), 0
-          );
-          const volume = Number(job.volume || 0);
-          const isMultiDelivery = delivered > 0 && delivered < volume;
-
-          return (
-            <tr key={job.id || job.docId}>
-              <td>
-                <span className="product-label">
-                  📄 {isMultiDelivery || hasKG ? 
-                    (job.po_number || job.product_name) : 
-                    job.product_name}
-                </span>
-              </td>
-              {steps.map((step) => (
-                <td key={step}>
-                  <div
-                    style={{
-                      backgroundColor: getStatusColor(step, job),
-                      height: "20px",
-                      width: "110px",
-                      borderRadius: "6px",
-                      margin: "auto",
-                    }}
-                  ></div>
+            return (
+              <tr key={job.id || job.docId}>
+                <td>
+                  <span className="product-label">
+                    📄 {hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name)}
+                  </span>
                 </td>
-              ))}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  </div>
-);
+                {steps.map((step) => (
+                  <td key={step}>
+                    <div
+                      style={{
+                        backgroundColor: getStatusColor(step, job),
+                        height: "20px",
+                        width: "110px",
+                        borderRadius: "6px",
+                        margin: "auto",
+                      }}
+                    ></div>
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
