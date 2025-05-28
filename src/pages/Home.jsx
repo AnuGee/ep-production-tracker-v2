@@ -618,47 +618,65 @@ const progressJobs = filteredJobs.filter((job) => {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div> <span>กำลังทำ</span> </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div> <span>ยังไม่เริ่ม</span> </div>
       </div>
-      <ProgressBoard
-        jobs={itemsPerPageProgress === "All"
-          ? filteredJobs
-          : sortedJobs.slice(
-              (currentPageProgress - 1) * Number(itemsPerPageProgress),
-              currentPageProgress * Number(itemsPerPageProgress)
-            )
-        }
-      />
-      {/* Progress Pagination Controls */}
-      <div style={{ marginTop: "1rem", display: 'flex', alignItems: 'center', gap: '10px' }}>
-           <span>แสดง:</span>
-           <select
-                value={itemsPerPageProgress}
-                onChange={(e) => {
-                    setItemsPerPageProgress(e.target.value === "All" ? "All" : Number(e.target.value));
-                    setCurrentPageProgress(1);
-                }}
-                style={{ padding: '4px 8px' }}
-            >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value="All">ทั้งหมด</option>
-            </select>
-           <span>รายการ</span>
-           {itemsPerPageProgress !== "All" && Math.ceil(sortedJobs.length / itemsPerPageProgress) > 1 && (
-              <div className="pagination" style={{ marginLeft: 'auto' }}>
-                {Array.from({ length: Math.ceil(sortedJobs.length / itemsPerPageProgress) }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPageProgress(i + 1)}
-                    disabled={currentPageProgress === (i + 1)}
-                    className="pagination-button"
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-           )}
-       </div>
+<ProgressBoard
+  jobs={itemsPerPageProgress === "All" 
+    ? filteredJobs 
+    : filteredJobs.slice(
+        (currentPageProgress - 1) * itemsPerPageProgress,
+        currentPageProgress * itemsPerPageProgress
+      )
+  }
+/>
+
+{/* Pagination Controls สำหรับ Progress Board */}
+<div style={{ marginTop: "1rem", display: 'flex', alignItems: 'center', gap: '10px' }}>
+  <span>แสดง:</span>
+  <select
+    value={itemsPerPageProgress}
+    onChange={(e) => {
+      setItemsPerPageProgress(e.target.value === "All" ? "All" : Number(e.target.value));
+      setCurrentPageProgress(1);
+    }}
+    style={{ padding: '4px 8px' }}
+  >
+    <option value={10}>10</option>
+    <option value={25}>25</option>
+    <option value={50}>50</option>
+    <option value="All">ทั้งหมด</option>
+  </select>
+  <span>รายการ</span>
+  
+  {itemsPerPageProgress !== "All" && (
+    <div className="pagination" style={{ marginLeft: 'auto' }}>
+      <button
+        onClick={() => setCurrentPageProgress(prev => Math.max(prev - 1, 1))}
+        disabled={currentPageProgress === 1}
+        className="pagination-button"
+      >
+        &lt;
+      </button>
+      
+      {Array.from({ length: Math.ceil(filteredJobs.length / itemsPerPageProgress) }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => setCurrentPageProgress(i + 1)}
+          disabled={currentPageProgress === i + 1}
+          className={`pagination-button ${currentPageProgress === i + 1 ? 'active' : ''}`}
+        >
+          {i + 1}
+        </button>
+      ))}
+      
+      <button
+        onClick={() => setCurrentPageProgress(prev => Math.min(prev + 1, Math.ceil(filteredJobs.length / itemsPerPageProgress)))}
+        disabled={currentPageProgress === Math.ceil(filteredJobs.length / itemsPerPageProgress)}
+        className="pagination-button"
+      >
+        &gt;
+      </button>
+    </div>
+  )}
+</div>
 
       {/* --- Summary Chart --- */}
       <hr style={{ margin: '2rem 0' }} />
