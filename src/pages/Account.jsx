@@ -77,12 +77,18 @@ setJobs(filtered);
             onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
           >
-            <option value="">-- เลือกงาน --</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                 {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
-              </option>
-            ))}
+      <option value="">-- เลือกงาน --</option>
+      {jobs
+        .sort((a, b) => {
+          const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+          const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+          return keyA.localeCompare(keyB);
+        })
+        .map((job) => (
+          <option key={job.id} value={job.id}>
+            {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
+          </option>
+        ))}
           </select>
         </div>
 
