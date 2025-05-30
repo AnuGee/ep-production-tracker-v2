@@ -91,17 +91,23 @@ export default function Logistics() {
     <div className="page-container">
       <h2>🚚 <strong>Logistics - อัปเดตการจัดส่ง</strong></h2>
 
-      <div className="form-group full-span">
-        <label>📋 เลือกรายการ</label>
-        <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="input-box">
-          <option value="">-- เลือกรายการ --</option>
-          {jobs.map((job) => (
-            <option key={job.id} value={job.id}>
-              {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | ส่งแล้ว: ${job.delivered_total || 0} | คงเหลือ: ${job.volume - (job.delivered_total || 0)}`}
-            </option>
-          ))}
-        </select>
-      </div>
+<div className="form-group full-span">
+  <label>📋 เลือกรายการ</label>
+  <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="input-box">
+    <option value="">-- เลือกรายการ --</option>
+    {jobs
+      .sort((a, b) => {
+        const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+        const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+        return keyA.localeCompare(keyB);
+      })
+      .map((job) => (
+        <option key={job.id} value={job.id}>
+          {`PO: ${job.po_number || "-"} | CU: ${job.customer || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | ส่งแล้ว: ${job.delivered_total || 0} | คงเหลือ: ${job.volume - (job.delivered_total || 0)}`}
+        </option>
+      ))}
+  </select>
+</div>
 
       <div className="form-group">
         <label>📦 จำนวนที่จัดส่ง (KG.)</label>
