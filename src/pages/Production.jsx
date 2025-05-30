@@ -28,7 +28,11 @@ export default function Production() {
     const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     const filtered = data
       .filter((job) => job.currentStep === "Production")
-      .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
+      .sort((a, b) => {
+        const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+        const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+        return keyA.localeCompare(keyB);
+      });
     setJobs(filtered);
   };
 
