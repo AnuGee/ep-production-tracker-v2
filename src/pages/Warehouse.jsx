@@ -33,9 +33,9 @@ export default function Warehouse() {
     const filtered = data
   .filter((job) => job.currentStep === "Warehouse")
   .sort((a, b) => {
-    const nameA = `${a.product_name} - ${a.customer}`.toUpperCase();
-    const nameB = `${b.product_name} - ${b.customer}`.toUpperCase();
-    return nameA.localeCompare(nameB);
+    const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+    const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+    return keyA.localeCompare(keyB);
   });
     setJobs(filtered);
   };
