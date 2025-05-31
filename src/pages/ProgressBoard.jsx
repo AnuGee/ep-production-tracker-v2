@@ -31,18 +31,35 @@ export default function ProgressBoard({ jobs }) {
 
       case "Production":
         if (status.production === "ผลิตเสร็จ") return "#4ade80";
+
         if (
           status.warehouse === "มีครบตามจำนวน" &&
           ["QC", "COA", "Account", "Completed"].includes(currentStep)
         ) {
-          return "#4ade80";
+          return "#4ade80"; // ✅ ข้าม Production ไป QC
         }
+
         if (
           status.warehouse === "เบิกเสร็จ" &&
           ["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(status.production)
         ) {
           return "#facc15";
         }
+
+        if (
+          status.qc_inspection === "ตรวจผ่าน" &&
+          status.production === "กำลังบรรจุ"
+        ) {
+          return "#facc15";
+        }
+
+        if (
+          currentStep === "Warehouse" &&
+          status.qc_inspection === "ตรวจไม่ผ่าน"
+        ) {
+          return "#e5e7eb"; // ❌ QC fail → กลับ Warehouse → รีเซ็ต Production
+        }
+
         return "#e5e7eb";
 
       case "QC":
