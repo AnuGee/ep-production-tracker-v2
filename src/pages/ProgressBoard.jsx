@@ -34,7 +34,7 @@ export default function ProgressBoard({ jobs }) {
 
         if (
           status.warehouse === "มีครบตามจำนวน" &&
-          ["QC", "COA", "Account", "Completed"].includes(currentStep)
+          ["QC", "COA", "Logistics", "Account", "Completed"].includes(currentStep)
         ) {
           return "#4ade80"; // ✅ ข้าม Production ไป QC
         }
