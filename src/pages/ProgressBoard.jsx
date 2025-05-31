@@ -90,9 +90,18 @@ export default function ProgressBoard({ jobs }) {
           (sum, d) => sum + Number(d.quantity || 0), 0
         );
       
-        if (delivered === 0) return "#e5e7eb";
-        if (delivered >= volume) return "#4ade80";
-        return "#facc15";
+        // ถ้า currentStep ไปถึง Account หรือ Completed แล้ว และมีการส่งมอบครบถ้วนแล้ว ให้เป็นสีเขียว
+        if (["Account", "Completed"].includes(currentStep) && delivered >= volume) {
+          return "#4ade80"; 
+        }
+
+        if (delivered >= volume) {
+            return "#4ade80"; // ส่งครบแล้ว
+        }
+        if (delivered > 0) {
+            return "#facc15"; // ส่งบางส่วน
+        }
+        return "#e5e7eb"; // ยังไม่ส่ง
       }
 
       case "Account":
