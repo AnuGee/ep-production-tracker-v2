@@ -74,43 +74,19 @@ export default function Logistics() {
         },
       ];
 
-      await updateDoc(jobRef, {
-        delivered_total: updatedDelivered,
-        delivery_logs: updatedLogs,
-        audit_logs: arrayUnion({
-          step: "Logistics",
-          field: "delivery_logs",
-          value: `${deliveryQty} kg`,
-          remark: remark || "",
-          timestamp: new Date().toISOString(),
-        }),
-        Timestamp_Logistics: serverTimestamp(),
-      });
-
-      // เพิ่มงานใหม่ให้ Account
-      await addDoc(collection(db, "production_workflow"), {
-        ...job,
-        po_number: `${job.po_number}-${deliveryQty}KG`,
-        currentStep: "Account",
-        delivered_total: Number(deliveryQty),
-        delivery_logs: [
-          {
-            quantity: Number(deliveryQty),
-            date: deliveryDate,
-            remark: remark || "",
-          },
-        ],
-        Timestamp_Logistics: serverTimestamp(),
-        audit_logs: [
-          {
-            step: "Logistics",
-            field: "currentStep",
-            value: "Account",
-            remark: remark || "",
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
+    await updateDoc(jobRef, {
+      delivered_total: updatedDelivered,
+      delivery_logs: updatedLogs,
+      currentStep: updatedDelivered >= Number(job.volume) ? "Account" : "Logistics",
+      audit_logs: arrayUnion({
+        step: "Logistics",
+        field: "delivery_logs",
+        value: `${deliveryQty} kg`,
+        remark: remark || "",
+        timestamp: new Date().toISOString(),
+      }),
+      Timestamp_Logistics: serverTimestamp(),
+    });
 
       toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
       setShowConfirm(false); // ✅ ปิด popup
