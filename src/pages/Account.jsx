@@ -76,13 +76,13 @@ export default function Account() {
             onChange={(e) => setSelectedId(e.target.value)}
           >
             <option value="">-- เลือกงาน --</option>
-            {jobs.map((job) => (
-              <option key={job.docId} value={job.docId}>
-                {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${
-                  job.product_name || "-"
-                } | VO: ${job.volume || "-"}`}
-              </option>
-            ))}
+      {jobs.flatMap((job) =>
+        (job.delivery_logs || []).map((log, index) => (
+          <option key={`${job.docId}-${index}`} value={`${job.docId}-${index}`}>
+            {`CU: ${job.customer || "-"} | PO: ${job.po_number}-${log.quantity || 0}KG | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | ส่งเมื่อ: ${log.date || "-"}`}
+          </option>
+        ))
+      )}
           </select>
         </div>
 
