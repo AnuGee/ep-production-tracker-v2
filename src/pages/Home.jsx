@@ -229,59 +229,35 @@ case "Logistics": {
     }
   };
 
-.filter((job) => {
-  const po = job.po_number || "";
-  const hasKG = po.includes("KG");
-  const deliveryTotal = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0), 0
-  );
-  const volume = Number(job.volume || 0);
-
-  // ✅ แสดงเฉพาะงานที่มี -KG หรือยังไม่มีการส่งของเลย
-  return hasKG || deliveryTotal === 0;
-});
-
-  .filter((job) => {
-    const po = job.po_number || "";
-    const hasKG = po.includes("KG");
-    const deliveryTotal = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0), 0
-    );
-    const volume = Number(job.volume || 0);
-
-    // แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
-    if (hasKG) return true; // แสดงงานที่มี -KG
-    if (deliveryTotal === 0) return true; // แสดงงานที่ยังไม่มีการจัดส่ง
-    
-    // ไม่แสดงงานที่ไม่มี -KG และมีการจัดส่งแล้ว (ไม่ว่าจะครบหรือไม่ครบ)
-    return true;
-  });
-  
-const progressJobs = filteredJobs.filter((job) => {
+// ✅ งานที่ควรแสดง: มี -KG หรือยังไม่เคยส่งเลย
+const filteredJobs = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
   const deliveryTotal = (job.delivery_logs || []).reduce(
     (sum, d) => sum + Number(d.quantity || 0),
     0
   );
-  const volume = Number(job.volume || 0);
-
-  // แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
   return hasKG || deliveryTotal === 0;
 });
 
-  const summaryPerStep = steps.map((step) => {
-    let notStarted = 0;
-    let doing = 0;
-    let done = 0;
-    filteredJobs.forEach((job) => {
-      const status = getStepStatus(job, step);
-      if (status === "done") done++;
-      else if (status === "doing") doing++;
-      else notStarted++;
-    });
-    return { name: step, notStarted, doing, done };
+// ✅ ใช้ filteredJobs ใน ProgressBoard
+const progressJobs = filteredJobs;
+
+// ✅ รวมจำนวนสถานะแต่ละแผนก
+const summaryPerStep = steps.map((step) => {
+  let notStarted = 0;
+  let doing = 0;
+  let done = 0;
+
+  filteredJobs.forEach((job) => {
+    const status = getStepStatus(job, step);
+    if (status === "done") done++;
+    else if (status === "doing") doing++;
+    else notStarted++;
   });
+
+  return { name: step, notStarted, doing, done };
+});
 
   const handleSort = (column) => {
     if (sortColumn === column) {
