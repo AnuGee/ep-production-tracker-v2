@@ -229,19 +229,18 @@ case "Logistics": {
     }
   };
 
-const filteredJobs = jobs
-  .filter(filterJobs)
-  .filter((job) => {
-    const search = searchText.toLowerCase();
-    const productNameMatch = job.product_name?.toLowerCase().includes(search);
-    const customerMatch = job.customer?.toLowerCase().includes(search);
-    const batchNoProdMatch = job.batch_no_production?.toLowerCase().includes(search);
-    const batchNoWHMatch =
-      Array.isArray(job.batch_no_warehouse) &&
-      job.batch_no_warehouse.some((bn) => bn?.toLowerCase().includes(search));
+.filter((job) => {
+  const po = job.po_number || "";
+  const hasKG = po.includes("KG");
+  const deliveryTotal = (job.delivery_logs || []).reduce(
+    (sum, d) => sum + Number(d.quantity || 0), 0
+  );
+  const volume = Number(job.volume || 0);
 
-    return productNameMatch || customerMatch || batchNoProdMatch || batchNoWHMatch;
-  })
+  // ✅ แสดงเฉพาะงานที่มี -KG หรือยังไม่มีการส่งของเลย
+  return hasKG || deliveryTotal === 0;
+});
+
   .filter((job) => {
     const po = job.po_number || "";
     const hasKG = po.includes("KG");
