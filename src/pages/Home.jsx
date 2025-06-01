@@ -778,7 +778,7 @@ const progressJobs = filteredJobs.filter((job) => {
         <td>{job.customer || "–"}</td>
         
         {/* คอลัมน์ PO - แสดงชื่อเดิมเสมอ */}
-        <td>{po.replace(/-.*KG/, "") || "–"}</td>
+        <td>{job.po_number || "–"}</td>
         
         {/* คอลัมน์ BN WH1-3 */}
         <td>{getBatchNoWH(job, 0)}</td>
