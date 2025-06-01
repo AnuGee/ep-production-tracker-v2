@@ -41,27 +41,28 @@ export default function Account() {
       }
     }, [selectedId, jobs]);
 
-  const handleSubmit = async () => {
-    try {
-      const jobRef = doc(db, "production_workflow", selectedId);
-      await updateDoc(jobRef, {
-        "status.account": accountStatus,
-        "remarks.account": remark || "",
-        currentStep:
-          accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
-        Timestamp_Account: serverTimestamp(),
-      });
+const handleSubmit = async () => {
+  try {
+    const [docId] = selectedId.split("-");
+    const jobRef = doc(db, "production_workflow", docId);
+    await updateDoc(jobRef, {
+      "status.account": accountStatus,
+      "remarks.account": remark || "",
+      currentStep:
+        accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
+      Timestamp_Account: serverTimestamp(),
+    });
 
-      toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
-      setSelectedId("");
-      setAccountStatus("");
-      setRemark("");
-      setShowConfirm(false);
-      fetchJobs();
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาด");
-    }
-  };
+    toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
+    setSelectedId("");
+    setAccountStatus("");
+    setRemark("");
+    setShowConfirm(false);
+    fetchJobs();
+  } catch (error) {
+    toast.error("❌ เกิดข้อผิดพลาด");
+  }
+};
 
   return (
     <div className="page-container">
