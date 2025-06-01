@@ -132,7 +132,13 @@ export default function Account() {
             <ul style={{ textAlign: "left", marginTop: "1rem" }}>
               <li>
                 <strong>PO:</strong>{" "}
-                {jobs.find((j) => j.docId === selectedId)?.po_number || "-"}
+                {(() => {
+                  if (!selectedId) return "-";
+                  const [docId, logIndexStr] = selectedId.split("-");
+                  const job = jobs.find((j) => j.docId === docId);
+                  const log = job?.delivery_logs?.[Number(logIndexStr)];
+                  return job && log ? `${job.po_number}-${log.quantity}KG` : "-";
+                })()}
               </li>
               <li>
                 <strong>สถานะ:</strong> {accountStatus}
