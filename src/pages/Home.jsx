@@ -255,7 +255,7 @@ const filteredJobs = jobs
     if (deliveryTotal === 0) return true; // แสดงงานที่ยังไม่มีการจัดส่ง
     
     // ไม่แสดงงานที่ไม่มี -KG และมีการจัดส่งแล้ว (ไม่ว่าจะครบหรือไม่ครบ)
-    return false;
+    return true;
   });
   
 const progressJobs = filteredJobs.filter((job) => {
