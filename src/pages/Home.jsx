@@ -18,6 +18,7 @@ import { useAuth } from "../context/AuthContext";
 export default function Home() {
   const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
+  const [allData, setAllData] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedYear, setSelectedYear] = useState("ทั้งหมด");
   const [selectedMonth, setSelectedMonth] = useState("ทั้งหมด");
@@ -175,10 +176,13 @@ case "Logistics": {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      const snapshot = await getDocs(collection(db, "production_workflow"));
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setJobs(data);
-    };
+  const snapshot = await getDocs(collection(db, "production_workflow"));
+  const data = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  setAllData(data); // ✅ สำคัญ
+};
     fetchJobs();
   }, []);
 
