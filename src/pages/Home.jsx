@@ -258,125 +258,18 @@ const filteredJobs = jobs
     return false;
   });
   
-// For ProgressBoard
-// เปลี่ยน filteredJobs ให้เป็นรายการที่รวม sub-jobs ด้วย
-const jobsForProgressBoard = filteredJobs.flatMap(job => {
+const progressJobs = filteredJobs.filter((job) => {
   const po = job.po_number || "";
-  const hasKGInPO = po.includes("KG"); // ตรวจสอบว่า PO เดิมมี -KG อยู่แล้วหรือไม่
-
-  // ถ้า job มี delivery_logs และ PO เดิมไม่มี -KG (คือเป็นงานหลักที่ต้องแบ่งส่ง)
-  if ((job.delivery_logs || []).length > 0 && !hasKGInPO) {
-    // สร้าง job object ใหม่สำหรับแต่ละรายการใน delivery_logs
-    return (job.delivery_logs || []).map((log, index) => {
-      // สร้าง ID ที่ไม่ซ้ำกันสำหรับแต่ละรายการย่อย
-      const uniqueId = `<span class="math-inline">\{job\.id \|\| job\.docId\}\-</span>{log.quantity}-${index}`; 
-
-      return {
-        ...job, // คัดลอกคุณสมบัติทั้งหมดจาก job หลัก
-        id: uniqueId, // กำหนด ID ใหม่สำหรับ key ของ React
-        docId: uniqueId, // กำหนด docId ใหม่สำหรับ key ของ React
-        // ปรับปรุง po_number ให้แสดงปริมาณที่ส่งในรายการย่อย
-        po_number: `<span class="math-inline">\{po\}\-</span>{log.quantity}KG`, 
-        // กำหนด volume ของรายการย่อยเป็นปริมาณที่ส่งจริงใน log นี้
-        volume: Number(log.quantity || 0), 
-        // ให้ delivery_logs มีเพียง log นี้ เพื่อให้ delivered ใน ProgressBoard คำนวณได้ถูกต้อง
-        delivery_logs: [log], 
-        // currentStep และ status ใช้ของ job หลักไปก่อน
-        currentStep: job.currentStep, 
-        status: job.status,
-        isSubJob: true, // เพิ่ม flag เพื่อระบุว่าเป็น sub-job (optional)
-      };
-    });
-  } 
-  // ถ้า job ไม่มี delivery_logs หรือ PO มี -KG อยู่แล้ว (เป็น job ที่มี -KG อยู่แล้ว หรือยังไม่มีการส่ง)
-  // ให้คืน job เดิมกลับไปพร้อมกับ flag
-  return [{ ...job, isSubJob: false }]; 
-});
-
-// จากนั้นกรอง jobsForProgressBoard อีกครั้งตามเงื่อนไขที่คุณต้องการแสดงใน ProgressBoard
-// ในกรณีนี้คือ แสดงงานที่มี -KG หรือเป็นงานที่ยังไม่ถูกส่งเลย (ซึ่งตอนนี้รวม sub-jobs ที่เราสร้างแล้ว)
-const progressJobs = jobsForProgressBoard.filter((job) => {
-  const po = job.po_number || "";
-  const hasKG = po.includes("KG"); // จะเป็น true สำหรับ sub-jobs ที่เราสร้างใหม่
+  const hasKG = po.includes("KG");
   const deliveryTotal = (job.delivery_logs || []).reduce(
     (sum, d) => sum + Number(d.quantity || 0),
     0
   );
-  // Logic เดิม: แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
-  // แต่ตอนนี้ sub-jobs ที่เราสร้างก็จะมี -KG แล้ว
+  const volume = Number(job.volume || 0);
+
+  // แสดงเฉพาะงานที่มี -KG ใน PO หรือเป็นงานที่ยังไม่มีการจัดส่งเลย
   return hasKG || deliveryTotal === 0;
 });
-
-// For ProgressBoard
-  const startIndexProgress = (currentPageProgress - 1) * itemsPerPageProgress;
-  const endIndexProgress = startIndexProgress + itemsPerPageProgress;
-
-  // สร้างรายการงานสำหรับ ProgressBoard โดยรวมงานหลักและงานย่อยที่แบ่งส่ง
-  const jobsForProgressBoard = filteredJobs.flatMap(job => {
-    const po = job.po_number || "";
-    const hasKGInPO = po.includes("KG"); // ตรวจสอบว่า PO เดิมมี -KG อยู่แล้วหรือไม่ (เช่น PO-123-500KG)
-    const totalDelivered = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0), 0
-    );
-    const originalVolume = Number(job.volume || 0);
-
-    // หาก PO เดิมมี "-KG" อยู่แล้ว ถือว่าเป็นงานย่อยที่ถูกสร้างมาแต่แรกแล้ว หรือเป็นงานที่ไม่มีการแบ่งส่ง
-    // ให้คืน job เดิมกลับไปเลย
-    if (hasKGInPO || (job.delivery_logs || []).length === 0) {
-      return [{ ...job }]; // คืน job เดิมไป
-    }
-
-    // หากมีการแบ่งส่ง (delivery_logs มีข้อมูล) และ PO เดิมไม่มี "-KG" (แสดงว่าเป็นงานหลักที่ต้องแบ่งย่อย)
-    if ((job.delivery_logs || []).length > 0 && !hasKGInPO) {
-      const subJobs = (job.delivery_logs || []).map((log, index) => {
-        // สร้าง ID ที่ไม่ซ้ำกันสำหรับแต่ละรายการย่อย
-        const uniqueSubJobId = `${job.id || job.docId}-sub-${log.quantity}-${index}`; 
-        
-        return {
-          ...job, // คัดลอกคุณสมบัติทั้งหมดจาก job หลัก
-          id: uniqueSubJobId, // กำหนด ID ใหม่สำหรับ key ของ React
-          docId: uniqueSubJobId, // กำหนด docId ใหม่สำหรับ key ของ React
-          // ปรับปรุง po_number ให้แสดงปริมาณที่ส่งในรายการย่อย
-          po_number: `${po}-${log.quantity}KG`, 
-          // กำหนด volume ของรายการย่อยเป็นปริมาณที่ส่งจริงใน log นี้
-          volume: Number(log.quantity || 0), 
-          // ให้ delivery_logs มีเพียง log นี้ เพื่อให้ delivered ใน ProgressBoard คำนวณได้ถูกต้อง
-          delivery_logs: [log], 
-          // currentStep และ status ใช้ของ job หลักไปก่อน
-          currentStep: job.currentStep, 
-          status: job.status,
-          // เพิ่ม property เพื่อระบุว่าเป็น job ย่อย (optional, แต่อาจมีประโยชน์)
-          isSubJob: true, 
-        };
-      });
-
-      // ตรวจสอบว่าต้องการแสดงงานหลักที่กำลังแบ่งส่งด้วยหรือไม่
-      // ถ้า totalDelivered < originalVolume แสดงว่างานหลักยังไม่เสร็จสมบูรณ์
-      if (totalDelivered < originalVolume) {
-        // คืนทั้งงานหลัก (ที่ยังไม่สมบูรณ์) และงานย่อยที่ถูกสร้างขึ้น
-        // เราต้องสร้าง ID ที่ไม่ซ้ำกันสำหรับงานหลักด้วย เพื่อไม่ให้ซ้ำกับ sub-job
-        const mainJobId = `${job.id || job.docId}-main`; 
-        return [{ ...job, id: mainJobId, docId: mainJobId, isSubJob: false }, ...subJobs];
-      } else {
-        // ถ้าส่งครบแล้ว (totalDelivered >= originalVolume) ให้แสดงเฉพาะงานย่อยเท่านั้น
-        // ไม่ต้องแสดงงานหลักเดิมแล้ว เพราะถือว่าถูกแบ่งย่อยและเสร็จสิ้นแล้ว
-        return subJobs;
-      }
-    }
-    
-    // กรณี fallback (ไม่น่าจะถูกเรียกใช้ถ้า logic ข้างบนครอบคลุม)
-    return [{ ...job }];
-  });
-
-  // ใช้ jobsForProgressBoard โดยตรงเพื่อส่งไปให้ ProgressBoard
-  // เนื่องจาก logic การแตกย่อยและกรองอยู่ใน flatMap แล้ว
-  const progressJobs = jobsForProgressBoard; 
-
-  // ส่วน Pagination ยังคงอยู่เหมือนเดิม
-  const currentProgressJobs =
-    itemsPerPageProgress === "All"
-      ? progressJobs
-      : progressJobs.slice(startIndexProgress, endIndexProgress);
 
   const summaryPerStep = steps.map((step) => {
     let notStarted = 0;
