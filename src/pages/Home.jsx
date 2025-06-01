@@ -101,17 +101,6 @@ export default function Home() {
   // -------------------------------------------------
 
   // --- โค้ดส่วนที่เหลือ (เหมือนเดิมจากไฟล์ที่คุณอัปโหลด) ---
-  const sumDeliveryOfSubJobs = (parentPO, allJobs) => {
-  return allJobs
-    .filter(j => j.po_number?.startsWith(`${parentPO}-`) && j.po_number.includes("KG"))
-    .reduce((sum, job) => {
-      const qty = (job.delivery_logs || []).reduce(
-        (s, d) => s + Number(d.quantity || 0), 0
-      );
-      return sum + qty;
-    }, 0);
-};
-
   const getStepStatus = (job, step) => {
     if (!job || !job.status) return "notStarted";
     const currentStep = job.currentStep;
@@ -168,17 +157,9 @@ case "Logistics": {
     (sum, d) => sum + Number(d.quantity || 0), 0
   );
 
-  const isParent = !job.po_number?.includes("KG");
-  let totalDelivered = delivered;
-
-  // ✅ ถ้าเป็นงานแม่ เช่น 004-LOTEST → รวม delivery ของลูกทั้งหมด
-  if (isParent) {
-    totalDelivered = sumDeliveryOfSubJobs(job.po_number, jobs);
-  }
-
-  if (totalDelivered === 0) return "notStarted";
-  if (totalDelivered >= volume) return "done";
-  return "doing";
+  if (delivered === 0) return "notStarted";
+  else if (delivered >= volume) return "done";
+  else return "doing";
 }
         
   case "Account": {
@@ -290,18 +271,18 @@ const progressJobs = filteredJobs.filter((job) => {
   return hasKG || deliveryTotal === 0;
 });
 
-const summaryPerStep = steps.map((step) => {
-  let notStarted = 0;
-  let doing = 0;
-  let done = 0;
-  filteredJobs.forEach((job) => {
-    const status = getStepStatus(job, step, jobs); // 👈 ส่ง jobs
-    if (status === "done") done++;
-    else if (status === "doing") doing++;
-    else notStarted++;
+  const summaryPerStep = steps.map((step) => {
+    let notStarted = 0;
+    let doing = 0;
+    let done = 0;
+    filteredJobs.forEach((job) => {
+      const status = getStepStatus(job, step);
+      if (status === "done") done++;
+      else if (status === "doing") doing++;
+      else notStarted++;
+    });
+    return { name: step, notStarted, doing, done };
   });
-  return { name: step, notStarted, doing, done };
-});
 
   const handleSort = (column) => {
     if (sortColumn === column) {
