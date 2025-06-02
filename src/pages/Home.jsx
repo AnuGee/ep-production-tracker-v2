@@ -233,48 +233,62 @@ case "Logistics": {
     }
   };
 
-// ✅ Step: คัดกรองรายการที่ควรแสดง
-const filteredJobs = allData.filter((job) => {
-  const po = job.po_number || "";
-  const hasKG = po.includes("KG");
-  const deliveryTotal = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0),
-    0
-  );
+  // ✅ สำหรับ 📋 รายการงานทั้งหมด
+  const filteredJobs = allData.filter((job) => {
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+    const deliveryTotal = (job.delivery_logs || []).reduce(
+      (sum, d) => sum + Number(d.quantity || 0), 0
+    );
 
-  // ✅ ถ้าเป็นลูก -KG ให้แสดง
-  if (hasKG) return true;
+    if (hasKG) return true;
+    if (deliveryTotal === 0) return true;
 
-  // ✅ ถ้ายังไม่เคยส่งเลย (ยังไม่มี delivery_logs) ให้แสดง
-  if (deliveryTotal === 0) return true;
+    const hasSub = allData.some((j) => {
+      const subPo = j.po_number || "";
+      return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
+    });
 
-  // ✅ ตรวจว่ามีลูก -KG ที่มาจากแม่รายนี้ไหม
-  const hasSub = allData.some((j) => {
-    const subPo = j.po_number || "";
-    return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
+    return !hasSub;
   });
 
-  // ❌ ถ้ามีลูก -KG แล้ว ไม่ต้องแสดงแม่
-  return !hasSub;
-});
+  // ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด
+  const filteredJobsForProgress = allData.filter((job) => {
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+    const deliveryTotal = (job.delivery_logs || []).reduce(
+      (sum, d) => sum + Number(d.quantity || 0), 0
+    );
+    const volume = Number(job.volume || 0);
 
-// ✅ Step: ใช้ filteredJobs สำหรับ progress และ summary
-const progressJobs = filteredJobs;
+    if (hasKG) return true;
+    if (deliveryTotal === 0) return true;
+    if (deliveryTotal >= volume) return true;
 
-const summaryPerStep = steps.map((step) => {
-  let notStarted = 0;
-  let doing = 0;
-  let done = 0;
+    const hasSub = allData.some((j) => {
+      const subPo = j.po_number || "";
+      return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
+    });
 
-  filteredJobs.forEach((job) => {
-    const status = getStepStatus(job, step);
-    if (status === "done") done++;
-    else if (status === "doing") doing++;
-    else notStarted++;
+    return !hasSub;
   });
 
-  return { name: step, notStarted, doing, done };
-});
+  const progressJobs = filteredJobsForProgress;
+
+  const summaryPerStep = steps.map((step) => {
+    let notStarted = 0;
+    let doing = 0;
+    let done = 0;
+
+    filteredJobsForProgress.forEach((job) => {
+      const status = getStepStatus(job, step);
+      if (status === "done") done++;
+      else if (status === "doing") doing++;
+      else notStarted++;
+    });
+
+    return { name: step, notStarted, doing, done };
+  });
 
   const handleSort = (column) => {
     if (sortColumn === column) {
