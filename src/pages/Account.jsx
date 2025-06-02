@@ -82,13 +82,13 @@ const handleSubmit = async () => {
             onChange={(e) => setSelectedId(e.target.value)}
           >
             <option value="">-- เลือกงาน --</option>
-      {jobs.flatMap((job) =>
-        (job.delivery_logs || []).map((log, index) => (
-          <option key={`${job.docId}-${index}`} value={`${job.docId}-${index}`}>
-            {`CU: ${job.customer || "-"} | PO: ${job.po_number}-${log.quantity || 0}KG | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | ส่งเมื่อ: ${log.date || "-"}`}
-          </option>
-        ))
-      )}
+    {jobs.flatMap((job) =>
+      (job.delivery_logs || []).map((log, index) => (
+        <option key={`${job.docId}-${index}`} value={`${job.docId}-${index}`}>
+          {`CU: ${job.customer || "-"} | PO: ${job.po_number}-${log.quantity || 0}KG | PN: ${job.product_name || "-"}-${log.quantity || 0}KG | VO: ${job.volume || "-"} | ส่งเมื่อ: ${log.date || "-"}`}
+        </option>
+      ))
+    )}
           </select>
         </div>
 
