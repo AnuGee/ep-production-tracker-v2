@@ -610,8 +610,8 @@ const summaryPerStep = steps.map((step) => {
       </div>
 <ProgressBoard
   jobs={itemsPerPageProgress === "All" 
-    ? filteredJobs 
-    : filteredJobs.slice(
+    ? progressJobs 
+    : progressJobs.slice(
         (currentPageProgress - 1) * itemsPerPageProgress,
         currentPageProgress * itemsPerPageProgress
       )
