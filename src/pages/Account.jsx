@@ -20,10 +20,15 @@ export default function Account() {
     const querySnapshot = await getDocs(collection(db, "production_workflow"));
     const data = querySnapshot.docs
       .map((docSnap) => ({
-        docId: docSnap.id, // ✅ ได้ docId ไม่ซ้ำ
+        docId: docSnap.id,
         ...docSnap.data(),
       }))
-      .filter((job) => job.currentStep === "Account");
+      .filter((job) => 
+        job.currentStep === "Account" || 
+        // เพิ่มเงื่อนไขนี้: แสดง Logistics ที่มีการส่งสินค้าแล้ว
+        (job.currentStep === "Logistics" && 
+         (job.delivery_logs || []).length > 0)
+      );
     setJobs(data);
   };
 
