@@ -134,7 +134,22 @@ export default function ProgressBoard({ jobs }) {
         (sum, d) => sum + Number(d.quantity || 0),
         0
       );
-      return hasKG || delivered === 0;
+      const volume = Number(job.volume || 0);
+      const isCompleted = job.currentStep === "Completed" || job.currentStep === "Account";
+      
+      // กรณีมี KG ในชื่อ (แบ่งส่ง)
+      if (hasKG) return true;
+      
+      // กรณียังไม่มีการส่งของ
+      if (delivered === 0) return true;
+      
+      // กรณีส่งครบในรอบเดียว
+      if (delivered >= volume) return true;
+      
+      // กรณีงานเสร็จสมบูรณ์แล้ว
+      if (isCompleted) return true;
+      
+      return false;
     })
     .map((job) => {
       const po = job.po_number || "";
