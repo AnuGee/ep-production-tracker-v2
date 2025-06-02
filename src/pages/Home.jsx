@@ -261,12 +261,16 @@ const filteredJobsForProgress = allData.filter((job) => {
   );
   const volume = Number(job.volume);
   const isValidVolume = !isNaN(volume);
+  const isCompleted = job.currentStep === "Completed";
 
   // กรณีมี -xxxKG ในชื่อ (แบ่งส่ง) ให้แสดงเสมอ
   if (hasKG) return true;
   
   // กรณียังไม่มีการส่งของ ให้แสดงเสมอ
   if (deliveryTotal === 0) return true;
+  
+  // กรณีงานเสร็จสมบูรณ์แล้ว (Completed) ให้แสดงด้วย
+  if (isCompleted) return true;
   
   // ตรวจสอบว่ามีรายการย่อยที่แบ่งส่งหรือไม่
   const hasSub = allData.some((j) => {
