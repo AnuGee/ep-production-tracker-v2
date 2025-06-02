@@ -135,9 +135,8 @@ export default function ProgressBoard({ jobs }) {
         0
       );
       const volume = Number(job.volume || 0);
-      const isCompleted = job.currentStep === "Completed" || job.currentStep === "Account";
       
-      // กรณีมี KG ในชื่อ (แบ่งส่ง)
+      // กรณีมี KG ในชื่อ (แบ่งส่ง) ให้แสดงเสมอ โดยไม่สนใจ currentStep
       if (hasKG) return true;
       
       // กรณียังไม่มีการส่งของ
@@ -147,7 +146,7 @@ export default function ProgressBoard({ jobs }) {
       if (delivered >= volume) return true;
       
       // กรณีงานเสร็จสมบูรณ์แล้ว
-      if (isCompleted) return true;
+      if (job.currentStep === "Completed" || job.currentStep === "Account") return true;
       
       return false;
     })
