@@ -233,32 +233,34 @@ case "Logistics": {
     }
   };
 
-// ✅ แสดงงานทั้งหมด ยกเว้นเฉพาะงานแม่ที่มีการส่งแล้วและมี KG ย่อย
+// ✅ Step: คัดกรองรายการที่ควรแสดง
 const filteredJobs = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
   const deliveryTotal = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0), 0
+    (sum, d) => sum + Number(d.quantity || 0),
+    0
   );
-  const volume = Number(job.volume || 0);
 
-  // ✅ แสดงงานที่มี -KG
+  // ✅ ถ้าเป็นลูก -KG ให้แสดง
   if (hasKG) return true;
 
-  // ✅ แสดงงานที่ยังไม่เคยส่งเลย
+  // ✅ ถ้ายังไม่เคยส่งเลย (ยังไม่มี delivery_logs) ให้แสดง
   if (deliveryTotal === 0) return true;
 
-  // ✅ แสดงงานแม่ที่ส่งครบแล้ว หากไม่มีรายการย่อย
-  if (!hasKG && deliveryTotal >= volume) return true;
+  // ✅ ตรวจว่ามีลูก -KG ที่มาจากแม่รายนี้ไหม
+  const hasSub = allData.some((j) => {
+    const subPo = j.po_number || "";
+    return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
+  });
 
-  // ❌ กรณีอื่น ให้กรองออก
-  return false;
+  // ❌ ถ้ามีลูก -KG แล้ว ไม่ต้องแสดงแม่
+  return !hasSub;
 });
 
-// ✅ ใช้กับ Progress Board
+// ✅ Step: ใช้ filteredJobs สำหรับ progress และ summary
 const progressJobs = filteredJobs;
 
-// ✅ คำนวณสรุปสถานะแต่ละแผนก
 const summaryPerStep = steps.map((step) => {
   let notStarted = 0;
   let doing = 0;
