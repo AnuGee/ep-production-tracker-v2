@@ -233,21 +233,28 @@ case "Logistics": {
     }
   };
 
-// ✅ งานที่ควรแสดง: มี -KG หรือยังไม่เคยส่งเลย
+// ✅ กรองข้อมูล: ถ้ามี KG → แสดงเฉพาะที่มี KG / ถ้ายังไม่ส่งเลย → แสดงต้นทาง
 const filteredJobs = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
   const deliveryTotal = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0),
-    0
+    (sum, d) => sum + Number(d.quantity || 0), 0
   );
-  return hasKG || deliveryTotal === 0;
+
+  // ถ้าเป็นรายการย่อย → แสดง
+  if (hasKG) return true;
+
+  // ถ้ายังไม่มีการส่ง → แสดงต้นฉบับ
+  if (deliveryTotal === 0) return true;
+
+  // ถ้าไม่มี -KG และมีการส่งแล้ว → ไม่แสดง (เพราะจะแสดงรายการย่อยแทน)
+  return false;
 });
 
-// ✅ ใช้ filteredJobs ใน ProgressBoard
+// ✅ ส่งต่อให้ ProgressBoard ใช้
 const progressJobs = filteredJobs;
 
-// ✅ รวมจำนวนสถานะแต่ละแผนก
+// ✅ คำนวณสรุปสถานะแต่ละแผนก
 const summaryPerStep = steps.map((step) => {
   let notStarted = 0;
   let doing = 0;
