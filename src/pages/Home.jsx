@@ -233,25 +233,29 @@ case "Logistics": {
     }
   };
 
-// ✅ กรองข้อมูล: ถ้ามี KG → แสดงเฉพาะที่มี KG / ถ้ายังไม่ส่งเลย → แสดงต้นทาง
+// ✅ แสดงงานทั้งหมด ยกเว้นเฉพาะงานแม่ที่มีการส่งแล้วและมี KG ย่อย
 const filteredJobs = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
   const deliveryTotal = (job.delivery_logs || []).reduce(
     (sum, d) => sum + Number(d.quantity || 0), 0
   );
+  const volume = Number(job.volume || 0);
 
-  // ถ้าเป็นรายการย่อย → แสดง
+  // ✅ แสดงงานที่มี -KG
   if (hasKG) return true;
 
-  // ถ้ายังไม่มีการส่ง → แสดงต้นฉบับ
+  // ✅ แสดงงานที่ยังไม่เคยส่งเลย
   if (deliveryTotal === 0) return true;
 
-  // ถ้าไม่มี -KG และมีการส่งแล้ว → ไม่แสดง (เพราะจะแสดงรายการย่อยแทน)
+  // ✅ แสดงงานแม่ที่ส่งครบแล้ว หากไม่มีรายการย่อย
+  if (!hasKG && deliveryTotal >= volume) return true;
+
+  // ❌ กรณีอื่น ให้กรองออก
   return false;
 });
 
-// ✅ ส่งต่อให้ ProgressBoard ใช้
+// ✅ ใช้กับ Progress Board
 const progressJobs = filteredJobs;
 
 // ✅ คำนวณสรุปสถานะแต่ละแผนก
