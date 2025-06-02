@@ -253,25 +253,26 @@ case "Logistics": {
   });
 
   // ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด
-  const filteredJobsForProgress = allData.filter((job) => {
-    const po = job.po_number || "";
-    const hasKG = po.includes("KG");
-    const deliveryTotal = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0), 0
-    );
-    const volume = Number(job.volume || 0);
+const filteredJobsForProgress = allData.filter((job) => {
+  const po = job.po_number || "";
+  const hasKG = po.includes("KG");
+  const deliveryTotal = (job.delivery_logs || []).reduce(
+    (sum, d) => sum + Number(d.quantity || 0), 0
+  );
+  const volume = Number(job.volume);
+  const isValidVolume = !isNaN(volume);
 
-    if (hasKG) return true;
-    if (deliveryTotal === 0) return true;
-    if (deliveryTotal >= volume) return true;
+  if (hasKG) return true;
+  if (deliveryTotal === 0) return true;
+  if (isValidVolume && deliveryTotal >= volume) return true;
 
-    const hasSub = allData.some((j) => {
-      const subPo = j.po_number || "";
-      return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
-    });
-
-    return !hasSub;
+  const hasSub = allData.some((j) => {
+    const subPo = j.po_number || "";
+    return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
   });
+
+  return !hasSub;
+});
 
   const progressJobs = filteredJobsForProgress;
 
