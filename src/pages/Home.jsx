@@ -477,6 +477,7 @@ const filteredJobsForProgress = allData.filter((job) => {
         "Warehouse Note": job.notes?.warehouse || "–",
         "Production Note": job.notes?.production || "–",
         "QC Note": job.notes?.qc_inspection || "–",
+        "Logistics Note": job.notes?.logistics || "–",
         "Account Note": job.notes?.account || "–"
       };
 
@@ -543,6 +544,15 @@ const filteredJobsForProgress = allData.filter((job) => {
         "PD Status": job.status?.production || "–",
         "QC Status": job.status?.qc_inspection || "–",
         "COA Status": job.status?.qc_coa || "–",
+        "Logistics Status": (() => {
+  const volume = Number(job.volume || 0);
+  const delivered = (job.delivery_logs || []).reduce(
+    (sum, d) => sum + Number(d.quantity || 0), 0
+  );
+  if (delivered === 0) return "ยังไม่ส่ง";
+  else if (delivered >= volume) return "ส่งครบแล้ว";
+  else return `ส่งบางส่วน (${delivered}/${volume})`;
+})(),
         "ACC Status": job.status?.account || "–"
       };
 
@@ -588,6 +598,7 @@ const filteredJobsForProgress = allData.filter((job) => {
       case "Production": return "production";
       case "QC": return "qc_inspection";
       case "COA": return "qc_coa";
+      case "Logistics": return "logistics";
       case "Account": return "account";
       default: return "";
     }
