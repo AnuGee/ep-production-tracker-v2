@@ -252,7 +252,7 @@ case "Logistics": {
     return !hasSub;
   });
 
-  // ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด
+// ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด
 const filteredJobsForProgress = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
@@ -262,15 +262,22 @@ const filteredJobsForProgress = allData.filter((job) => {
   const volume = Number(job.volume);
   const isValidVolume = !isNaN(volume);
 
+  // กรณีมี -xxxKG ในชื่อ (แบ่งส่ง) ให้แสดงเสมอ
   if (hasKG) return true;
+  
+  // กรณียังไม่มีการส่งของ ให้แสดงเสมอ
   if (deliveryTotal === 0) return true;
-  if (isValidVolume && deliveryTotal >= volume) return true;
-
+  
+  // ตรวจสอบว่ามีรายการย่อยที่แบ่งส่งหรือไม่
   const hasSub = allData.some((j) => {
     const subPo = j.po_number || "";
     return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
   });
-
+  
+  // กรณีส่งครบในรอบเดียวและไม่มีรายการย่อย ให้แสดง
+  if (isValidVolume && deliveryTotal >= volume && !hasSub) return true;
+  
+  // ถ้ามีรายการย่อย ไม่แสดงรายการหลัก
   return !hasSub;
 });
 
