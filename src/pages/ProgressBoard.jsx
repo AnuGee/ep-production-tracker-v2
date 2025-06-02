@@ -126,31 +126,34 @@ export default function ProgressBoard({ jobs }) {
           </tr>
         </thead>
 <tbody>
-  {jobs
-    .filter((job) => {
-      const po = job.po_number || "";
-      const hasKG = po.includes("KG");
-      const delivered = (job.delivery_logs || []).reduce(
-        (sum, d) => sum + Number(d.quantity || 0),
-        0
-      );
-      const volume = Number(job.volume || 0);
-      
-      // กรณีมี KG ในชื่อ (แบ่งส่ง) ให้แสดงเสมอ โดยไม่สนใจ currentStep
-      if (hasKG) return true;
-      
-      // กรณียังไม่มีการส่งของ
-      if (delivered === 0) return true;
-      
-      // กรณีส่งครบในรอบเดียว
-      if (delivered >= volume) return true;
-      
-      // กรณีงานเสร็จสมบูรณ์แล้ว
-      if (job.currentStep === "Completed" || job.currentStep === "Account") return true;
-      
-      return false;
-    })
-    .map((job) => {
+{jobs
+  .filter((job) => {
+    const po = job.po_number || "";
+    const hasKG = po.includes("KG");
+    const delivered = (job.delivery_logs || []).reduce(
+      (sum, d) => sum + Number(d.quantity || 0),
+      0
+    );
+    const volume = Number(job.volume || 0);
+    
+    // กรณีมี KG ในชื่อ (แบ่งส่ง)
+    if (hasKG) return true;
+    
+    // กรณียังไม่มีการส่งของ
+    if (delivered === 0) return true;
+    
+    // กรณีส่งครบในรอบเดียว
+    if (delivered >= volume) return true;
+    
+    // กรณีงานเสร็จสมบูรณ์แล้ว
+    if (job.currentStep === "Completed" || job.currentStep === "Account") return true;
+    
+    // เพิ่มเงื่อนไขนี้: กรณีมีการส่งสินค้าแล้วบางส่วน
+    if (delivered > 0) return true;
+    
+    return false;
+  })
+  .map((job) => {
       const po = job.po_number || "";
       const hasKG = po.includes("KG");
       const delivered = (job.delivery_logs || []).reduce(
