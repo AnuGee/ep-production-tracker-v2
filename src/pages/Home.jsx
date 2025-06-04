@@ -844,8 +844,6 @@ const filteredJobsForProgress = allData.filter((job) => {
         <td>{job.batch_no || "–"}</td>
         
         {/* คอลัมน์ Product - แสดงตามเงื่อนไขการจัดส่ง */}
-        <td>{displayProductName || "–"}</td>
-
         <td>{job._isDeliveryLog ? job.product_name_with_quantity : job.product_name || "–"}</td>
         
         {/* คอลัมน์ Current Step */}
