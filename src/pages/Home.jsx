@@ -233,6 +233,28 @@ case "Logistics": {
     }
   };
 
+  // ✅ ฟังก์ชันใหม่: แปลงข้อมูลตามรอบการส่ง
+const expandJobsByDeliveryLogs = (jobs) => {
+  return jobs.flatMap(job => {
+    const deliveryLogs = job.delivery_logs || [];
+    
+    // ถ้าไม่มี delivery_logs หรือยังไม่มีการส่งของ ให้คืนค่า job เดิม
+    if (deliveryLogs.length === 0) {
+      return [job];
+    }
+    
+    // ถ้ามี delivery_logs ให้แยกเป็นหลาย job ตามแต่ละ log
+    return deliveryLogs.map(log => ({
+      ...job,
+      _isDeliveryLog: true, // เพิ่ม flag เพื่อระบุว่าเป็น job ที่แยกจาก delivery_log
+      _deliveryQuantity: log.quantity, // เก็บปริมาณที่ส่งในรอบนี้
+      _deliveryDate: log.date, // เก็บวันที่ส่งในรอบนี้
+      product_name_with_quantity: `${job.product_name}-${log.quantity}KG`, // สร้างชื่อที่มี -xxxKG ต่อท้าย
+      po_number_with_quantity: `${job.po_number}-${log.quantity}KG` // สร้าง PO ที่มี -xxxKG ต่อท้าย
+    }));
+  });
+};
+
   // ✅ สำหรับ 📋 รายการงานทั้งหมด
   const filteredJobs = allData.filter((job) => {
     const po = job.po_number || "";
@@ -285,7 +307,9 @@ const filteredJobsForProgress = allData.filter((job) => {
   return !hasSub;
 });
 
-  const progressJobs = filteredJobsForProgress;
+  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
+  const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
+  const progressJobs = expandedJobsForProgress;
 
   const summaryPerStep = steps.map((step) => {
     let notStarted = 0;
@@ -311,7 +335,9 @@ const filteredJobsForProgress = allData.filter((job) => {
     }
   };
 
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
+  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
+    const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
+    const sortedJobs = [...expandedJobs].sort((a, b) => {
     const getValue = (job, col) => {
       if (col === "delivery_date") {
           const dateA = new Date(a.delivery_date || 0);
@@ -819,6 +845,8 @@ const filteredJobsForProgress = allData.filter((job) => {
         
         {/* คอลัมน์ Product - แสดงตามเงื่อนไขการจัดส่ง */}
         <td>{displayProductName || "–"}</td>
+
+        <td>{job._isDeliveryLog ? job.product_name_with_quantity : job.product_name || "–"}</td>
         
         {/* คอลัมน์ Current Step */}
         <td>{job.currentStep || "–"}</td>
