@@ -162,7 +162,7 @@ export default function ProgressBoard({ jobs }) {
       );
 
       return (
-        <tr key={job.id || job.docId}>
+        <tr key={`${job.id || job.docId}${job._isDeliveryLog ? `-${job._deliveryQuantity}` : ''}`}>
           <td>
             <span className="product-label">
               📄 {hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name)}
