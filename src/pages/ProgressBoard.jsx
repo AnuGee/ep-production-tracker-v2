@@ -164,9 +164,14 @@ export default function ProgressBoard({ jobs }) {
       return (
         <tr key={`${job.id || job.docId}${job._isDeliveryLog ? `-${job._deliveryQuantity}` : ''}`}>
           <td>
-            <span className="product-label">
-              📄 {hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name)}
-            </span>
+// แก้ไขส่วนแสดงชื่อสินค้า
+<span className="product-label">
+  📄 {
+    job._isDeliveryLog 
+      ? `${job.product_name}-${job._deliveryQuantity}KG`
+      : (hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name))
+  }
+</span>
           </td>
           {steps.map((step) => (
             <td key={step}>
