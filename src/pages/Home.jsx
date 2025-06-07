@@ -340,20 +340,25 @@ const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
 const getValue = (job, col) => {
   if (col === "delivery_date") {
-      const dateA = new Date(a.delivery_date || 0);
-      const dateB = new Date(b.delivery_date || 0);
-      return isNaN(dateA.getTime()) ? (isNaN(dateB.getTime()) ? 0 : -1) : (isNaN(dateB.getTime()) ? 1 : dateA - dateB);
-   }
+    // ✅ แก้ไขจาก a.delivery_date เป็น job.delivery_date
+    const date = new Date(job.delivery_date || 0);
+    return isNaN(date.getTime()) ? 0 : date.getTime();
+}
    if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
    if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
    if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
+   // ✅ เพิ่มเงื่อนไขสำหรับ bn_pd
+   if (col === "bn_pd") {
+     // รวม batch_no_warehouse ทั้งหมดที่มีค่า
+     return job.batch_no_warehouse?.filter(Boolean).join(" / ").toLowerCase() || "";
+   }
    if (col === "status") return job.currentStep?.toLowerCase() || "";
    if (col === "last_update") {
        const timeA = new Date(a.audit_logs?.at(-1)?.timestamp || 0);
        const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
        return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
    }
-   // ✅ เพิ่มเงื่อนไขพิเศษสำหรับคอลัมน์ volume
+   // ✅ เงื่อนไขพิเศษสำหรับคอลัมน์ volume
    if (col === "volume") {
      const num = Number(job.volume);
      return isNaN(num) ? 0 : num;
@@ -800,7 +805,7 @@ const getValue = (job, col) => {
               <th onClick={() => handleSort("bn_wh1")} style={{ minWidth: "90px", cursor: "pointer" }}> BN WH1 {sortColumn === "bn_wh1" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
               <th onClick={() => handleSort("bn_wh2")} style={{ minWidth: "90px", cursor: "pointer" }}> BN WH2 {sortColumn === "bn_wh2" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
               <th onClick={() => handleSort("bn_wh3")} style={{ minWidth: "90px", cursor: "pointer" }}> BN WH3 {sortColumn === "bn_wh3" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("batch_no_production")} style={{ minWidth: "90px", cursor: "pointer" }}> BN PD {sortColumn === "batch_no_production" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
+              <th onClick={() => handleSort("bn_pd")} style={{ minWidth: "90px", cursor: "pointer" }}> BN PD {sortColumn === "bn_pd" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
               <th onClick={() => handleSort("product_name")} style={{ minWidth: "150px", cursor: "pointer" }}> Product {sortColumn === "product_name" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
               <th onClick={() => handleSort("currentStep")} style={{ minWidth: "110px", cursor: "pointer" }}> Current Step {sortColumn === "currentStep" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
               <th onClick={() => handleSort("status")} style={{ minWidth: "140px", cursor: "pointer" }}> Status {sortColumn === "status" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
