@@ -338,54 +338,42 @@ const filteredJobsForProgress = allData.filter((job) => {
   // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
 const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
-  const getValue = (job, col) => {
-    // วันที่
-    if (col === "delivery_date") {
-      const date = new Date(job.delivery_date);
-      return isNaN(date.getTime()) ? null : date.getTime();
+const getValue = (job, col) => {
+  if (col === "delivery_date") {
+      const dateA = new Date(a.delivery_date || 0);
+      const dateB = new Date(b.delivery_date || 0);
+      return isNaN(dateA.getTime()) ? (isNaN(dateB.getTime()) ? 0 : -1) : (isNaN(dateB.getTime()) ? 1 : dateA - dateB);
+   }
+   if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
+   if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
+   if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
+   if (col === "status") return job.currentStep?.toLowerCase() || "";
+   if (col === "last_update") {
+       const timeA = new Date(a.audit_logs?.at(-1)?.timestamp || 0);
+       const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
+       return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
+   }
+   // ✅ เพิ่มเงื่อนไขพิเศษสำหรับคอลัมน์ volume
+   if (col === "volume") {
+     const num = Number(job.volume);
+     return isNaN(num) ? 0 : num;
+   }
+   const val = job[col];
+   if (typeof val === 'number') return val;
+   return (val || "").toString().toLowerCase();
+};
+
+    const valA = getValue(a, sortColumn);
+    const valB = getValue(b, sortColumn);
+
+    if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
     }
 
-    if (col === "last_update") {
-      const lastLog = job.audit_logs?.at(-1);
-      const timestamp = lastLog?.timestamp;
-      const date = new Date(timestamp);
-      return isNaN(date.getTime()) ? null : date.getTime();
-    }
-
-    // Batch Number จาก array
-    if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
-    if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
-    if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
-    if (col === "bn_pd") return job.batch_no_production?.toLowerCase() || "";
-
-    // ขั้นตอน
-    if (col === "status") return job.currentStep?.toLowerCase() || "";
-
-    // ตัวเลข เช่น Volume
-    if (typeof job[col] === "number") return job[col];
-
-    // ตัวอักษรทั่วไป
-    return (job[col] || "").toString().toLowerCase();
-  };
-
-  const valA = getValue(a, sortColumn);
-  const valB = getValue(b, sortColumn);
-
-  // เปรียบเทียบตัวเลข
-  if (typeof valA === "number" && typeof valB === "number") {
-    return sortDirection === "asc" ? valA - valB : valB - valA;
-  }
-
-  // เปรียบเทียบวันที่
-  if (valA instanceof Date || typeof valA === "number" && sortColumn.includes("date")) {
-    return sortDirection === "asc" ? valA - valB : valB - valA;
-  }
-
-  // เปรียบเทียบข้อความ
-  if (valA < valB) return sortDirection === "asc" ? -1 : 1;
-  if (valA > valB) return sortDirection === "asc" ? 1 : -1;
-  return 0;
-});
+    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
 
 
   const getTotalVolume = () => {
