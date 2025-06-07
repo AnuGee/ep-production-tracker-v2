@@ -340,21 +340,28 @@ const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
 const getValue = (job, col) => {
   if (col === "delivery_date") {
-    // ✅ แก้ไขจาก a.delivery_date เป็น job.delivery_date
-    const date = new Date(job.delivery_date || 0);
-    return isNaN(date.getTime()) ? 0 : date.getTime();
-}
+      // ✅ แก้ไขจาก a.delivery_date เป็น job.delivery_date
+      const date = new Date(job.delivery_date || 0);
+      return isNaN(date.getTime()) ? 0 : date.getTime();
+   }
    if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
    if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
    if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
-   // ✅ เพิ่มเงื่อนไขสำหรับ bn_pd
+   // ✅ แก้ไขเงื่อนไขสำหรับ bn_pd ให้แปลงเป็นตัวเลข
    if (col === "bn_pd") {
-     // รวม batch_no_warehouse ทั้งหมดที่มีค่า
-     return job.batch_no_warehouse?.filter(Boolean).join(" / ").toLowerCase() || "";
+     // ดึงเฉพาะตัวเลขจาก batch_no_warehouse
+     const batchNos = job.batch_no_warehouse?.filter(Boolean) || [];
+     if (batchNos.length === 0) return 0;
+     
+     // ใช้ batch_no แรกที่มีค่า และแปลงเป็นตัวเลข
+     const firstBatchNo = batchNos[0];
+     // ดึงเฉพาะตัวเลขออกมา
+     const numericValue = firstBatchNo.replace(/\D/g, '');
+     return numericValue ? parseInt(numericValue, 10) : 0;
    }
    if (col === "status") return job.currentStep?.toLowerCase() || "";
    if (col === "last_update") {
-       const timeA = new Date(a.audit_logs?.at(-1)?.timestamp || 0);
+       const timeA = new Date(job.audit_logs?.at(-1)?.timestamp || 0);
        const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
        return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
    }
