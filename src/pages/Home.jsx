@@ -338,55 +338,81 @@ const filteredJobsForProgress = allData.filter((job) => {
   // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
 const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
-const getValue = (job, col) => {
-  if (col === "delivery_date") {
-      // ✅ แก้ไขจาก a.delivery_date เป็น job.delivery_date
-      const date = new Date(job.delivery_date || 0);
-      return isNaN(date.getTime()) ? 0 : date.getTime();
-   }
-   if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
-   if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
-   if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
-   // ✅ แก้ไขเงื่อนไขสำหรับ bn_pd ให้แปลงเป็นตัวเลข
-   if (col === "bn_pd") {
-     // ดึงเฉพาะตัวเลขจาก batch_no_warehouse
-     const batchNos = job.batch_no_warehouse?.filter(Boolean) || [];
-     if (batchNos.length === 0) return 0;
-     
-     // ใช้ batch_no แรกที่มีค่า และแปลงเป็นตัวเลข
-     const firstBatchNo = batchNos[0];
-     // ดึงเฉพาะตัวเลขออกมา
-     const numericValue = firstBatchNo.replace(/\D/g, '');
-     return numericValue ? parseInt(numericValue, 10) : 0;
-   }
-   if (col === "status") return job.currentStep?.toLowerCase() || "";
-   if (col === "last_update") {
-       const timeA = new Date(job.audit_logs?.at(-1)?.timestamp || 0);
-       const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
-       return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
-   }
-   // ✅ เงื่อนไขพิเศษสำหรับคอลัมน์ volume
-   if (col === "volume") {
-     const num = Number(job.volume);
-     return isNaN(num) ? 0 : num;
-   }
-   const val = job[col];
-   if (typeof val === 'number') return val;
-   return (val || "").toString().toLowerCase();
-};
-
-    const valA = getValue(a, sortColumn);
-    const valB = getValue(b, sortColumn);
-
-    if (typeof valA === 'number' && typeof valB === 'number') {
-        return sortDirection === 'asc' ? valA - valB : valB - valA;
+  const getValue = (job, col) => {
+    if (col === "delivery_date") {
+        const date = new Date(job.delivery_date || 0);
+        return isNaN(date.getTime()) ? 0 : date.getTime();
     }
+    if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
+    if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
+    if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
+    if (col === "bn_pd") {
+        // ✅ แก้ไขตรงนี้: ใช้ job.batch_no ตรงๆ สำหรับการเรียง
+        const bnPdValue = job.batch_no || "";
+        return bnPdValue; // ส่งคืนค่า string เพื่อให้เรียงแบบธรรมชาติ
+    }
+    if (col === "status") return job.currentStep?.toLowerCase() || "";
+    if (col === "last_update") {
+        const timeA = new Date(job.audit_logs?.at(-1)?.timestamp || 0);
+        const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
+        return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
+    }
+    if (col === "volume") {
+      const num = Number(job.volume);
+      return isNaN(num) ? 0 : num;
+    }
+    const val = job[col];
+    if (typeof val === 'number') return val;
+    return (val || "").toString().toLowerCase();
+  };
 
-    if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-    if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  });
+  const valA = getValue(a, sortColumn);
+  const valB = getValue(b, sortColumn);
 
+  // Custom natural sort for strings (especially for "BN PD" and other text columns)
+  if (typeof valA === 'string' && typeof valB === 'string') {
+    // This regular expression splits strings into parts of numbers and non-numbers.
+    // e.g., "BN007-A" -> ["BN", "007", "-A"]
+    const regex = /(\d+)|(\D+)/g;
+    const partsA = valA.match(regex) || [];
+    const partsB = valB.match(regex) || [];
+
+    let i = 0;
+    while (i < partsA.length && i < partsB.length) {
+      const partA = partsA[i];
+      const partB = partsB[i];
+
+      const isNumA = !isNaN(partA);
+      const isNumB = !isNaN(partB);
+
+      if (isNumA && isNumB) {
+        const numA = parseInt(partA, 10);
+        const numB = parseInt(partB, 10);
+        if (numA !== numB) {
+          return sortDirection === 'asc' ? numA - numB : numB - numA;
+        }
+      } else {
+        if (partA < partB) return sortDirection === 'asc' ? -1 : 1;
+        if (partA > partB) return sortDirection === 'asc' ? 1 : -1;
+      }
+      i++;
+    }
+    // If one string is a prefix of the other (e.g., "BN" vs "BN1")
+    if (partsA.length !== partsB.length) {
+      return sortDirection === 'asc' ? partsA.length - partsB.length : partsB.length - partsA.length;
+    }
+    return 0; // Equal
+  }
+
+  // Original numeric/other type comparison
+  if (typeof valA === 'number' && typeof valB === 'number') {
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
+  }
+
+  if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+  if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+  return 0;
+});
 
   const getTotalVolume = () => {
     return filteredJobs.reduce((sum, job) => {
