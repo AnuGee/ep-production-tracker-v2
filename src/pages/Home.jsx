@@ -255,7 +255,8 @@ export default function Home() {
       setSortDirection("asc");
     }
   };
-
+  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
+const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
   const getValue = (job, col) => {
     if (col === "delivery_date") {
