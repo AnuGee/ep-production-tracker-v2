@@ -1,4 +1,5 @@
 // ✅ QC.jsx - แก้ให้รองรับงานจาก Warehouse ที่ข้าม Production ไป COA เลย
+// ทดลองแก้
 
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
