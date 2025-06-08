@@ -412,6 +412,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
   if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
   if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
   return 0;
+});
 
   const getTotalVolume = () => {
     return filteredJobs.reduce((sum, job) => {
