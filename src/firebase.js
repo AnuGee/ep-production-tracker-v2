@@ -1,4 +1,5 @@
 // src/firebase.js
+// ทดลองแก้
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth"; // ✅ เพิ่มตรงนี้
