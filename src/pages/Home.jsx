@@ -307,102 +307,56 @@ const filteredJobsForProgress = allData.filter((job) => {
   return !hasSub;
 });
 
-  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
-  const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
-  const progressJobs = expandedJobsForProgress;
+// ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
+const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
 
-  const summaryPerStep = steps.map((step) => {
-    let notStarted = 0;
-    let doing = 0;
-    let done = 0;
+// ✅ เรียงลำดับตาม product_name หรือ product_name_with_quantity
+const sortedProgressJobs = [...expandedJobsForProgress].sort((a, b) => {
+  // ใช้ product_name_with_quantity ถ้ามี (กรณีเป็น job ที่แยกจาก delivery_log)
+  const nameA = a._isDeliveryLog ? a.product_name_with_quantity : a.product_name || "";
+  const nameB = b._isDeliveryLog ? b.product_name_with_quantity : b.product_name || "";
+  
+  // ใช้ Natural Sort เพื่อเรียงตัวเลขและตัวอักษรได้อย่างถูกต้อง
+  return naturalSort(nameA, nameB);
+});
 
-    filteredJobsForProgress.forEach((job) => {
-      const status = getStepStatus(job, step);
-      if (status === "done") done++;
-      else if (status === "doing") doing++;
-      else notStarted++;
-    });
+// ใช้ sortedProgressJobs แทน progressJobs
+const progressJobs = sortedProgressJobs;
 
-    return { name: step, notStarted, doing, done };
-  });
+// ฟังก์ชัน Natural Sort สำหรับเรียงตัวเลขและตัวอักษร
+function naturalSort(a, b) {
+  const regex = /(\d+)|(\D+)/g;
+  const partsA = a.match(regex) || [];
+  const partsB = b.match(regex) || [];
 
-  const handleSort = (column) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
-    }
-  };
+  let i = 0;
+  while (i < partsA.length && i < partsB.length) {
+    const partA = partsA[i];
+    const partB = partsB[i];
 
-  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
-const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
-const sortedJobs = [...expandedJobs].sort((a, b) => {
-  const getValue = (job, col) => {
-    if (col === "delivery_date") {
-        const date = new Date(job.delivery_date || 0);
-        return isNaN(date.getTime()) ? 0 : date.getTime();
-    }
-    if (col === "bn_wh1") return job.batch_no_warehouse?.[0]?.toLowerCase() || "";
-    if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
-    if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
-    if (col === "bn_pd") {
-        // ✅ แก้ไขตรงนี้: ใช้ job.batch_no ตรงๆ สำหรับการเรียง
-        const bnPdValue = job.batch_no || "";
-        return bnPdValue; // ส่งคืนค่า string เพื่อให้เรียงแบบธรรมชาติ
-    }
-    if (col === "status") return job.currentStep?.toLowerCase() || "";
-    if (col === "last_update") {
-        const timeA = new Date(job.audit_logs?.at(-1)?.timestamp || 0);
-        const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
-        return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
-    }
-    if (col === "volume") {
-      const num = Number(job.volume);
-      return isNaN(num) ? 0 : num;
-    }
-    const val = job[col];
-    if (typeof val === 'number') return val;
-    return (val || "").toString().toLowerCase();
-  };
+    const isNumA = !isNaN(partA);
+    const isNumB = !isNaN(partB);
 
-  const valA = getValue(a, sortColumn);
-  const valB = getValue(b, sortColumn);
-
-  // Custom natural sort for strings (especially for "BN PD" and other text columns)
-  if (typeof valA === 'string' && typeof valB === 'string') {
-    // This regular expression splits strings into parts of numbers and non-numbers.
-    // e.g., "BN007-A" -> ["BN", "007", "-A"]
-    const regex = /(\d+)|(\D+)/g;
-    const partsA = valA.match(regex) || [];
-    const partsB = valB.match(regex) || [];
-
-    let i = 0;
-    while (i < partsA.length && i < partsB.length) {
-      const partA = partsA[i];
-      const partB = partsB[i];
-
-      const isNumA = !isNaN(partA);
-      const isNumB = !isNaN(partB);
-
-      if (isNumA && isNumB) {
-        const numA = parseInt(partA, 10);
-        const numB = parseInt(partB, 10);
-        if (numA !== numB) {
-          return sortDirection === 'asc' ? numA - numB : numB - numA;
-        }
-      } else {
-        if (partA < partB) return sortDirection === 'asc' ? -1 : 1;
-        if (partA > partB) return sortDirection === 'asc' ? 1 : -1;
+    if (isNumA && isNumB) {
+      const numA = parseInt(partA, 10);
+      const numB = parseInt(partB, 10);
+      if (numA !== numB) {
+        return numA - numB;
       }
-      i++;
+    } else {
+      if (partA < partB) return -1;
+      if (partA > partB) return 1;
     }
-    // If one string is a prefix of the other (e.g., "BN" vs "BN1")
-    if (partsA.length !== partsB.length) {
-      return sortDirection === 'asc' ? partsA.length - partsB.length : partsB.length - partsA.length;
-    }
-    return 0; // Equal
+    i++;
   }
+  
+  // ถ้าหนึ่งในสตริงเป็น prefix ของอีกอัน (เช่น "BN" vs "BN1")
+  if (partsA.length !== partsB.length) {
+    return partsA.length - partsB.length;
+  }
+  
+  return 0; // เท่ากัน
+}
 
   // Original numeric/other type comparison
   if (typeof valA === 'number' && typeof valB === 'number') {
