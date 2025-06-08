@@ -1,5 +1,4 @@
 // src/pages/Home.jsx
-// ขอให้เรียกคืนได้
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 // ✅ เพิ่ม Click & Drag Scroll ตาราง
 import React, { useEffect, useState, useRef, useCallback } from "react"; // <<< เพิ่ม useRef, useCallback
