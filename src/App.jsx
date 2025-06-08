@@ -11,6 +11,7 @@ import Production from "./pages/Production";
 import QC from "./pages/QC";
 import Logistics from "./pages/Logistics";
 import Account from "./pages/Account";
+import Search from "./pages/Search";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute"; // ✅ NEW
@@ -90,7 +91,14 @@ return (
               </ProtectedRoute>
             }
           />
-          
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute allowedRoles={["Admin", "Sales"]}>
+                <MainLayout><Search /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthProvider>

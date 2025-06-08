@@ -205,19 +205,25 @@ export default function Sales() {
     <div className="page-container">
       <h2>📝 <strong>Sales - กรอกข้อมูลเริ่มต้น</strong></h2>
 
-      {jobs.length > 0 && (
-        <div className="form-group full-span">
-          <label>📋 <strong>เลือกรายการเพื่อแก้ไขข้อมูล (หากยังไม่ครบ)</strong></label>
-          <select onChange={(e) => handleSelectJob(e.target.value)} className="input-box">
-            <option value="">-- เลือกรายการ --</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {`PO: ${job.po_number || "(ไม่ระบุ PO)"} | CU: ${job.customer || "(ไม่ระบุลูกค้า)"} | PN: ${job.product_name || "(ไม่ระบุสินค้า)"} | VO: ${job.volume || "(ไม่ระบุจำนวน)"}`}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+  {jobs.length > 0 && (
+    <div className="form-group full-span">
+      <label>📋 <strong>เลือกรายการเพื่อแก้ไขข้อมูล (หากยังไม่ครบ)</strong></label>
+      <select onChange={(e) => handleSelectJob(e.target.value)} className="input-box">
+        <option value="">-- เลือกรายการ --</option>
+        {jobs
+          .sort((a, b) => {
+            const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+            const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+            return keyA.localeCompare(keyB);
+          })
+          .map((job) => (
+            <option key={job.id} value={job.id}>
+              {`PO: ${job.po_number || "(ไม่ระบุ PO)"} | CU: ${job.customer || "(ไม่ระบุลูกค้า)"} | PN: ${job.product_name || "(ไม่ระบุสินค้า)"} | VO: ${job.volume || "(ไม่ระบุจำนวน)"}`}
+            </option>
+          ))}
+      </select>
+    </div>
+  )}
 
       <form onSubmit={handleSubmit} className="form-grid">
         <div className="form-group">

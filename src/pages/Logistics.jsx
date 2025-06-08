@@ -104,7 +104,6 @@ export default function Logistics() {
   return (
     <div className="page-container">
       <h2>🚚 Logistics - อัปเดตข้อมูลการจัดส่ง</h2>
-
       <div className="form-grid">
         <div className="form-group full-span">
           <label>📋 เลือกรายการ</label>
@@ -128,7 +127,6 @@ export default function Logistics() {
             })}
           </select>
         </div>
-
         <div className="form-group">
           <label>📦 จำนวนที่จัดส่ง (KG.)</label>
           <input

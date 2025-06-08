@@ -196,14 +196,21 @@ const handleFinalCoaSubmit = async () => {
             onChange={(e) => setSelectedInspectionJobId(e.target.value)}
             className="input-box"
           >
-            <option value="">-- เลือกงาน --</option>
-{inspectionJobs
-  .sort((a, b) => a.product_name.localeCompare(b.product_name))
-  .map((job) => (
-    <option key={job.id} value={job.id}>
-      {job.product_name} - {job.customer}{`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
-    </option>
-))}
+    <option value="">-- เลือกงาน --</option>
+    {inspectionJobs
+      .sort((a, b) => {
+        const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+        const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+        return keyA.localeCompare(keyB);
+      })
+      .map((job) => {
+        const deliveryDate = job.delivery_date || "-";
+        return (
+          <option key={job.id} value={job.id}>
+            {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | DD: ${deliveryDate}`}
+          </option>
+        );
+      })}
           </select>
         </div>
         <div className="form-group full-span">
@@ -253,14 +260,22 @@ const handleFinalCoaSubmit = async () => {
         onChange={(e) => setSelectedCoaJobId(e.target.value)}
         className="input-box"
       >
-        <option value="">-- เลือกงาน --</option>
-{coaJobs
-  .sort((a, b) => a.product_name.localeCompare(b.product_name))
-  .map((job) => (
-    <option key={job.id} value={job.id}>
-      {job.product_name} - {job.customer}{`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
-    </option>
-))}
+    <option value="">-- เลือกงาน --</option>
+    {coaJobs
+      .sort((a, b) => {
+        const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
+        const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
+        return keyA.localeCompare(keyB);
+      })
+      .map((job) => {
+        const deliveryDate = job.delivery_date || "-";
+        return (
+          <option key={job.id} value={job.id}>
+            {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | DD: ${deliveryDate}`}
+          </option>
+        );
+      })}
+
       </select>
     </div>
     <div className="form-group full-span">
