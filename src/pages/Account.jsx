@@ -1,103 +1,103 @@
-// src/pages/Account.jsx
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { collection, doc, getDocs, updateDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import toast from "react-hot-toast";
-import "../styles/Responsive.css";
 
 export default function Account() {
   const [jobs, setJobs] = useState([]);
-  const [selectedJobId, setSelectedJobId] = useState("");
+  const [selectedId, setSelectedId] = useState("");
   const [accountStatus, setAccountStatus] = useState("");
   const [remark, setRemark] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
   const fetchJobs = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    const filtered = data
-  .filter((job) => job.currentStep === "Account")
-  .sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
-setJobs(filtered);
-
+    const querySnapshot = await getDocs(collection(db, "production_workflow"));
+    const data = querySnapshot.docs
+      .map((docSnap) => ({
+        docId: docSnap.id,
+        ...docSnap.data(),
+      }))
+      .filter((job) => 
+        job.currentStep === "Account" || 
+        // เพิ่มเงื่อนไขนี้: แสดง Logistics ที่มีการส่งสินค้าแล้ว
+        (job.currentStep === "Logistics" && 
+         (job.delivery_logs || []).length > 0)
+      );
+    setJobs(data);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedJobId || !accountStatus) {
-      toast.error("❌ กรุณาเลือกงานและสถานะ");
-      return;
-    }
-    setShowConfirm(true); // เปิด popup ยืนยัน
-  };
-
-  const handleFinalSubmit = async () => {
-    try {
-      const jobRef = doc(db, "production_workflow", selectedJobId);
-      await updateDoc(jobRef, {
-        "status.account": accountStatus,
-        "remarks.account": remark || "",
-        currentStep: accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
-        Timestamp_Account: serverTimestamp(),
-        audit_logs: [
-          ...jobs.find((j) => j.id === selectedJobId)?.audit_logs || [],
-          {
-            step: "Account",
-            field: "status.account",
-            value: accountStatus,
-            remark: remark || "",
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
-      toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
-      setSelectedJobId("");
-      setAccountStatus("");
-      setRemark("");
-      setShowConfirm(false);
+    useEffect(() => {
       fetchJobs();
-    } catch (error) {
-      toast.error("❌ เกิดข้อผิดพลาด");
-    }
-  };
+    }, []);
+    
+    useEffect(() => {
+      if (selectedId) {
+        const selectedJob = jobs.find((job) => job.docId === selectedId);
+        if (selectedJob) {
+          setAccountStatus(selectedJob.status?.account || "");
+          setRemark(selectedJob.remarks?.account || "");
+        }
+      }
+    }, [selectedId, jobs]);
+
+const handleSubmit = async () => {
+  try {
+    const [docId] = selectedId.split("-");
+    const jobRef = doc(db, "production_workflow", docId);
+    await updateDoc(jobRef, {
+      "status.account": accountStatus,
+      "remarks.account": remark || "",
+      currentStep:
+        accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
+      Timestamp_Account: serverTimestamp(),
+    });
+
+    toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
+    setSelectedId("");
+    setAccountStatus("");
+    setRemark("");
+    setShowConfirm(false);
+    fetchJobs();
+  } catch (error) {
+    toast.error("❌ เกิดข้อผิดพลาด");
+  }
+};
 
   return (
     <div className="page-container">
-      <h2>💰 <strong>Account - บันทึกสถานะใบแจ้งหนี้</strong></h2>
+      <h2>💰 Account - บันทึกสถานะใบแจ้งหนี้</h2>
 
-      <form onSubmit={handleSubmit} className="form-grid">
-        <div className="form-group">
-          <label>📦 <strong>เลือกงาน</strong></label>
+      <div className="form-grid">
+        <div className="form-group full-span">
+          <label>📦 เลือกงาน</label>
           <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
             className="input-box"
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
           >
-      <option value="">-- เลือกงาน --</option>
-      {jobs
-        .sort((a, b) => {
-          const keyA = `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
-          const keyB = `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
-          return keyA.localeCompare(keyB);
-        })
-        .map((job) => (
-          <option key={job.id} value={job.id}>
-            {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"}`}
-          </option>
-        ))}
+            <option value="">-- เลือกงาน --</option>
+    {jobs.flatMap((job) =>
+      (job.delivery_logs || []).map((log, index) => (
+        <option key={`${job.docId}-${index}`} value={`${job.docId}-${index}`}>
+          {`CU: ${job.customer || "-"} | PO: ${job.po_number}-${log.quantity || 0}KG | PN: ${job.product_name || "-"}-${log.quantity || 0}KG | VO: ${job.volume || "-"} | ส่งเมื่อ: ${log.date || "-"}`}
+        </option>
+      ))
+    )}
           </select>
         </div>
 
         <div className="form-group">
-          <label>📄 <strong>สถานะใบแจ้งหนี้</strong></label>
+          <label>📄 สถานะใบแจ้งหนี้</label>
           <select
+            className="input-box"
             value={accountStatus}
             onChange={(e) => setAccountStatus(e.target.value)}
-            className="input-box"
           >
             <option value="">-- เลือกสถานะ --</option>
             <option value="Invoice ยังไม่ออก">Invoice ยังไม่ออก</option>
@@ -106,37 +106,63 @@ setJobs(filtered);
         </div>
 
         <div className="form-group full-span">
-          <label>📝 <strong>หมายเหตุ (ถ้ามี)</strong></label>
+          <label>📝 หมายเหตุ (ถ้ามี)</label>
           <input
-            type="text"
+            className="input-box"
             value={remark}
             onChange={(e) => setRemark(e.target.value)}
-            className="input-box"
-            placeholder="ระบุหมายเหตุหากมี"
           />
         </div>
 
-        <div className="full-span" style={{ marginTop: "1rem" }}>
-          <button type="submit" className="submit-btn">
+        <div className="form-group full-span">
+          <button
+            className="submit-btn"
+            onClick={() => {
+              if (!selectedId || !accountStatus) {
+                toast.error("กรุณากรอกข้อมูลให้ครบ");
+              } else {
+                setShowConfirm(true);
+              }
+            }}
+          >
             ✅ บันทึกข้อมูล
           </button>
         </div>
-      </form>
+      </div>
 
-      {/* ✅ Modal ยืนยันก่อนบันทึก */}
+      {/* ✅ Modal */}
       {showConfirm && (
         <div className="modal-overlay" onClick={() => setShowConfirm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>📋 <strong>ยืนยันข้อมูลก่อนบันทึก</strong></h3>
-            <ul style={{ textAlign: "left", marginTop: "10px" }}>
-              <li><strong>สถานะใบแจ้งหนี้:</strong> {accountStatus}</li>
-              {remark && <li><strong>หมายเหตุ:</strong> {remark}</li>}
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
+            <ul style={{ textAlign: "left", marginTop: "1rem" }}>
+              <li>
+                <strong>PO:</strong>{" "}
+                {(() => {
+                  if (!selectedId) return "-";
+                  const [docId, logIndexStr] = selectedId.split("-");
+                  const job = jobs.find((j) => j.docId === docId);
+                  const log = job?.delivery_logs?.[Number(logIndexStr)];
+                  return job && log ? `${job.po_number}-${log.quantity}KG` : "-";
+                })()}
+              </li>
+              <li>
+                <strong>สถานะ:</strong> {accountStatus}
+              </li>
+              {remark && (
+                <li>
+                  <strong>หมายเหตุ:</strong> {remark}
+                </li>
+              )}
             </ul>
             <div className="button-row">
-              <button className="submit-btn" onClick={handleFinalSubmit}>
-                ✅ ยืนยันการบันทึก
+              <button className="submit-btn" onClick={handleSubmit}>
+                ✅ ยืนยัน
               </button>
-              <button className="cancel-btn" onClick={() => setShowConfirm(false)}>
+              <button
+                className="cancel-btn"
+                onClick={() => setShowConfirm(false)}
+              >
                 ❌ ยกเลิก
               </button>
             </div>
