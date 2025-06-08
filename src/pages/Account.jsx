@@ -48,14 +48,26 @@ export default function Account() {
 
 const handleSubmit = async () => {
   try {
-    const [docId] = selectedId.split("-");
+    const [docId, logIndex] = selectedId.split("-");
     const jobRef = doc(db, "production_workflow", docId);
+    
+    // สร้าง audit log
+    const selectedJob = jobs.find((job) => job.docId === docId);
+    const auditLog = {
+      step: "Account",
+      field: "status.account",
+      value: accountStatus,
+      remark: remark || "",
+      timestamp: new Date().toISOString(),
+    };
+    
     await updateDoc(jobRef, {
       "status.account": accountStatus,
       "remarks.account": remark || "",
       currentStep:
         accountStatus === "Invoice ออกแล้ว" ? "Completed" : "Account",
       Timestamp_Account: serverTimestamp(),
+      audit_logs: [...(selectedJob?.audit_logs || []), auditLog],
     });
 
     toast.success("✅ บันทึกข้อมูลเรียบร้อยแล้ว");
@@ -82,13 +94,24 @@ const handleSubmit = async () => {
             onChange={(e) => setSelectedId(e.target.value)}
           >
             <option value="">-- เลือกงาน --</option>
-    {jobs.flatMap((job) =>
-      (job.delivery_logs || []).map((log, index) => (
-        <option key={`${job.docId}-${index}`} value={`${job.docId}-${index}`}>
-          {`CU: ${job.customer || "-"} | PO: ${job.po_number}-${log.quantity || 0}KG | PN: ${job.product_name || "-"}-${log.quantity || 0}KG | VO: ${job.volume || "-"} | ส่งเมื่อ: ${log.date || "-"}`}
-        </option>
-      ))
-    )}
+            {jobs.flatMap((job) => {
+              // กรณีมี delivery_logs ให้แสดงแยกตามรายการส่ง
+              if ((job.delivery_logs || []).length > 0) {
+                return job.delivery_logs.map((log, index) => (
+                  <option key={`${job.docId}-${index}`} value={`${job.docId}-${index}`}>
+                    {`CU: ${job.customer || "-"} | PO: ${job.po_number}-${log.quantity || 0}KG | PN: ${job.product_name || "-"}-${log.quantity || 0}KG | VO: ${job.volume || "-"} | ส่งเมื่อ: ${log.date || "-"}`}
+                  </option>
+                ));
+              } 
+              // กรณีไม่มี delivery_logs (งานเก่า) ให้แสดงเป็นรายการเดียว
+              else {
+                return [
+                  <option key={`${job.docId}-legacy`} value={`${job.docId}-legacy`}>
+                    {`CU: ${job.customer || "-"} | PO: ${job.po_number || "-"} | PN: ${job.product_name || "-"} | VO: ${job.volume || "-"} | (งานเก่า)`}
+                  </option>
+                ];
+              }
+            })}
           </select>
         </div>
 
@@ -136,16 +159,23 @@ const handleSubmit = async () => {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>📋 ยืนยันข้อมูลก่อนบันทึก</h3>
             <ul style={{ textAlign: "left", marginTop: "1rem" }}>
-              <li>
-                <strong>PO:</strong>{" "}
-                {(() => {
-                  if (!selectedId) return "-";
-                  const [docId, logIndexStr] = selectedId.split("-");
-                  const job = jobs.find((j) => j.docId === docId);
-                  const log = job?.delivery_logs?.[Number(logIndexStr)];
-                  return job && log ? `${job.po_number}-${log.quantity}KG` : "-";
-                })()}
-              </li>
+            <li>
+              <strong>PO:</strong>{" "}
+              {(() => {
+                if (!selectedId) return "-";
+                const [docId, logIndexStr] = selectedId.split("-");
+                const job = jobs.find((j) => j.docId === docId);
+                
+                // กรณีเป็นงานเก่า (logIndexStr === "legacy")
+                if (logIndexStr === "legacy") {
+                  return job ? job.po_number : "-";
+                }
+                
+                // กรณีเป็นงานใหม่ที่มี delivery_logs
+                const log = job?.delivery_logs?.[Number(logIndexStr)];
+                return job && log ? `${job.po_number}-${log.quantity}KG` : "-";
+              })()}
+            </li>
               <li>
                 <strong>สถานะ:</strong> {accountStatus}
               </li>
