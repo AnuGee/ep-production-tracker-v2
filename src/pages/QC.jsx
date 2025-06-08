@@ -124,7 +124,7 @@ const handleFinalCoaSubmit = async () => {
   const jobRef = doc(db, "production_workflow", selectedCoaJobId);
   let nextStep = "QC";
   if (coaStatus === "เตรียมพร้อมแล้ว") {
-    nextStep = "Account";
+    nextStep = "Logistics"; // เปลี่ยนจาก Account เป็น Logistics
   }
 
   console.log("Job ID ที่กำลังจะอัปเดต (QC):", selectedCoaJobId);
