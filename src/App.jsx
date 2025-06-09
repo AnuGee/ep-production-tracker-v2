@@ -29,8 +29,22 @@ return (
         <Routes>
 
           {/* ✅ Public: ไม่ต้อง Login */}
-          <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-          <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute allowedRoles={["Admin", "Sales", "Warehouse", "Production", "QC", "Account"]}>
+                <MainLayout><Home /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["Admin", "Sales", "Warehouse", "Production", "QC", "Account"]}>
+                <MainLayout><Dashboard /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
           <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
 
