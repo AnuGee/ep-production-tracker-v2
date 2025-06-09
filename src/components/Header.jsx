@@ -30,6 +30,9 @@ export default function Header() {
   if (allowSearch) {
     menus.push({ label: "🔍 Search", path: "/search" });
   }
+  if (role === "Admin" || user?.email === "hemmarin@ecopaint.co.th") {
+  menus.push({ label: "📝 Log", path: "/log" });
+}
 
   return (
     <div className="header-container" style={{ maxWidth: "1200px", margin: "auto", padding: "1rem" }}>
