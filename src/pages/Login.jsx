@@ -4,6 +4,23 @@ import { useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase";
 import "../styles/Responsive.css";
+import { logEvent } from "../utils/logger"; // ✅ เพิ่ม
+
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setError("");
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    await logEvent({
+      email,
+      action: "Login",
+      page: "Login.jsx",
+    });
+    navigate("/");
+  } catch (err) {
+    setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+  }
+};
 
 export default function Login() {
   const navigate = useNavigate();
