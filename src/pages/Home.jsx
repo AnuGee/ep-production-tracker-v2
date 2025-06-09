@@ -308,8 +308,57 @@ const filteredJobsForProgress = allData.filter((job) => {
 });
 
   // ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
-  const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
-  const progressJobs = expandedJobsForProgress;
+// ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
+const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
+
+// ✅ เรียงลำดับตาม product_name หรือ product_name_with_quantity
+const sortedProgressJobs = [...expandedJobsForProgress].sort((a, b) => {
+  // ใช้ product_name_with_quantity ถ้ามี (กรณีเป็น job ที่แยกจาก delivery_log)
+  const nameA = a._isDeliveryLog ? a.product_name_with_quantity : a.product_name || "";
+  const nameB = b._isDeliveryLog ? b.product_name_with_quantity : b.product_name || "";
+  
+  // ใช้ natural sort ที่มีอยู่แล้ว
+  if (typeof nameA === 'string' && typeof nameB === 'string') {
+    const regex = /(\d+)|(\D+)/g;
+    const partsA = nameA.match(regex) || [];
+    const partsB = nameB.match(regex) || [];
+
+    let i = 0;
+    while (i < partsA.length && i < partsB.length) {
+      const partA = partsA[i];
+      const partB = partsB[i];
+
+      const isNumA = !isNaN(partA);
+      const isNumB = !isNaN(partB);
+
+      if (isNumA && isNumB) {
+        const numA = parseInt(partA, 10);
+        const numB = parseInt(partB, 10);
+        if (numA !== numB) {
+          return numA - numB; // เรียงจากน้อยไปมากเสมอ
+        }
+      } else {
+        if (partA < partB) return -1;
+        if (partA > partB) return 1;
+      }
+      i++;
+    }
+    
+    if (partsA.length !== partsB.length) {
+      return partsA.length - partsB.length;
+    }
+    return 0;
+  }
+
+  // กรณีไม่ใช่ string
+  if (nameA < nameB) return -1;
+  if (nameA > nameB) return 1;
+  return 0;
+});
+
+// ใช้ sortedProgressJobs แทน progressJobs
+const progressJobs = sortedProgressJobs;
+
 
   const summaryPerStep = steps.map((step) => {
     let notStarted = 0;
