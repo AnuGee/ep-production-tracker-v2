@@ -32,6 +32,8 @@ export default function Log() {
             <th>Email</th>
             <th>Action</th>
             <th>Page</th>
+            <th>Metadata</th>
+            <th>User Agent</th>
             <th>Time</th>
           </tr>
         </thead>
@@ -42,10 +44,18 @@ export default function Log() {
               <td>{log.action}</td>
               <td>{log.page}</td>
               <td>
+                {log.metadata
+                  ? Object.entries(log.metadata)
+                      .map(([k, v]) => `${k}: ${v}`)
+                      .join(" | ")
+                  : "-"}
+              </td>
+              <td>{log.user_agent || "-"}</td>
+              <td>
                 {log.timestamp?.toDate().toLocaleString("th-TH", {
                   dateStyle: "short",
                   timeStyle: "short",
-                })}
+                }) || "-"}
               </td>
             </tr>
           ))}
