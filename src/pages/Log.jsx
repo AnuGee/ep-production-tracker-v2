@@ -1,11 +1,56 @@
 // src/pages/Log.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { db } from "../firebase";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
 
 export default function Log() {
+  const [logs, setLogs] = useState([]);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      const q = query(
+        collection(db, "user_activity_logs"),
+        orderBy("timestamp", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setLogs(data);
+    };
+
+    fetchLogs();
+  }, []);
+
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>📜 ประวัติการใช้งาน (Log)</h2>
-      <p>หน้านี้จะแสดงข้อมูล log ต่าง ๆ เช่น การเข้าสู่ระบบ การลบ การอัปเดต เป็นต้น</p>
+    <div className="page-container">
+      <h2>📑 ประวัติการใช้งาน (User Activity Log)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Action</th>
+            <th>Page</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {logs.map((log) => (
+            <tr key={log.id}>
+              <td>{log.email}</td>
+              <td>{log.action}</td>
+              <td>{log.page}</td>
+              <td>
+                {log.timestamp?.toDate().toLocaleString("th-TH", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
