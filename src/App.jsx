@@ -1,4 +1,5 @@
 // src/App.jsx
+import Log from "./pages/Log"; // ⬅️ ด้านบนสุด
 import AdminUser from "./pages/AdminUser";
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -113,6 +114,14 @@ return (
               </ProtectedRoute>
             }
           />
+          <Route
+  path="/log"
+  element={
+    <ProtectedRoute allowedRoles={["Admin"]}>
+      <MainLayout><Log /></MainLayout>
+    </ProtectedRoute>
+  }
+/>
         </Routes>
       </Router>
     </AuthProvider>
