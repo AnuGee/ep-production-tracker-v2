@@ -74,6 +74,14 @@ export default function Logistics() {
         },
       ];
 
+      await logEvent({
+  email: currentUser.email,
+  action: "Delete Job",
+  page: "Account.jsx",
+  metadata: { batch_no: job.batch_no, customer: job.customer },
+});
+
+
     await updateDoc(jobRef, {
       delivered_total: updatedDelivered,
       delivery_logs: updatedLogs,
