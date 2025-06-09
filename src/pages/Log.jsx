@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import "./Log.css"; // ✅ ไฟล์ CSS แยกต่างหากสำหรับตกแต่ง
 
 export default function Log() {
   const [logs, setLogs] = useState([]);
@@ -24,43 +25,41 @@ export default function Log() {
   }, []);
 
   return (
-    <div className="page-container">
-      <h2>📑 ประวัติการใช้งาน (User Activity Log)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Action</th>
-            <th>Page</th>
-            <th>Metadata</th>
-            <th>User Agent</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.map((log) => (
-            <tr key={log.id}>
-              <td>{log.email}</td>
-              <td>{log.action}</td>
-              <td>{log.page}</td>
-              <td>
-                {log.metadata
-                  ? Object.entries(log.metadata)
-                      .map(([k, v]) => `${k}: ${v}`)
-                      .join(" | ")
-                  : "-"}
-              </td>
-              <td>{log.user_agent || "-"}</td>
-              <td>
+    <div className="log-container">
+      <h2>📜 ประวัติการใช้งาน (User Activity Log)</h2>
+      <div className="log-table">
+        {logs.length === 0 ? (
+          <p>⏳ กำลังโหลด...</p>
+        ) : (
+          logs.map((log) => (
+            <div key={log.id} className="log-card">
+              <div><strong>📧 Email:</strong> {log.email}</div>
+              <div><strong>📝 Action:</strong> {log.action}</div>
+              <div><strong>📄 Page:</strong> {log.page}</div>
+              <div>
+                <strong>🔍 Metadata:</strong>
+                <ul>
+                  {log.metadata
+                    ? Object.entries(log.metadata).map(([k, v]) => (
+                        <li key={k}>
+                          {k}: {v}
+                        </li>
+                      ))
+                    : "ไม่มี"}
+                </ul>
+              </div>
+              <div><strong>🖥️ User Agent:</strong> {log.user_agent || "-"}</div>
+              <div>
+                <strong>⏰ เวลา:</strong>{" "}
                 {log.timestamp?.toDate().toLocaleString("th-TH", {
                   dateStyle: "short",
                   timeStyle: "short",
                 }) || "-"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
