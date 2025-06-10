@@ -21,7 +21,17 @@ export default function Dashboard() {
   const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [selectedYears, setSelectedYears] = useState(["2025"]);
-  const [selectedMonths, setSelectedMonths] = useState(["เม.ย."]);
+  // ดึงเดือนปัจจุบันเป็นค่า Default
+const getCurrentThaiMonth = () => {
+  const monthIndex = new Date().getMonth();
+  const thaiMonths = [
+    "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+    "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
+  ];
+  return thaiMonths[monthIndex];
+};
+
+const [selectedMonths, setSelectedMonths] = useState([getCurrentThaiMonth()]);
 
   const allYears = ["2025", "2026", "2027", "2028", "2029", "2030"];
   const allMonths = [
@@ -76,7 +86,7 @@ export default function Dashboard() {
     }
   });
 
-  const departmentSteps = ["Sales", "Warehouse", "Production", "QC", "Account"];
+  const departmentSteps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
   const pendingPerDept = departmentSteps.map((step) => ({
     name: step,
     count: jobs.filter((job) => job.currentStep === step).length,
