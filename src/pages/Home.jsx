@@ -158,10 +158,13 @@ case "Logistics": {
     (sum, d) => sum + Number(d.quantity || 0), 0
   );
 
-  // ✅ เพิ่มเงื่อนไขนี้: ถ้างานอยู่ในขั้นตอน Account หรือ Completed แล้ว ให้ถือว่าผ่าน Logistics แล้ว
-  if (["Account", "Completed"].includes(job.currentStep)) {
-    return "done";
-  }
+  // ✅ งานเก่าที่ไปถึง Account หรือ Completed แล้ว แต่ไม่มี logistics → ถือว่า "done"
+  if (["Account", "Completed"].includes(job.currentStep)) return "done";
+
+  if (delivered === 0) return "notStarted";
+  else if (delivered >= volume) return "done";
+  else return "doing";
+}
   
   if (delivered === 0) return "notStarted";
   else if (delivered >= volume) return "done";
