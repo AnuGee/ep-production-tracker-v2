@@ -158,14 +158,6 @@ case "Logistics": {
     (sum, d) => sum + Number(d.quantity || 0), 0
   );
 
-  // ✅ งานเก่าที่ไปถึง Account หรือ Completed แล้ว แต่ไม่มี logistics → ถือว่า "done"
-  if (["Account", "Completed"].includes(job.currentStep)) return "done";
-
-  if (delivered === 0) return "notStarted";
-  else if (delivered >= volume) return "done";
-  else return "doing";
-}
-  
   if (delivered === 0) return "notStarted";
   else if (delivered >= volume) return "done";
   else return "doing";
