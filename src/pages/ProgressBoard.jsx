@@ -84,26 +84,25 @@ export default function ProgressBoard({ jobs }) {
         }
         return "#e5e7eb";
 
-case "Logistics": {
-  const volume = Number(job.volume || 0);
-  const delivered = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0), 0
-  );
+      case "Logistics": {
+        const volume = Number(job.volume || 0);
+        const delivered = (job.delivery_logs || []).reduce(
+          (sum, d) => sum + Number(d.quantity || 0), 0
+        );
+      
+        // ถ้า currentStep ไปถึง Account หรือ Completed แล้ว และมีการส่งมอบครบถ้วนแล้ว ให้เป็นสีเขียว
+        if (["Account", "Completed"].includes(currentStep) && delivered >= volume) {
+          return "#4ade80"; 
+        }
 
-  // ✅ แก้ไขเงื่อนไขนี้: ถ้างานอยู่ในขั้นตอน Account หรือ Completed แล้ว ให้ถือว่าผ่าน Logistics แล้ว
-  // โดยไม่ต้องตรวจสอบ delivered >= volume
-  if (["Account", "Completed"].includes(currentStep)) {
-    return "#4ade80"; // สีเขียว - เสร็จแล้ว
-  }
-
-  if (delivered >= volume) {
-    return "#4ade80"; // ส่งครบแล้ว
-  }
-  if (delivered > 0) {
-    return "#facc15"; // ส่งบางส่วน
-  }
-  return "#e5e7eb"; // ยังไม่ส่ง
-}
+        if (delivered >= volume) {
+            return "#4ade80"; // ส่งครบแล้ว
+        }
+        if (delivered > 0) {
+            return "#facc15"; // ส่งบางส่วน
+        }
+        return "#e5e7eb"; // ยังไม่ส่ง
+      }
 
       case "Account":
         if (status.account === "Invoice ออกแล้ว") return "#4ade80";
