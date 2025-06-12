@@ -90,11 +90,19 @@ export default function ProgressBoard({ jobs }) {
           (sum, d) => sum + Number(d.quantity || 0), 0
         );
       
-        // ถ้า currentStep ไปถึง Account หรือ Completed แล้ว และมีการส่งมอบครบถ้วนแล้ว ให้เป็นสีเขียว
-        if (["Account", "Completed"].includes(currentStep) && delivered >= volume) {
-          return "#4ade80"; 
+        // ✅ แก้ไขหลัก: ถ้า currentStep ไปถึง Account หรือ Completed แล้ว 
+        // และมีการส่งมอบแล้ว (ไม่ว่าจะครบหรือไม่) ให้เป็นสีเขียว
+        if (["Account", "Completed"].includes(currentStep)) {
+          // ถ้ามีการส่งมอบแล้วบางส่วนหรือครบถ้วน ให้เป็นสีเขียว
+          if (delivered > 0) {
+            return "#4ade80"; 
+          }
+          // ถ้ายังไม่มีการส่งมอบเลย แต่งานไปถึง Account/Completed แล้ว 
+          // อาจเป็นกรณีพิเศษ ให้เป็นสีเขียวด้วย (เพราะงานผ่านขั้นตอนนี้ไปแล้ว)
+          return "#4ade80";
         }
 
+        // กรณีปกติ: ตรวจสอบปริมาณการส่งมอบ
         if (delivered >= volume) {
             return "#4ade80"; // ส่งครบแล้ว
         }
