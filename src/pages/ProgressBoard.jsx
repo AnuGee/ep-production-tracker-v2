@@ -1,8 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import "../styles/Responsive.css";
 
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
+  
+  // ✅ เพิ่ม State สำหรับ Tooltip
+  const [hoveredJob, setHoveredJob] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   const getStatusColor = (step, job) => {
     if (!job.status) return "#e5e7eb";
@@ -122,6 +126,103 @@ export default function ProgressBoard({ jobs }) {
     }
   };
 
+  // ✅ ฟังก์ชันจัดการ Mouse Enter
+  const handleMouseEnter = (job, event) => {
+    setHoveredJob(job);
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+  };
+
+  // ✅ ฟังก์ชันจัดการ Mouse Leave
+  const handleMouseLeave = () => {
+    setHoveredJob(null);
+  };
+
+  // ✅ Component สำหรับ Tooltip
+  const JobTooltip = ({ job, position }) => {
+    if (!job) return null;
+
+    return (
+      <div
+        style={{
+          position: "fixed",
+          left: position.x,
+          top: position.y,
+          transform: "translateX(-50%) translateY(-100%)",
+          backgroundColor: "rgba(0, 0, 0, 0.9)",
+          color: "white",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          fontSize: "14px",
+          zIndex: 1000,
+          minWidth: "280px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+          pointerEvents: "none"
+        }}
+      >
+        <div style={{ marginBottom: "8px", fontWeight: "bold", borderBottom: "1px solid #444", paddingBottom: "6px" }}>
+          รายละเอียดงาน
+        </div>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>📅</span>
+            <span style={{ fontWeight: "500" }}>PO Date:</span>
+            <span>{job.po_date || "ไม่ระบุ"}</span>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>📄</span>
+            <span style={{ fontWeight: "500" }}>PO Number:</span>
+            <span>{job.po_number || "ไม่ระบุ"}</span>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>📦</span>
+            <span style={{ fontWeight: "500" }}>Product Name:</span>
+            <span>{job.product_name || "ไม่ระบุ"}</span>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>⚖️</span>
+            <span style={{ fontWeight: "500" }}>Volume:</span>
+            <span>{job.volume ? `${job.volume} KG.` : "ไม่ระบุ"}</span>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>🧑‍💼</span>
+            <span style={{ fontWeight: "500" }}>Customer:</span>
+            <span>{job.customer || "ไม่ระบุ"}</span>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span>🚚</span>
+            <span style={{ fontWeight: "500" }}>Delivery Date:</span>
+            <span>{job.delivery_date || "ไม่ระบุ"}</span>
+          </div>
+        </div>
+        
+        {/* ลูกศรชี้ลง */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-6px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 0,
+            height: 0,
+            borderLeft: "6px solid transparent",
+            borderRight: "6px solid transparent",
+            borderTop: "6px solid rgba(0, 0, 0, 0.9)"
+          }}
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="progress-table-wrapper">
       <table className="progress-table">
@@ -133,71 +234,93 @@ export default function ProgressBoard({ jobs }) {
             ))}
           </tr>
         </thead>
-<tbody>
-{jobs
-  .filter((job) => {
-    const po = job.po_number || "";
-    const hasKG = po.includes("KG");
-    const delivered = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0),
-      0
-    );
-    const volume = Number(job.volume || 0);
-    
-    // กรณีมี KG ในชื่อ (แบ่งส่ง)
-    if (hasKG) return true;
-    
-    // กรณียังไม่มีการส่งของ
-    if (delivered === 0) return true;
-    
-    // กรณีส่งครบในรอบเดียว
-    if (delivered >= volume) return true;
-    
-    // กรณีงานเสร็จสมบูรณ์แล้ว
-    if (job.currentStep === "Completed" || job.currentStep === "Account") return true;
-    
-    // เพิ่มเงื่อนไขนี้: กรณีมีการส่งสินค้าแล้วบางส่วน
-    if (delivered > 0) return true;
-    
-    return false;
-  })
-  .map((job) => {
-      const po = job.po_number || "";
-      const hasKG = po.includes("KG");
-      const delivered = (job.delivery_logs || []).reduce(
-        (sum, d) => sum + Number(d.quantity || 0),
-        0
-      );
+        <tbody>
+          {jobs
+            .filter((job) => {
+              const po = job.po_number || "";
+              const hasKG = po.includes("KG");
+              const delivered = (job.delivery_logs || []).reduce(
+                (sum, d) => sum + Number(d.quantity || 0),
+                0
+              );
+              const volume = Number(job.volume || 0);
+              
+              // กรณีมี KG ในชื่อ (แบ่งส่ง)
+              if (hasKG) return true;
+              
+              // กรณียังไม่มีการส่งของ
+              if (delivered === 0) return true;
+              
+              // กรณีส่งครบในรอบเดียว
+              if (delivered >= volume) return true;
+              
+              // กรณีงานเสร็จสมบูรณ์แล้ว
+              if (job.currentStep === "Completed" || job.currentStep === "Account") return true;
+              
+              // เพิ่มเงื่อนไขนี้: กรณีมีการส่งสินค้าแล้วบางส่วน
+              if (delivered > 0) return true;
+              
+              return false;
+            })
+            .map((job) => {
+              const po = job.po_number || "";
+              const hasKG = po.includes("KG");
+              const delivered = (job.delivery_logs || []).reduce(
+                (sum, d) => sum + Number(d.quantity || 0),
+                0
+              );
 
-      return (
-        <tr key={`${job.id || job.docId}${job._isDeliveryLog ? `-${job._deliveryQuantity}` : ''}`}>
-          <td>
-<span className="product-label">
-  📄 {
-    job._isDeliveryLog 
-      ? `${job.product_name}-${job._deliveryQuantity}KG`
-      : (hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name))
-  }
-</span>
-          </td>
-          {steps.map((step) => (
-            <td key={step}>
-              <div
-                style={{
-                  backgroundColor: getStatusColor(step, job),
-                  height: "20px",
-                  width: "110px",
-                  borderRadius: "6px",
-                  margin: "auto",
-                }}
-              ></div>
-            </td>
-          ))}
-        </tr>
-      );
-    })}
-</tbody>
+              return (
+                <tr key={`${job.id || job.docId}${job._isDeliveryLog ? `-${job._deliveryQuantity}` : ''}`}>
+                  <td>
+                    {/* ✅ เพิ่ม Mouse Events ให้กับ Product Label */}
+                    <span 
+                      className="product-label"
+                      onMouseEnter={(e) => handleMouseEnter(job, e)}
+                      onMouseLeave={handleMouseLeave}
+                      style={{
+                        cursor: "help",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        transition: "background-color 0.2s ease",
+                        display: "inline-block"
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.backgroundColor = "rgba(59, 130, 246, 0.1)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      📄 {
+                        job._isDeliveryLog 
+                          ? `${job.product_name}-${job._deliveryQuantity}KG`
+                          : (hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name))
+                      }
+                    </span>
+                  </td>
+                  {steps.map((step) => (
+                    <td key={step}>
+                      <div
+                        style={{
+                          backgroundColor: getStatusColor(step, job),
+                          height: "20px",
+                          width: "110px",
+                          borderRadius: "6px",
+                          margin: "auto",
+                        }}
+                      ></div>
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+        </tbody>
       </table>
+      
+      {/* ✅ แสดง Tooltip เมื่อ Hover */}
+      <JobTooltip job={hoveredJob} position={tooltipPosition} />
     </div>
   );
 }
+
