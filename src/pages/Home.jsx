@@ -1,6 +1,8 @@
 // src/pages/Home.jsx
 // ✅ Merge เวอร์ชันเต็ม + เพิ่ม Export, Badge, Sort คอลัมน์ + Highlight คอลัมน์ที่กำลัง Sort และแถว hover
 // ✅ เพิ่ม Click & Drag Scroll ตาราง
+// ✅ เพิ่มตัวกรองสำหรับ Progress Board (ปี, เดือน, สถานะยังไม่เสร็จ)
+// ✅ ปรับปรุงตารางรายการงานทั้งหมด (ลบคอลัมน์ Status และจัดเรียงคอลัมน์ใหม่)
 import React, { useEffect, useState, useRef, useCallback } from "react"; // <<< เพิ่ม useRef, useCallback
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "../components/JobDetailModal";
@@ -28,6 +30,11 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
+
+  // ✅ เพิ่ม State สำหรับตัวกรอง Progress Board
+  const [progressYearFilter, setProgressYearFilter] = useState("ทั้งหมด");
+  const [progressMonthFilter, setProgressMonthFilter] = useState("ทั้งหมด");
+  const [progressShowOnlyIncomplete, setProgressShowOnlyIncomplete] = useState(false);
 
   // --- State และ Ref สำหรับการลาก (เพิ่มเข้ามา) ---
   const tableWrapperRef = useRef(null);
@@ -216,6 +223,13 @@ export default function Home() {
     setSearchText("");
   };
 
+  // ✅ เพิ่มฟังก์ชันล้างตัวกรอง Progress Board
+  const handleClearProgressFilters = () => {
+    setProgressYearFilter("ทั้งหมด");
+    setProgressMonthFilter("ทั้งหมด");
+    setProgressShowOnlyIncomplete(false);
+  };
+
   const filterJobs = (job) => {
     if (!job.delivery_date) return false;
     try {
@@ -243,6 +257,34 @@ export default function Home() {
     } catch (error) {
         console.error(`Error processing date for job ${job.id}: ${job.delivery_date}`, error);
         return false;
+    }
+  };
+
+  // ✅ เพิ่มฟังก์ชันกรองสำหรับ Progress Board
+  const filterJobsForProgress = (job) => {
+    if (!job.delivery_date) return false;
+    
+    try {
+      const date = new Date(job.delivery_date);
+      if (isNaN(date.getTime())) return false;
+      
+      const jobYear = date.getFullYear().toString();
+      const jobMonth = date.getMonth();
+      const selectedMonthIndex = months.indexOf(progressMonthFilter);
+  
+      // กรองตามปี
+      if (progressYearFilter !== "ทั้งหมด" && jobYear !== progressYearFilter) return false;
+      
+      // กรองตามเดือน
+      if (progressMonthFilter !== "ทั้งหมด" && jobMonth !== selectedMonthIndex) return false;
+      
+      // กรองเฉพาะงานที่ยังไม่เสร็จ
+      if (progressShowOnlyIncomplete && job.currentStep === "Completed") return false;
+
+      return true;
+    } catch (error) {
+      console.error(`Error processing date for job ${job.id}: ${job.delivery_date}`, error);
+      return false;
     }
   };
 
@@ -287,7 +329,7 @@ const expandJobsByDeliveryLogs = (jobs) => {
     return !hasSub;
   });
 
-// ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด
+// ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด - เพิ่มการกรองตามตัวกรองใหม่
 const filteredJobsForProgress = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
@@ -298,26 +340,37 @@ const filteredJobsForProgress = allData.filter((job) => {
   const isValidVolume = !isNaN(volume);
   const isCompleted = job.currentStep === "Completed";
 
+  // กรองตามเงื่อนไขเดิม
+  let passBasicFilter = false;
+  
   // กรณีมี -xxxKG ในชื่อ (แบ่งส่ง) ให้แสดงเสมอ
-  if (hasKG) return true;
+  if (hasKG) passBasicFilter = true;
   
   // กรณียังไม่มีการส่งของ ให้แสดงเสมอ
-  if (deliveryTotal === 0) return true;
+  else if (deliveryTotal === 0) passBasicFilter = true;
   
   // กรณีงานเสร็จสมบูรณ์แล้ว (Completed) ให้แสดงด้วย
-  if (isCompleted) return true;
+  else if (isCompleted) passBasicFilter = true;
   
-  // ตรวจสอบว่ามีรายการย่อยที่แบ่งส่งหรือไม่
-  const hasSub = allData.some((j) => {
-    const subPo = j.po_number || "";
-    return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
-  });
+  else {
+    // ตรวจสอบว่ามีรายการย่อยที่แบ่งส่งหรือไม่
+    const hasSub = allData.some((j) => {
+      const subPo = j.po_number || "";
+      return subPo !== po && subPo.startsWith(po) && subPo.includes("KG");
+    });
+    
+    // กรณีส่งครบในรอบเดียวและไม่มีรายการย่อย ให้แสดง
+    if (isValidVolume && deliveryTotal >= volume && !hasSub) passBasicFilter = true;
+    
+    // ถ้ามีรายการย่อย ไม่แสดงรายการหลัก
+    else if (!hasSub) passBasicFilter = true;
+  }
   
-  // กรณีส่งครบในรอบเดียวและไม่มีรายการย่อย ให้แสดง
-  if (isValidVolume && deliveryTotal >= volume && !hasSub) return true;
+  // ถ้าไม่ผ่านการกรองพื้นฐาน ให้ return false
+  if (!passBasicFilter) return false;
   
-  // ถ้ามีรายการย่อย ไม่แสดงรายการหลัก
-  return !hasSub;
+  // ✅ เพิ่มการกรองตามตัวกรองใหม่
+  return filterJobsForProgress(job);
 });
 
   // ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
@@ -413,7 +466,6 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
         const bnPdValue = job.batch_no || "";
         return bnPdValue; // ส่งคืนค่า string เพื่อให้เรียงแบบธรรมชาติ
     }
-    if (col === "status") return job.currentStep?.toLowerCase() || "";
     if (col === "last_update") {
         const timeA = new Date(job.audit_logs?.at(-1)?.timestamp || 0);
         const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
@@ -433,8 +485,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
 
   // Custom natural sort for strings (especially for "BN PD" and other text columns)
   if (typeof valA === 'string' && typeof valB === 'string') {
-    // This regular expression splits strings into parts of numbers and non-numbers.
-    // e.g., "BN007-A" -> ["BN", "007", "-A"]
+    // This regular expression splits strings into numeric and non-numeric parts
     const regex = /(\d+)|(\D+)/g;
     const partsA = valA.match(regex) || [];
     const partsB = valB.match(regex) || [];
@@ -448,574 +499,420 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       const isNumB = !isNaN(partB);
 
       if (isNumA && isNumB) {
+        // Both parts are numeric, compare as numbers
         const numA = parseInt(partA, 10);
         const numB = parseInt(partB, 10);
         if (numA !== numB) {
-          return sortDirection === 'asc' ? numA - numB : numB - numA;
+          return sortDirection === "asc" ? numA - numB : numB - numA;
         }
       } else {
-        if (partA < partB) return sortDirection === 'asc' ? -1 : 1;
-        if (partA > partB) return sortDirection === 'asc' ? 1 : -1;
+        // At least one part is non-numeric, compare as strings
+        if (partA < partB) return sortDirection === "asc" ? -1 : 1;
+        if (partA > partB) return sortDirection === "asc" ? 1 : -1;
       }
       i++;
     }
-    // If one string is a prefix of the other (e.g., "BN" vs "BN1")
+    
+    // If all compared parts are equal, compare by length
     if (partsA.length !== partsB.length) {
-      return sortDirection === 'asc' ? partsA.length - partsB.length : partsB.length - partsA.length;
+      return sortDirection === "asc" ? partsA.length - partsB.length : partsB.length - partsA.length;
     }
-    return 0; // Equal
+    return 0;
   }
 
-  // Original numeric/other type comparison
-  if (typeof valA === 'number' && typeof valB === 'number') {
-      return sortDirection === 'asc' ? valA - valB : valB - valA;
-  }
-
-  if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-  if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+  // For non-string values, use standard comparison
+  if (valA < valB) return sortDirection === "asc" ? -1 : 1;
+  if (valA > valB) return sortDirection === "asc" ? 1 : -1;
   return 0;
 });
 
-  const getTotalVolume = () => {
-    return filteredJobs.reduce((sum, job) => {
-      const vol = Number(job.volume);
-      return sum + (isNaN(vol) ? 0 : vol);
-    }, 0);
-  };
-
-  const handleDeleteJob = async (id) => {
-    const confirmDelete = window.confirm("❗ ยืนยันต้องการลบงานนี้หรือไม่?");
-    if (!confirmDelete) return;
-    try {
-      await deleteDoc(doc(db, "production_workflow", id));
-      setJobs(prevJobs => prevJobs.filter(job => job.id !== id));
-      alert("✅ ลบงานเรียบร้อยแล้ว");
-    } catch (error) {
-      console.error("Error deleting job:", error);
-      alert("❌ ลบงานไม่สำเร็จ: " + error.message);
-    }
-  };
-
-  const renderStatusBadge = (label, step, job) => {
-    if (!job || !job.currentStep) return null;
-    const stepOrder = ["Sales", "Warehouse", "Production", "QC", "COA", "Logistics", "Account", "Completed"];
-    const currentIndex = stepOrder.indexOf(job.currentStep);
-    const stepIndex = stepOrder.indexOf(step);
-    let badgeClass = "status-badge pending";
-    let statusValue = "–";
-
-    if (currentIndex > stepIndex) {
-        badgeClass = "status-badge completed";
-        statusValue = "ผ่านแล้ว";
-    } else if (currentIndex === stepIndex) {
-        badgeClass = "status-badge working";
-    }
-    
-    if (job.status) {
-        let specificStatus = "";
-        switch (step) {
-            case "Sales": specificStatus = job.status.sales || ""; break;
-            case "Warehouse": specificStatus = job.status.warehouse || ""; break;
-            case "Production": specificStatus = job.status.production || ""; break;
-            case "QC": specificStatus = job.status.qc_inspection || ""; break;
-            case "COA": specificStatus = job.status.qc_coa || ""; break;
-            case "Logistics": {
-              const volume = Number(job.volume || 0);
-              const delivered = (job.delivery_logs || []).reduce(
-                (sum, d) => sum + Number(d.quantity || 0),
-                0
-              );
-              if (delivered === 0) specificStatus = "ยังไม่ส่ง";
-              else if (delivered >= volume) specificStatus = "ส่งครบแล้ว";
-              else specificStatus = `ส่งบางส่วน`;
-              break;
-            }
-            case "Account": specificStatus = job.status.account || ""; break;
-        }
-
-        if (badgeClass === "status-badge working" && specificStatus) {
-            statusValue = specificStatus;
-        } else if (badgeClass === "status-badge completed") {
-            if (step === "Warehouse" && job.status.warehouse === "เบิกเสร็จ") {
-                statusValue = "เบิกเสร็จ";
-            } else if (step === "QC" && job.status.qc_inspection === "ตรวจผ่านแล้ว"){
-                statusValue = "ตรวจผ่านแล้ว";
-            } else if (step === "COA" && job.status.qc_coa === "เตรียมพร้อมแล้ว"){
-                statusValue = "พร้อมแล้ว";
-              } else if (step === "Logistics") {
-                statusValue = "ส่งครบแล้ว";
-            } else if (step === "Account" && job.status.account === "Invoice ออกแล้ว"){
-                statusValue = "Inv. ออกแล้ว";
-            }
-        } else if (badgeClass === "status-badge pending") {
-            statusValue = specificStatus || "ยังไม่เริ่ม";
-        }
-    }
-
-    if (step === "Sales" && currentIndex > stepIndex) {
-        statusValue = "กรอกแล้ว";
-    }
-    
-    if (step === "Production" && job.currentStep === "QC" && job.status?.qc_inspection === "skip"){
-        badgeClass = "status-badge completed";
-        statusValue = "ข้าม";
-    }
-
+  const filteredAndSearchedJobs = sortedJobs.filter((job) => {
+    if (!filterJobs(job)) return false;
+    if (!searchText) return true;
+    const searchLower = searchText.toLowerCase();
     return (
-      <span className={badgeClass} title={`${label}: ${statusValue}`}>
-        {label}
-      </span>
+      (job.product_name || "").toLowerCase().includes(searchLower) ||
+      (job.customer || "").toLowerCase().includes(searchLower) ||
+      (job.po_number || "").toLowerCase().includes(searchLower) ||
+      (job.batch_no || "").toLowerCase().includes(searchLower)
     );
+  });
+
+  const totalPages = Math.ceil(filteredAndSearchedJobs.length / 10);
+  const currentPage = Math.min(Math.max(1, parseInt(new URLSearchParams(window.location.search).get("page")) || 1), totalPages);
+  const startIndex = (currentPage - 1) * 10;
+  const endIndex = startIndex + 10;
+  const currentJobs = filteredAndSearchedJobs.slice(startIndex, endIndex);
+
+  const totalPagesProgress = Math.ceil(progressJobs.length / itemsPerPageProgress);
+  const startIndexProgress = (currentPageProgress - 1) * itemsPerPageProgress;
+  const endIndexProgress = startIndexProgress + itemsPerPageProgress;
+  const currentProgressJobs = progressJobs.slice(startIndexProgress, endIndexProgress);
+
+  const handleDeleteJob = async (jobId) => {
+    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบงานนี้?")) {
+      try {
+        await deleteDoc(doc(db, "production_workflow", jobId));
+        setAllData((prev) => prev.filter((job) => job.id !== jobId));
+        alert("ลบงานเรียบร้อยแล้ว");
+      } catch (error) {
+        console.error("Error deleting job:", error);
+        alert("เกิดข้อผิดพลาดในการลบงาน");
+      }
+    }
   };
 
-  // ฟังก์ชัน Export ที่ปรับปรุงใหม่
   const exportToExcel = () => {
-    const headers = [
-      "Customer", "PO", "BN WH1", "BN WH2", "BN WH3", 
-      "BN PD", "Product", "Current Step", "Status", 
-      "Volume (KG)", "Delivery Date", "Last Update",
-      "Sales Note", "Warehouse Note", "Production Note", 
-      "QC Note", "Account Note"
-    ];
+    const dataToExport = filteredAndSearchedJobs.map((job) => ({
+      "Product Name": job.product_name || "",
+      "Customer": job.customer || "",
+      "PO Number": job.po_number || "",
+      "Volume": job.volume || "",
+      "Delivery Date": job.delivery_date || "",
+      "BN WH1": getBatchNoWH(job, 0),
+      "BN WH2": getBatchNoWH(job, 1),
+      "BN WH3": getBatchNoWH(job, 2),
+      "BN PD": job.batch_no || "",
+      "Last Update": renderLastUpdate(job),
+    }));
 
-    if (role === "Admin") {
-      headers.push("Audit Logs");
-    }
-
-    const dataToExport = sortedJobs.map((job) => {
-      const bnPd = job.batch_no_warehouse?.filter(Boolean).join(" / ") || "–";
-      
-      let statusText = "–";
-      if (job.currentStep === "Completed") {
-        statusText = "✅ งานเสร็จสิ้นแล้ว";
-      } else if (job.currentStep) {
-        statusText = `🟡 กำลังทำในขั้นตอน: ${job.currentStep}`;
-      }
-
-      const rowData = {
-        "Customer": job.customer || "–",
-        "PO": job.po_number || "–",
-        "BN WH1": getBatchNoWH(job, 0),
-        "BN WH2": getBatchNoWH(job, 1),
-        "BN WH3": getBatchNoWH(job, 2),
-        "BN PD": bnPd,
-        "Product": job.product_name || "–",
-        "Current Step": job.currentStep || "–",
-        "Status": statusText,
-        "Volume (KG)": job.volume || "–",
-        "Delivery Date": job.delivery_date || "–",
-        "Last Update": renderLastUpdate(job),
-        "Sales Note": job.notes?.sales || "–",
-        "Warehouse Note": job.notes?.warehouse || "–",
-        "Production Note": job.notes?.production || "–",
-        "QC Note": job.notes?.qc_inspection || "–",
-        "Logistics Note": job.notes?.logistics || "–",
-        "Account Note": job.notes?.account || "–"
-      };
-
-      if (role === "Admin" && job.audit_logs) {
-        const formattedLogs = job.audit_logs.map(log => 
-          `${new Date(log.timestamp).toLocaleString("th-TH")} - ${log.step}: ${log.action || "อัปเดตสถานะ"}`
-        ).join("\n");
-        rowData["Audit Logs"] = formattedLogs;
-      }
-
-      return rowData;
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: headers });
-    
-    const colWidths = [
-      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-      { wch: 30 }, { wch: 20 }, { wch: 15 }, { wch: 20 },
-      { wch: 10 }, { wch: 15 }, { wch: 25 },
-      { wch: 20 }, { wch: 20 }, { wch: 20 },
-      { wch: 20 }, { wch: 20 }
-    ];
-
-    if (role === "Admin") {
-      colWidths.push({ wch: 50 });
-    }
-
-    worksheet['!cols'] = colWidths;
-
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "EP Jobs (Filtered)");
-    
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Jobs");
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    
-    const now = new Date();
-    const timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
-    saveAs(blob, `EP_Jobs_Export_${timestamp}.xlsx`);
+    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(data, `jobs_export_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
-  const exportAllToExcel = async () => {
-    const snapshot = await getDocs(collection(db, "production_workflow"));
-    const headers = [
-      "No.", "Product", "Customer", "Volume (KG)", "Delivery Date", "Current Step",
-      "Sales Status", "WH Status", "PD Status", "QC Status", "COA Status", "ACC Status"
-    ];
-    
-    if (role === "Admin") {
-      headers.push("Audit Logs");
+  const handleRowClick = (job, event) => {
+    if (wasDragging) {
+      event.preventDefault();
+      return;
     }
-
-    const allData = snapshot.docs.map((doc, index) => {
-      const job = { id: doc.id, ...doc.data() };
-      
-      const rowData = {
-        "No.": index + 1,
-        "Product": job.product_name || "–",
-        "Customer": job.customer || "–",
-        "Volume (KG)": job.volume || "–",
-        "Delivery Date": job.delivery_date || "–",
-        "Current Step": job.currentStep || "–",
-        "Sales Status": job.status?.sales || (job.currentStep !== "Sales" ? "Done" : "Pending"),
-        "WH Status": job.status?.warehouse || "–",
-        "PD Status": job.status?.production || "–",
-        "QC Status": job.status?.qc_inspection || "–",
-        "COA Status": job.status?.qc_coa || "–",
-        "Logistics Status": (() => {
-  const volume = Number(job.volume || 0);
-  const delivered = (job.delivery_logs || []).reduce(
-    (sum, d) => sum + Number(d.quantity || 0), 0
-  );
-  if (delivered === 0) return "ยังไม่ส่ง";
-  else if (delivered >= volume) return "ส่งครบแล้ว";
-  else return `ส่งบางส่วน (${delivered}/${volume})`;
-})(),
-        "ACC Status": job.status?.account || "–"
-      };
-
-      if (role === "Admin" && job.audit_logs) {
-        const formattedLogs = job.audit_logs.map(log => 
-          `${new Date(log.timestamp).toLocaleString("th-TH")} - ${log.step}: ${log.action || "อัปเดตสถานะ"}`
-        ).join("\n");
-        rowData["Audit Logs"] = formattedLogs;
-      }
-
-      return rowData;
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(allData, { header: headers });
-    
-    const colWidths = [
-      { wch: 5 }, { wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 15 },
-      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-      { wch: 15 }, { wch: 15 }, { wch: 15 }
-    ];
-
-    if (role === "Admin") {
-      colWidths.push({ wch: 50 });
-    }
-
-    worksheet['!cols'] = colWidths;
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "All EP Jobs");
-    
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    
-    const now = new Date();
-    const timestamp = now.toISOString().slice(0, 19).replace(/[:T]/g, "-");
-    saveAs(blob, `EP_All_Jobs_${timestamp}.xlsx`);
+    setSelectedJob(job);
   };
 
-  const getStepKey = (currentStep) => {
-    switch (currentStep) {
-      case "Sales": return "sales";
-      case "Warehouse": return "warehouse";
-      case "Production": return "production";
-      case "QC": return "qc_inspection";
-      case "COA": return "qc_coa";
-      case "Logistics": return "logistics";
-      case "Account": return "account";
-      default: return "";
-    }
-  };
-
-  // --- ส่วน JSX Return ---
   return (
-    <div className="page-container">
-      <h2 style={{ marginTop: 0 }}>🏠 หน้าหลัก – ภาพรวมการทำงาน</h2>
+    <div className="home-container">
+      <h1>🏠 หน้าแรก</h1>
 
-      {/* --- Filters --- */}
-      <hr style={{ margin: "2rem 0" }} />
-      <h3>🎛 ตัวกรอง</h3>
-      <div className="filter-bar" style={{ display: 'flex', flexWrap: "wrap", alignItems: "center", gap: "12px", marginBottom: "1rem" }}>
-        <label>📆 ปี:</label>
-        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
-          {years.map((year) => <option key={year}>{year}</option>)}
-        </select>
-        <label>🗓 เดือน:</label>
-        <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-          <option>ทั้งหมด</option>
-          {months.map((month) => <option key={month}>{month}</option>)}
-        </select>
-        <label>🎯 สถานะ:</label>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option>ทั้งหมด</option>
-          <option>ยังไม่ถึง</option>
-          <option>กำลังทำ</option>
-          <option>เสร็จแล้ว</option>
-        </select>
-        <input type="text" placeholder="🔍 ค้นหา Product, Customer, Batch No..." value={searchText} onChange={(e) => setSearchText(e.target.value)} className="input-box" style={{ flexGrow: 1, minWidth: "250px", maxWidth: "450px" }} />
-        <button className="clear-button" onClick={handleClearFilters} style={{ padding: '6px 12px'}}>♻️ Reset</button>
-      </div>
+      {/* 📊 สรุปสถานะงานรายแผนก */}
+      <section>
+        <h2>📊 สรุปสถานะงานรายแผนก</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={summaryPerStep}>
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
+            <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" />
+            <Bar dataKey="done" stackId="a" fill="#4ade80" name="เสร็จแล้ว" />
+          </BarChart>
+        </ResponsiveContainer>
+      </section>
 
-      {/* --- Total Volume --- */}
-      <hr style={{ margin: '2rem 0' }} />
-      <h3 className="total-volume">
-        📦 รวมยอดผลิต ({selectedMonth} {selectedYear !== 'ทั้งหมด' ? selectedYear : ''}): {getTotalVolume().toLocaleString()} KG
-      </h3>
-
-      {/* --- Progress Board --- */}
-      <hr style={{ margin: '2rem 0' }} />
-      <h3>🔴 ความคืบหน้าของงานแต่ละชุด</h3>
-      <div className="legend" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center", marginBottom: "1rem", marginTop: "1rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div> <span>ผ่านแล้ว</span> </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div> <span>กำลังทำ</span> </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}> <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div> <span>ยังไม่เริ่ม</span> </div>
-      </div>
-<ProgressBoard
-  jobs={itemsPerPageProgress === "All" 
-    ? progressJobs 
-    : progressJobs.slice(
-        (currentPageProgress - 1) * itemsPerPageProgress,
-        currentPageProgress * itemsPerPageProgress
-      )
-  }
-/>
-
-{/* Pagination Controls สำหรับ Progress Board */}
-<div style={{ marginTop: "1rem", display: 'flex', alignItems: 'center', gap: '10px' }}>
-  <span>แสดง:</span>
-  <select
-    value={itemsPerPageProgress}
-    onChange={(e) => {
-      setItemsPerPageProgress(e.target.value === "All" ? "All" : Number(e.target.value));
-      setCurrentPageProgress(1);
-    }}
-    style={{ padding: '4px 8px' }}
-  >
-    <option value={10}>10</option>
-    <option value={25}>25</option>
-    <option value={50}>50</option>
-    <option value="All">ทั้งหมด</option>
-  </select>
-  <span>รายการ</span>
-  
-  {itemsPerPageProgress !== "All" && (
-    <div className="pagination" style={{ marginLeft: 'auto' }}>
-      <button
-        onClick={() => setCurrentPageProgress(prev => Math.max(prev - 1, 1))}
-        disabled={currentPageProgress === 1}
-        className="pagination-button"
-      >
-        &lt;
-      </button>
-      
-      {Array.from({ length: Math.ceil(filteredJobs.length / itemsPerPageProgress) }, (_, i) => (
-        <button
-          key={i}
-          onClick={() => setCurrentPageProgress(i + 1)}
-          disabled={currentPageProgress === i + 1}
-          className={`pagination-button ${currentPageProgress === i + 1 ? 'active' : ''}`}
-        >
-          {i + 1}
-        </button>
-      ))}
-      
-      <button
-        onClick={() => setCurrentPageProgress(prev => Math.min(prev + 1, Math.ceil(filteredJobs.length / itemsPerPageProgress)))}
-        disabled={currentPageProgress === Math.ceil(filteredJobs.length / itemsPerPageProgress)}
-        className="pagination-button"
-      >
-        &gt;
-      </button>
-    </div>
-  )}
-</div>
-
-      {/* --- Summary Chart --- */}
-      <hr style={{ margin: '2rem 0' }} />
-      <h3>📊 สรุปสถานะงานรายแผนก</h3>
-      <div className="legend" style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{ width: "16px", height: "16px", backgroundColor: "#4ade80", borderRadius: "4px" }}></div>
-          <span>ผ่านแล้ว</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{ width: "16px", height: "16px", backgroundColor: "#facc15", borderRadius: "4px" }}></div>
-          <span>กำลังทำ</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <div style={{ width: "16px", height: "16px", backgroundColor: "#d1d5db", borderRadius: "4px" }}></div>
-          <span>ยังไม่เริ่ม</span>
-        </div>
-      </div>
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart layout="vertical" data={summaryPerStep} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <XAxis type="number" hide />
-          <YAxis dataKey="name" type="category" width={80} />
-          <Tooltip
-            formatter={(value, name, props) => {
-              const key = props?.dataKey;
-              const labelMap = {
-                done: "ผ่านแล้ว",
-                doing: "กำลังทำ",
-                notStarted: "ยังไม่เริ่ม"
-              };
-              return [`${value} งาน`, labelMap[key] || key];
-            }}
-          />
-          <Bar dataKey="done" stackId="a" fill="#4ade80" name="ผ่านแล้ว"/>
-          <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ"/>
-          <Bar dataKey="notStarted" stackId="a" fill="#d1d5db" name="ยังไม่เริ่ม"/>
-        </BarChart>
-      </ResponsiveContainer>
-
-      {/* --- Main Job Table --- */}
-      <hr style={{ margin: '2rem 0' }} />
-      <h3>📋 รายการงานทั้งหมด ({sortedJobs.length} รายการ)</h3>
-      <div style={{ marginBottom: "1rem" }}>
-        <button onClick={exportToExcel} className="submit-btn" style={{ marginRight: "8px" }}>📦 Export</button>
-        <button onClick={exportAllToExcel} className="submit-btn">📜 Export All</button>
-      </div>
-
-      {/* --- Table Wrapper with Drag Scroll --- */}
-      <div
-        className="table-wrapper"
-        ref={tableWrapperRef}
-        onMouseDown={handleMouseDown}
-        style={{ cursor: 'grab' }}
-      >
-        <table className="job-table">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort("customer")} style={{ minWidth: "120px", cursor: "pointer" }}> Customer {sortColumn === "customer" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("po_number")} style={{ minWidth: "100px", cursor: "pointer" }}> PO {sortColumn === "po_number" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("bn_wh1")} style={{ minWidth: "90px", cursor: "pointer" }}> BN WH1 {sortColumn === "bn_wh1" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("bn_wh2")} style={{ minWidth: "90px", cursor: "pointer" }}> BN WH2 {sortColumn === "bn_wh2" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("bn_wh3")} style={{ minWidth: "90px", cursor: "pointer" }}> BN WH3 {sortColumn === "bn_wh3" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("bn_pd")} style={{ minWidth: "90px", cursor: "pointer" }}> BN PD {sortColumn === "bn_pd" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("product_name")} style={{ minWidth: "150px", cursor: "pointer" }}> Product {sortColumn === "product_name" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("currentStep")} style={{ minWidth: "110px", cursor: "pointer" }}> Current Step {sortColumn === "currentStep" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("status")} style={{ minWidth: "140px", cursor: "pointer" }}> Status {sortColumn === "status" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("volume")} style={{ minWidth: "80px", cursor: "pointer" }}> Volume {sortColumn === "volume" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("delivery_date")} style={{ minWidth: "120px", cursor: "pointer" }}> Delivery Date {sortColumn === "delivery_date" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th onClick={() => handleSort("last_update")} style={{ minWidth: "180px", cursor: "pointer" }}> Last Update {sortColumn === "last_update" ? (sortDirection === "asc" ? "🔼" : "🔽") : ''} </th>
-              <th style={{ minWidth: "60px" }}>Delete</th>
-            </tr>
-          </thead>
-<tbody>
-  {sortedJobs.length > 0 ? sortedJobs.map((job) => {
-    // ตรวจสอบสถานะการจัดส่ง
-    const po = job.po_number || "";
-    const hasKG = po.includes("KG");
-    const deliveryLogs = job.delivery_logs || [];
-    const deliveredTotal = deliveryLogs.reduce((sum, d) => sum + Number(d.quantity || 0), 0);
-    const volume = Number(job.volume || 0);
-    const isMultiDelivery = deliveredTotal > 0 && deliveredTotal < volume;
-
-    // กำหนดชื่อที่จะแสดงในคอลัมน์ Product
-    const displayProductName = isMultiDelivery || hasKG 
-      ? (hasKG ? po : `${job.product_name}-${deliveredTotal}KG`) 
-      : job.product_name;
-
-    return (
-      <tr
-        key={job.id}
-        onClick={() => {
-          if (!wasDragging) {
-            setSelectedJob(job);
-          }
-        }}
-        style={{ cursor: "pointer" }}
-      >
-        {/* คอลัมน์ Customer - แสดงชื่อเดิมเสมอ */}
-        <td>{job.customer || "–"}</td>
-        
-        {/* คอลัมน์ PO - แสดงชื่อเดิมเสมอ */}
-        <td>{job.po_number || "–"}</td>
-        
-        {/* คอลัมน์ BN WH1-3 */}
-        <td>{getBatchNoWH(job, 0)}</td>
-        <td>{getBatchNoWH(job, 1)}</td>
-        <td>{getBatchNoWH(job, 2)}</td>
-        
-        {/* คอลัมน์ BN PD */}
-        <td>{job.batch_no || "–"}</td>
-        
-        {/* คอลัมน์ Product - แสดงตามเงื่อนไขการจัดส่ง */}
-        <td>{job._isDeliveryLog ? job.product_name_with_quantity : job.product_name || "–"}</td>
-        
-        {/* คอลัมน์ Current Step */}
-        <td>{job.currentStep || "–"}</td>
-        
-        {/* คอลัมน์ Status */}
-        <td style={{ whiteSpace: 'nowrap' }}>
-          {renderStatusBadge("SL", "Sales", job)} {' '}
-          {renderStatusBadge("WH", "Warehouse", job)} {' '}
-          {renderStatusBadge("PD", "Production", job)} {' '}
-          {renderStatusBadge("QC", "QC", job)} {' '}
-          {renderStatusBadge("COA", "COA", job)} {' '}
-          {renderStatusBadge("LO", "Logistics", job)} {' '}
-          {renderStatusBadge("AC", "Account", job)}
-        </td>
-        
-        {/* คอลัมน์ Volume */}
-        <td>{job.volume || "–"}</td>
-        
-        {/* คอลัมน์ Delivery Date */}
-        <td>{job.delivery_date || "–"}</td>
-        
-        {/* คอลัมน์ Last Update */}
-        <td>{renderLastUpdate(job)}</td>
-        
-        {/* คอลัมน์ Delete */}
-        <td style={{ textAlign: "center", whiteSpace: "nowrap" }}>
-          {(role === "Admin" || role === "Sales") && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteJob(job.id);
-              }}
-              style={{
-                backgroundColor: "#ef4444",
-                color: "white", 
-                border: "none", 
-                borderRadius: "6px",
-                padding: "4px 12px", 
-                fontWeight: "bold", 
-                cursor: "pointer", 
-                fontSize: '12px'
-              }}
-              title="Delete Job"
+      {/* 🔴 ความคืบหน้าของงานแต่ละชุด */}
+      <section>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+          <h2>🔴 ความคืบหน้าของงานแต่ละชุด</h2>
+          
+          {/* ✅ เพิ่มตัวกรองสำหรับ Progress Board */}
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <select 
+              value={progressYearFilter} 
+              onChange={(e) => setProgressYearFilter(e.target.value)}
+              style={{ padding: "5px", borderRadius: "4px", border: "1px solid #ccc" }}
             >
-              ลบ
+              {years.map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            
+            <select 
+              value={progressMonthFilter} 
+              onChange={(e) => setProgressMonthFilter(e.target.value)}
+              style={{ padding: "5px", borderRadius: "4px", border: "1px solid #ccc" }}
+            >
+              <option value="ทั้งหมด">ทั้งหมด</option>
+              {months.map((month) => (
+                <option key={month} value={month}>{month}</option>
+              ))}
+            </select>
+            
+            <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <input 
+                type="checkbox" 
+                checked={progressShowOnlyIncomplete}
+                onChange={(e) => setProgressShowOnlyIncomplete(e.target.checked)}
+              />
+              <span style={{ fontSize: "14px" }}>เฉพาะยังไม่เสร็จ</span>
+            </label>
+            
+            <button 
+              onClick={handleClearProgressFilters}
+              style={{ 
+                padding: "5px 10px", 
+                backgroundColor: "#f3f4f6", 
+                border: "1px solid #ccc", 
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px"
+              }}
+            >
+              ล้างตัวกรอง
             </button>
-          )}
-        </td>
-      </tr>
-    );
-  }) : (
-    <tr>
-      <td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>
-        No jobs found matching your criteria.
-      </td>
-    </tr>
-  )}
-</tbody>
-          </table>
-      </div>
+          </div>
+        </div>
 
-      {/* --- Modal --- */}
+        <ProgressBoard jobs={currentProgressJobs} />
+        
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+          <div>
+            <label>แสดง: </label>
+            <select 
+              value={itemsPerPageProgress} 
+              onChange={(e) => setItemsPerPageProgress(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={progressJobs.length}>ทั้งหมด ({progressJobs.length})</option>
+            </select>
+            <span> รายการ (รวม {progressJobs.length} รายการ)</span>
+          </div>
+          
+          <div>
+            {Array.from({ length: totalPagesProgress }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPageProgress(page)}
+                style={{
+                  margin: "0 2px",
+                  padding: "5px 10px",
+                  backgroundColor: currentPageProgress === page ? "#3b82f6" : "#f3f4f6",
+                  color: currentPageProgress === page ? "white" : "black",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 📋 รายการงานทั้งหมด - ✅ ปรับปรุงการจัดเรียงคอลัมน์ */}
+      <section>
+        <h2>📋 รายการงานทั้งหมด</h2>
+        
+        <div className="filter-bar">
+          <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+            {years.map((year) => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+            <option value="ทั้งหมด">ทั้งหมด</option>
+            {months.map((month) => (
+              <option key={month} value={month}>{month}</option>
+            ))}
+          </select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="ทั้งหมด">ทั้งหมด</option>
+            <option value="ยังไม่ถึง">ยังไม่ถึง</option>
+            <option value="กำลังทำ">กำลังทำ</option>
+            <option value="เสร็จแล้ว">เสร็จแล้ว</option>
+          </select>
+          <input
+            type="text"
+            placeholder="ค้นหา..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <button onClick={handleClearFilters}>ล้างตัวกรอง</button>
+          <button onClick={exportToExcel}>📊 Export Excel</button>
+        </div>
+
+        <div 
+          className="table-wrapper"
+          ref={tableWrapperRef}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseUpOrLeave}
+          style={{ 
+            cursor: isDragging ? 'grabbing' : 'grab',
+            userSelect: isDragging ? 'none' : 'auto'
+          }}
+        >
+          <table className="job-table">
+            <thead>
+              <tr>
+                {/* ✅ จัดเรียงคอลัมน์ใหม่: ข้อมูลสำคัญก่อน */}
+                <th 
+                  onClick={() => handleSort("product_name")}
+                  className={sortColumn === "product_name" ? "sorted" : ""}
+                >
+                  Product {sortColumn === "product_name" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("customer")}
+                  className={sortColumn === "customer" ? "sorted" : ""}
+                >
+                  Customer {sortColumn === "customer" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("delivery_date")}
+                  className={sortColumn === "delivery_date" ? "sorted" : ""}
+                >
+                  Delivery Date {sortColumn === "delivery_date" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("volume")}
+                  className={sortColumn === "volume" ? "sorted" : ""}
+                >
+                  Volume {sortColumn === "volume" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("po_number")}
+                  className={sortColumn === "po_number" ? "sorted" : ""}
+                >
+                  PO {sortColumn === "po_number" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                {/* ✅ ย้าย Batch Numbers มาท้าย */}
+                <th 
+                  onClick={() => handleSort("bn_pd")}
+                  className={sortColumn === "bn_pd" ? "sorted" : ""}
+                >
+                  BN PD {sortColumn === "bn_pd" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("bn_wh1")}
+                  className={sortColumn === "bn_wh1" ? "sorted" : ""}
+                >
+                  BN WH1 {sortColumn === "bn_wh1" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("bn_wh2")}
+                  className={sortColumn === "bn_wh2" ? "sorted" : ""}
+                >
+                  BN WH2 {sortColumn === "bn_wh2" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                <th 
+                  onClick={() => handleSort("bn_wh3")}
+                  className={sortColumn === "bn_wh3" ? "sorted" : ""}
+                >
+                  BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                {/* ✅ ลบคอลัมน์ Status ออกแล้ว */}
+                <th 
+                  onClick={() => handleSort("last_update")}
+                  className={sortColumn === "last_update" ? "sorted" : ""}
+                >
+                  Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                {role === "admin" && <th>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {currentJobs.map((job) => (
+                <tr 
+                  key={`${job.id || job.docId}${job._isDeliveryLog ? `-${job._deliveryQuantity}` : ''}`}
+                  onClick={(e) => handleRowClick(job, e)}
+                  className="clickable-row"
+                >
+                  {/* ✅ จัดเรียงข้อมูลตามคอลัมน์ใหม่ */}
+                  <td>
+                    {job._isDeliveryLog 
+                      ? `${job.product_name}-${job._deliveryQuantity}KG`
+                      : job.product_name
+                    }
+                  </td>
+                  <td>{job.customer}</td>
+                  <td>{job.delivery_date}</td>
+                  <td>{job.volume}</td>
+                  <td>
+                    {job._isDeliveryLog 
+                      ? `${job.po_number}-${job._deliveryQuantity}KG`
+                      : job.po_number
+                    }
+                  </td>
+                  <td>{job.batch_no}</td>
+                  <td>{getBatchNoWH(job, 0)}</td>
+                  <td>{getBatchNoWH(job, 1)}</td>
+                  <td>{getBatchNoWH(job, 2)}</td>
+                  {/* ✅ ลบคอลัมน์ Status ออกแล้ว */}
+                  <td style={{ fontSize: "12px" }}>{renderLastUpdate(job)}</td>
+                  {role === "admin" && (
+                    <td>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteJob(job.id);
+                        }}
+                        style={{ 
+                          backgroundColor: "#ef4444", 
+                          color: "white", 
+                          border: "none", 
+                          padding: "5px 10px", 
+                          borderRadius: "4px",
+                          cursor: "pointer"
+                        }}
+                      >
+                        ลบ
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+          <div>
+            แสดง {startIndex + 1}-{Math.min(endIndex, filteredAndSearchedJobs.length)} จาก {filteredAndSearchedJobs.length} รายการ
+          </div>
+          <div>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => {
+                  const url = new URL(window.location);
+                  url.searchParams.set("page", page);
+                  window.history.pushState({}, "", url);
+                  window.location.reload();
+                }}
+                style={{
+                  margin: "0 2px",
+                  padding: "5px 10px",
+                  backgroundColor: currentPage === page ? "#3b82f6" : "#f3f4f6",
+                  color: currentPage === page ? "white" : "black",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {selectedJob && (
-        <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
+        <JobDetailModal
+          job={selectedJob}
+          onClose={() => setSelectedJob(null)}
+          onUpdate={(updatedJob) => {
+            setAllData((prev) =>
+              prev.map((job) => (job.id === updatedJob.id ? updatedJob : job))
+            );
+            setSelectedJob(null);
+          }}
+        />
       )}
     </div>
   );
 }
+
