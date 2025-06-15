@@ -438,7 +438,8 @@ const progressJobs = sortedProgressJobs;
       else notStarted++;
     });
 
-    return { name: step, notStarted, doing, done };
+    // ✅ เพิ่ม property 'total' สำหรับกราฟแนวนอน
+    return { name: step, notStarted, doing, done, total: notStarted + doing + done };
   });
 
   const handleSort = (column) => {
@@ -550,14 +551,76 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
   const currentProgressJobs = progressJobs.slice(startIndexProgress, endIndexProgress);
 
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm("คุณแน่ใจหรือไม่ที่จะลบงานนี้?")) {
+    // แทนที่ window.confirm ด้วย modal UI
+    const isConfirmed = await new Promise((resolve) => {
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.5); display: flex; justify-content: center;
+        align-items: center; z-index: 1000;
+      `;
+      modal.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <p>คุณแน่ใจหรือไม่ที่จะลบงานนี้?</p>
+          <div style="display: flex; justify-content: space-around; margin-top: 20px;">
+            <button id="confirm-yes" style="padding: 8px 16px; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">ใช่</button>
+            <button id="confirm-no" style="padding: 8px 16px; background-color: #ccc; color: black; border: none; border-radius: 4px; cursor: pointer;">ไม่</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      document.getElementById('confirm-yes').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(true);
+      };
+      document.getElementById('confirm-no').onclick = () => {
+        document.body.removeChild(modal);
+        resolve(false);
+      };
+    });
+
+    if (isConfirmed) {
       try {
         await deleteDoc(doc(db, "production_workflow", jobId));
         setAllData((prev) => prev.filter((job) => job.id !== jobId));
-        alert("ลบงานเรียบร้อยแล้ว");
+        // แทนที่ alert ด้วย modal UI
+        const alertModal = document.createElement('div');
+        alertModal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background-color: rgba(0,0,0,0.5); display: flex; justify-content: center;
+          align-items: center; z-index: 1000;
+        `;
+        alertModal.innerHTML = `
+          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p>ลบงานเรียบร้อยแล้ว</p>
+            <div style="text-align: center; margin-top: 20px;">
+              <button id="alert-ok" style="padding: 8px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">ตกลง</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(alertModal);
+        document.getElementById('alert-ok').onclick = () => document.body.removeChild(alertModal);
+
       } catch (error) {
         console.error("Error deleting job:", error);
-        alert("เกิดข้อผิดพลาดในการลบงาน");
+        // แทนที่ alert ด้วย modal UI
+        const errorModal = document.createElement('div');
+        errorModal.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background-color: rgba(0,0,0,0.5); display: flex; justify-content: center;
+          align-items: center; z-index: 1000;
+        `;
+        errorModal.innerHTML = `
+          <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p>เกิดข้อผิดพลาดในการลบงาน</p>
+            <div style="text-align: center; margin-top: 20px;">
+              <button id="error-ok" style="padding: 8px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">ตกลง</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(errorModal);
+        document.getElementById('error-ok').onclick = () => document.body.removeChild(errorModal);
       }
     }
   };
@@ -606,9 +669,12 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       <section>
         <h2>📊 สรุปสถานะงานรายแผนก</h2>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={summaryPerStep}>
-            <XAxis dataKey="name" />
-            <YAxis />
+          {/* แก้ไข BarChart: เพิ่ม layout="vertical" */}
+          <BarChart data={summaryPerStep} layout="vertical">
+            {/* แก้ไข XAxis: type เป็น number และ dataKey เป็น total */}
+            <XAxis type="number" dataKey="total" />
+            {/* แก้ไข YAxis: type เป็น category และ dataKey เป็น name */}
+            <YAxis type="category" dataKey="name" />
             <Tooltip />
             <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
             <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" />
