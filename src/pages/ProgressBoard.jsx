@@ -126,14 +126,34 @@ export default function ProgressBoard({ jobs }) {
     }
   };
 
-  // ✅ ฟังก์ชันจัดการ Mouse Enter
+  // ✅ ฟังก์ชันจัดการ Mouse Enter - ปรับปรุงการคำนวณตำแหน่ง
   const handleMouseEnter = (job, event) => {
     setHoveredJob(job);
     const rect = event.currentTarget.getBoundingClientRect();
-    setTooltipPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10
-    });
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const tooltipWidth = 280; // ความกว้างของ tooltip
+    const tooltipHeight = 200; // ความสูงประมาณของ tooltip
+    
+    let x = rect.left + rect.width / 2;
+    let y = rect.top - 10;
+    
+    // ✅ ตรวจสอบขอบซ้าย-ขวา
+    if (x - tooltipWidth / 2 < 10) {
+      // ถ้าชิดซ้ายเกินไป ให้เลื่อนไปทางขวา
+      x = tooltipWidth / 2 + 10;
+    } else if (x + tooltipWidth / 2 > viewportWidth - 10) {
+      // ถ้าชิดขวาเกินไป ให้เลื่อนไปทางซ้าย
+      x = viewportWidth - tooltipWidth / 2 - 10;
+    }
+    
+    // ✅ ตรวจสอบขอบบน-ล่าง
+    if (y - tooltipHeight < 10) {
+      // ถ้าชิดบนเกินไป ให้แสดงด้านล่างแทน
+      y = rect.bottom + 10;
+    }
+    
+    setTooltipPosition({ x, y });
   };
 
   // ✅ ฟังก์ชันจัดการ Mouse Leave
@@ -141,9 +161,11 @@ export default function ProgressBoard({ jobs }) {
     setHoveredJob(null);
   };
 
-  // ✅ Component สำหรับ Tooltip
+  // ✅ Component สำหรับ Tooltip - ปรับปรุงการแสดงผล
   const JobTooltip = ({ job, position }) => {
     if (!job) return null;
+
+    const isShowBelow = position.y > window.innerHeight / 2;
 
     return (
       <div
@@ -151,7 +173,9 @@ export default function ProgressBoard({ jobs }) {
           position: "fixed",
           left: position.x,
           top: position.y,
-          transform: "translateX(-50%) translateY(-100%)",
+          transform: isShowBelow 
+            ? "translateX(-50%) translateY(10px)" 
+            : "translateX(-50%) translateY(-100%)",
           backgroundColor: "rgba(0, 0, 0, 0.9)",
           color: "white",
           padding: "12px 16px",
@@ -159,6 +183,7 @@ export default function ProgressBoard({ jobs }) {
           fontSize: "14px",
           zIndex: 1000,
           minWidth: "280px",
+          maxWidth: "320px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
           pointerEvents: "none"
         }}
@@ -205,20 +230,38 @@ export default function ProgressBoard({ jobs }) {
           </div>
         </div>
         
-        {/* ลูกศรชี้ลง */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-6px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 0,
-            height: 0,
-            borderLeft: "6px solid transparent",
-            borderRight: "6px solid transparent",
-            borderTop: "6px solid rgba(0, 0, 0, 0.9)"
-          }}
-        />
+        {/* ✅ ลูกศรปรับตำแหน่งตามการแสดงผล */}
+        {!isShowBelow && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-6px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 0,
+              height: 0,
+              borderLeft: "6px solid transparent",
+              borderRight: "6px solid transparent",
+              borderTop: "6px solid rgba(0, 0, 0, 0.9)"
+            }}
+          />
+        )}
+        
+        {isShowBelow && (
+          <div
+            style={{
+              position: "absolute",
+              top: "-6px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 0,
+              height: 0,
+              borderLeft: "6px solid transparent",
+              borderRight: "6px solid transparent",
+              borderBottom: "6px solid rgba(0, 0, 0, 0.9)"
+            }}
+          />
+        )}
       </div>
     );
   };
