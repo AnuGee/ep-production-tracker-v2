@@ -674,7 +674,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
             {/* Modify XAxis: type is number and dataKey is total */}
             <XAxis type="number" dataKey="total" />
             {/* Modify YAxis: type is category, dataKey is name, and add padding */}
-            <YAxis type="category" dataKey="name" padding={{ left: 40 }} /> {/* Adjust padding here */}
+            <YAxis type="category" dataKey="name" width={120} /> {/* Removed padding, added width */}
             <Tooltip />
             {/* Reorder Bar components for colors: done (green), doing (yellow), notStarted (gray) */}
             <Bar dataKey="done" stackId="a" fill="#4ade80" name="เสร็จแล้ว" /> {/* Green */}
