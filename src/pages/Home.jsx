@@ -593,8 +593,14 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
   };
 
   return (
-    <div className="home-container">
-      <h1>🏠 หน้าแรก</h1>
+    <div className="home-container" style={{ 
+      maxWidth: "1400px", 
+      margin: "0 auto", 
+      padding: "20px",
+      fontSize: "14px" 
+    }}>
+      {/* ✅ ปรับขนาดหัวข้อให้เล็กลง */}
+      <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>🏠 หน้าแรก</h1>
 
       {/* 📊 สรุปสถานะงานรายแผนก */}
       <section>
