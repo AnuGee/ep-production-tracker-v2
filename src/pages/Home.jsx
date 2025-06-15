@@ -673,12 +673,12 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
           <BarChart data={summaryPerStep} layout="vertical">
             {/* แก้ไข XAxis: type เป็น number และ dataKey เป็น total */}
             <XAxis type="number" dataKey="total" />
-            {/* แก้ไข YAxis: type เป็น category และ dataKey เป็น name */}
-            <YAxis type="category" dataKey="name" />
+            {/* Modify YAxis: type is category, dataKey is name, and add padding */}
+            <YAxis type="category" dataKey="name" padding={{ left: 20 }} /> {/* Adjust padding here */}
             <Tooltip />
-            <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
-            <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" />
             <Bar dataKey="done" stackId="a" fill="#4ade80" name="เสร็จแล้ว" />
+            <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" />
+            <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
           </BarChart>
         </ResponsiveContainer>
       </section>
