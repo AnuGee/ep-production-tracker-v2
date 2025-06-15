@@ -669,16 +669,17 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       <section>
         <h2>📊 สรุปสถานะงานรายแผนก</h2>
         <ResponsiveContainer width="100%" height={300}>
-          {/* แก้ไข BarChart: เพิ่ม layout="vertical" */}
+          {/* Modify BarChart: add layout="vertical" */}
           <BarChart data={summaryPerStep} layout="vertical">
-            {/* แก้ไข XAxis: type เป็น number และ dataKey เป็น total */}
+            {/* Modify XAxis: type is number and dataKey is total */}
             <XAxis type="number" dataKey="total" />
             {/* Modify YAxis: type is category, dataKey is name, and add padding */}
             <YAxis type="category" dataKey="name" padding={{ left: 20 }} /> {/* Adjust padding here */}
             <Tooltip />
-            <Bar dataKey="done" stackId="a" fill="#4ade80" name="เสร็จแล้ว" />
-            <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" />
-            <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
+            {/* Reorder Bar components for colors: done (green), doing (yellow), notStarted (gray) */}
+            <Bar dataKey="done" stackId="a" fill="#4ade80" name="เสร็จแล้ว" /> {/* Green */}
+            <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" /> {/* Yellow */}
+            <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" /> {/* Gray */}
           </BarChart>
         </ResponsiveContainer>
       </section>
