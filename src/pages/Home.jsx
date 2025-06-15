@@ -683,6 +683,13 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
         </ResponsiveContainer>
       </section>
 
+      {/* ✅ เส้นแบ่งระหว่างส่วน */}
+      <hr style={{ 
+        border: "none", 
+        borderTop: "2px solid #dee2e6", 
+        margin: "30px 0" 
+      }} />
+
       {/* 🔴 ความคืบหน้าของงานแต่ละชุด */}
       <section>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
@@ -774,6 +781,13 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
           </div>
         </div>
       </section>
+
+      {/* ✅ เส้นแบ่งระหว่างส่วน */}
+      <hr style={{ 
+        border: "none", 
+        borderTop: "2px solid #dee2e6", 
+        margin: "30px 0" 
+      }} />
 
       {/* 📋 รายการงานทั้งหมด - ✅ ปรับปรุงการจัดเรียงคอลัมน์ */}
       <section>
