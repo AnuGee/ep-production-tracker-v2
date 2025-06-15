@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-// ✅ ปรับปรุงหน้าตา: ขนาดหัวข้อเล็กลง, เพิ่มเส้นแบ่งส่วน, กราฟแนวนอน, แก้ไข Tooltip
+// ✅ แก้ไขกราฟสรุปสถานะงานรายแผนก: ปรับการคำนวณและแสดงผลให้ถูกต้อง
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "../components/JobDetailModal";
@@ -376,19 +376,25 @@ export default function Home() {
 
   const progressJobs = sortedProgressJobs;
 
+  // ✅ แก้ไขการคำนวณ summaryPerStep ให้ใช้ currentStep แทน getStepStatus
   const summaryPerStep = steps.map((step) => {
-    let notStarted = 0;
-    let doing = 0;
-    let done = 0;
+    const stepCounts = allData.reduce((acc, job) => {
+      if (job.currentStep === step) {
+        acc.doing++;
+      } else if (steps.indexOf(job.currentStep) > steps.indexOf(step)) {
+        acc.done++;
+      } else {
+        acc.notStarted++;
+      }
+      return acc;
+    }, { notStarted: 0, doing: 0, done: 0 });
 
-    filteredJobsForProgress.forEach((job) => {
-      const status = getStepStatus(job, step);
-      if (status === "done") done++;
-      else if (status === "doing") doing++;
-      else notStarted++;
-    });
-
-    return { name: step, notStarted, doing, done };
+    return { 
+      name: step, 
+      ยังไม่เริ่ม: stepCounts.notStarted,
+      กำลังทำ: stepCounts.doing,
+      เสร็จแล้ว: stepCounts.done
+    };
   });
 
   const handleSort = (column) => {
@@ -568,10 +574,13 @@ export default function Home() {
             >
               <XAxis type="number" />
               <YAxis dataKey="name" type="category" width={70} />
-              <Tooltip />
-              <Bar dataKey="notStarted" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
-              <Bar dataKey="doing" stackId="a" fill="#facc15" name="กำลังทำ" />
-              <Bar dataKey="done" stackId="a" fill="#4ade80" name="เสร็จแล้ว" />
+              <Tooltip 
+                formatter={(value, name) => [value, name]}
+                labelFormatter={(label) => `แผนก: ${label}`}
+              />
+              <Bar dataKey="ยังไม่เริ่ม" stackId="a" fill="#e5e7eb" name="ยังไม่เริ่ม" />
+              <Bar dataKey="กำลังทำ" stackId="a" fill="#facc15" name="กำลังทำ" />
+              <Bar dataKey="เสร็จแล้ว" stackId="a" fill="#4ade80" name="เสร็จแล้ว" />
             </BarChart>
           </ResponsiveContainer>
         </div>
