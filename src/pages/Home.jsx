@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-// ✅ แก้ไขกราฟสรุปสถานะงานรายแผนก: ปรับการคำนวณและแสดงผลให้ถูกต้อง
+// ✅ แก้ไขกราฟสรุปสถานะงานรายแผนก: ใช้ข้อมูลจริงจาก allData และปรับการคำนวณให้ถูกต้อง
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import ProgressBoard from "./ProgressBoard";
 import JobDetailModal from "../components/JobDetailModal";
@@ -185,6 +185,7 @@ export default function Home() {
         ...doc.data(),
       }));
       setAllData(data);
+      console.log("Fetched jobs:", data.length); // Debug log
     };
     fetchJobs();
   }, []);
@@ -376,24 +377,31 @@ export default function Home() {
 
   const progressJobs = sortedProgressJobs;
 
-  // ✅ แก้ไขการคำนวณ summaryPerStep ให้ใช้ currentStep แทน getStepStatus
+  // ✅ แก้ไขการคำนวณ summaryPerStep ให้แสดงข้อมูลจริง
   const summaryPerStep = steps.map((step) => {
-    const stepCounts = allData.reduce((acc, job) => {
-      if (job.currentStep === step) {
-        acc.doing++;
-      } else if (steps.indexOf(job.currentStep) > steps.indexOf(step)) {
-        acc.done++;
-      } else {
-        acc.notStarted++;
-      }
-      return acc;
-    }, { notStarted: 0, doing: 0, done: 0 });
+    // นับจำนวนงานที่อยู่ในแต่ละแผนก
+    const currentStepCount = allData.filter(job => job.currentStep === step).length;
+    
+    // นับจำนวนงานที่ผ่านแผนกนี้ไปแล้ว (เสร็จแล้ว)
+    const stepIndex = steps.indexOf(step);
+    const completedCount = allData.filter(job => {
+      const jobStepIndex = steps.indexOf(job.currentStep);
+      return jobStepIndex > stepIndex || job.currentStep === "Completed";
+    }).length;
+    
+    // นับจำนวนงานที่ยังไม่ถึงแผนกนี้ (ยังไม่เริ่ม)
+    const notStartedCount = allData.filter(job => {
+      const jobStepIndex = steps.indexOf(job.currentStep);
+      return jobStepIndex < stepIndex && job.currentStep !== "Completed";
+    }).length;
+
+    console.log(`${step}: กำลังทำ=${currentStepCount}, เสร็จแล้ว=${completedCount}, ยังไม่เริ่ม=${notStartedCount}`);
 
     return { 
       name: step, 
-      ยังไม่เริ่ม: stepCounts.notStarted,
-      กำลังทำ: stepCounts.doing,
-      เสร็จแล้ว: stepCounts.done
+      ยังไม่เริ่ม: notStartedCount,
+      กำลังทำ: currentStepCount,
+      เสร็จแล้ว: completedCount
     };
   });
 
@@ -583,6 +591,10 @@ export default function Home() {
               <Bar dataKey="เสร็จแล้ว" stackId="a" fill="#4ade80" name="เสร็จแล้ว" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+        {/* ✅ Debug info - จะลบออกหลังจากแก้ไขเสร็จ */}
+        <div style={{ fontSize: "12px", color: "#666", marginTop: "10px" }}>
+          Total jobs: {allData.length} | Chart data: {JSON.stringify(summaryPerStep)}
         </div>
       </section>
 
