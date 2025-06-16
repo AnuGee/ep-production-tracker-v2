@@ -30,33 +30,33 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
-    // ✅ เพิ่ม state สำหรับ pagination ของรายการงานทั้งหมด
+  // ✅ เพิ่ม state สำหรับ pagination ของรายการงานทั้งหมด
   const [currentPageAllJobs, setCurrentPageAllJobs] = useState(1);
   const [itemsPerPageAllJobs, setItemsPerPageAllJobs] = useState(10);
 
-  // ✅ เพิ่ม State สำหรับตัวกรอง Progress Board
+
+  // เพิ่ม State สำหรับตัวกรอง Progress Board
   const [progressYearFilter, setProgressYearFilter] = useState("ทั้งหมด");
   const [progressMonthFilter, setProgressMonthFilter] = useState("ทั้งหมด");
   const [progressShowOnlyIncomplete, setProgressShowOnlyIncomplete] = useState(false);
 
-  // --- State และ Ref สำหรับการลาก (เพิ่มเข้ามา) ---
+  // State และ Ref สำหรับการลาก
   const tableWrapperRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftStart, setScrollLeftStart] = useState(0);
   const [wasDragging, setWasDragging] = useState(false);
-  // ------------------------------------------------
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   const years = ["ทั้งหมด", "2025", "2026", "2027", "2028", "2029", "2030"];
   const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"]; // Removed COA as it's part of QC visually
 
-  // --- Handlers สำหรับการลาก (เพิ่มเข้ามา) ---
+  // Handlers สำหรับการลาก
   const handleMouseDown = (e) => {
     if (!tableWrapperRef.current) return;
 
-    setWasDragging(false); // รีเซ็ตทุกครั้งที่เริ่มกด
+    setWasDragging(false); // Reset every time a press starts
     setIsDragging(true);
     setStartX(e.pageX - tableWrapperRef.current.offsetLeft);
     setScrollLeftStart(tableWrapperRef.current.scrollLeft);
@@ -83,11 +83,10 @@ export default function Home() {
         tableWrapperRef.current.style.userSelect = 'auto';
     }
   }, [isDragging]);
-  // ------------------------------------------------
 
-  // --- useEffect จัดการ global listeners (เพิ่มเข้ามา) ---
+  // useEffect จัดการ global listeners
    useEffect(() => {
-    // ใช้ wrapper function เพื่อให้ useCallback ทำงานกับ event listener ได้ถูกต้อง
+    // Use wrapper function so useCallback can work correctly with event listener
     const handleGlobalMouseMove = (e) => handleMouseMove(e);
     const handleGlobalMouseUp = () => handleMouseUpOrLeave();
 
@@ -109,103 +108,85 @@ export default function Home() {
       }
     };
   }, [isDragging, handleMouseMove, handleMouseUpOrLeave]);
-  // -------------------------------------------------
 
-  // --- โค้ดส่วนที่เหลือ (เหมือนเดิมจากไฟล์ที่คุณอัปโหลด) ---
   const getStepStatus = (job, step) => {
-    if (!job || !job.status) return "notStarted";
+    if (!job || !job.status) return "#e5e7eb"; // Gray for not started/no status
+
     const currentStep = job.currentStep;
     const status = job.status;
 
-    switch (step) {
-      case "Sales": return currentStep !== "Sales" ? "done" : "doing";
-      case "Warehouse": {
-        const hasBatchNo = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse.length > 0;
-        const wh = status.warehouse ?? "";
-        const passed = ["Production", "QC", "COA", "Account", "Completed"].includes(currentStep);
-        const isPassedByBatch = hasBatchNo && (wh === "" || wh === undefined);
-        if (passed || wh === "เบิกเสร็จ" || isPassedByBatch) return "done";
-        if (["ยังไม่เบิก", "กำลังเบิก"].includes(wh)) return "doing";
-        return "notStarted";
-      }
-      case "Production": {
-        const pd = status.production;
-        
-       // ✅ เพิ่มเงื่อนไขพิเศษ: กรณีมีของครบใน WH → ข้าม Production → ไป COA เลย
-          const skipProduction =
-            Array.isArray(job.batch_no_warehouse) &&
-            job.batch_no_warehouse.length > 0 &&
-            !pd &&
-            !status.qc_inspection &&  // ยังไม่ได้ตรวจ
-            ["QC", "COA", "Account", "Completed"].includes(currentStep);
-        
-          if (skipProduction) return "done";
-        
-          if (currentStep === "QC" && status.qc_inspection === "skip") return "done";
-          if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "doing";
-          if (["QC", "COA", "Account", "Completed"].includes(currentStep)) return "done";
-          return "notStarted";
-        }
-  case "QC": {
-    const qc = status.qc_inspection;
-    const coa = status.qc_coa;
-  
-    if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
-    if (qc === "ตรวจผ่านแล้ว") return "done";
-  
-    // ✅ กรณีข้ามไป COA แล้วเริ่มทำ
-    if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
-    if (coa === "เตรียมพร้อมแล้ว") return "done";
-  
-    if (["COA", "Account", "Completed"].includes(currentStep)) return "done";
-  
-    return "notStarted";
-  }
-
-  case "Logistics": {
-    const volume = Number(job.volume || 0);
-    const delivered = (job.delivery_logs || []).reduce(
-      (sum, d) => sum + Number(d.quantity || 0), 0
-    );
-  
-    // ✅ แก้ไขหลัก: ถ้า currentStep ไปถึง Account หรือ Completed แล้ว 
-    // และมีการส่งมอบแล้ว (ไม่ว่าจะครบหรือไม่) ให้เป็น "done"
-    if (["Account", "Completed"].includes(currentStep)) {
-      // ถ้ามีการส่งมอบแล้วบางส่วนหรือครบถ้วน ให้เป็น done
-      if (delivered > 0) {
-        return "done"; 
-      }
-      // ถ้ายังไม่มีการส่งมอบเลย แต่งานไปถึง Account/Completed แล้ว 
-      // อาจเป็นกรณีพิเศษ ให้เป็น done ด้วย (เพราะงานผ่านขั้นตอนนี้ไปแล้ว)
-      return "done";
+    // Logic for Sales step
+    if (step === "Sales") {
+      return (job.product_name && job.po_number && job.volume && job.customer)
+        ? "#4ade80" // Green if all sales fields are present
+        : "#e5e7eb"; // Gray otherwise
     }
-  
-    // กรณีปกติ: ตรวจสอบปริมาณการส่งมอบ
-    if (delivered === 0) return "notStarted";
-    else if (delivered >= volume) return "done";
-    else return "doing";
-  }
-        
-  case "Account": {
-    const ac = status.account;
-    if (ac === "Invoice ออกแล้ว") return "done";
-    if (ac === "Invoice ยังไม่ออก") return "doing";
-    return "notStarted";
-  }
+    
+    // Logic for current step (doing)
+    if (currentStep === step) {
+      return "#facc15"; // Yellow for current step (doing)
+    }
 
-  default: return "notStarted";
+    // Logic for done steps (passed this step)
+    const stepsOrder = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account", "Completed"];
+    const currentStepIndex = stepsOrder.indexOf(currentStep);
+    const stepIndex = stepsOrder.indexOf(step);
+
+    if (stepIndex < currentStepIndex) {
+      return "#4ade80"; // Green if current step is past this step
+    }
+
+    // Specific conditions for each step
+    switch (step) {
+      case "Warehouse":
+        const hasBatchNoWH = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse.length > 0;
+        const wh = status.warehouse ?? "";
+        if (wh === "เบิกเสร็จ" || wh === "มีครบตามจำนวน" || hasBatchNoWH) return "#4ade80";
+        if (["ยังไม่เบิก", "กำลังเบิก"].includes(wh)) return "#facc15";
+        return "#e5e7eb";
+
+      case "Production":
+        const pd = status.production;
+        const skipProduction = Array.isArray(job.batch_no_warehouse) && job.batch_no_warehouse.length > 0 && !pd && !status.qc_inspection && ["QC", "COA", "Logistics", "Account", "Completed"].includes(currentStep);
+        if (skipProduction) return "#4ade80"; // Green for skipped production (warehouse complete, moved to QC)
+        if (pd === "ผลิตเสร็จ") return "#4ade80";
+        if (["กำลังผลิต", "รอผลตรวจ", "กำลังบรรจุ"].includes(pd)) return "#facc15";
+        return "#e5e7eb";
+
+      case "QC":
+        const qc = status.qc_inspection;
+        const coa = status.qc_coa;
+        if (qc === "ตรวจผ่านแล้ว" && coa === "เตรียมพร้อมแล้ว") return "#4ade80";
+        if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc) || ["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "#facc15";
+        return "#e5e7eb";
+
+      case "Logistics":
+        const volume = Number(job.volume || 0);
+        const delivered = (job.delivery_logs || []).reduce((sum, d) => sum + Number(d.quantity || 0), 0);
+        if (delivered >= volume) return "#4ade80"; // Green for fully delivered
+        if (delivered > 0) return "#facc15"; // Yellow for partially delivered
+        return "#e5e7eb";
+
+      case "Account":
+        const ac = status.account;
+        if (ac === "Invoice ออกแล้ว") return "#4ade80"; // Green for invoice issued
+        if (ac === "Invoice ยังไม่ออก") return "#facc15"; // Yellow for invoice not yet issued
+        return "#e5e7eb"; // Gray otherwise
+
+      default: return "#e5e7eb"; // Default gray for any other case not explicitly handled
     }
   };
 
+
   useEffect(() => {
     const fetchJobs = async () => {
-  const snapshot = await getDocs(collection(db, "production_workflow"));
-  const data = snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
-  setAllData(data); // ✅ สำคัญ
-};
+      const snapshot = await getDocs(collection(db, "production_workflow"));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAllData(data); // ✅ สำคัญ
+    };
     fetchJobs();
   }, []);
 
@@ -219,6 +200,21 @@ export default function Home() {
     return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
   };
 
+  // Function to get current status in Thai
+  const getThaiStatus = (job) => {
+    if (!job || !job.currentStep) return "ไม่ระบุ";
+    switch (job.currentStep) {
+      case "Sales": return "ฝ่ายขาย";
+      case "Warehouse": return "คลังสินค้า";
+      case "Production": return "ฝ่ายผลิต";
+      case "QC": return "QC";
+      case "Logistics": return "ขนส่ง";
+      case "Account": return "บัญชี";
+      case "Completed": return "เสร็จสมบูรณ์";
+      default: return "ไม่ระระบุ";
+    }
+  };
+
   const handleClearFilters = () => {
     setSelectedYear("ทั้งหมด");
     setSelectedMonth("ทั้งหมด");
@@ -226,7 +222,7 @@ export default function Home() {
     setSearchText("");
   };
 
-  // ✅ เพิ่มฟังก์ชันล้างตัวกรอง Progress Board
+  // เพิ่มฟังก์ชันล้างตัวกรอง Progress Board
   const handleClearProgressFilters = () => {
     setProgressYearFilter("ทั้งหมด");
     setProgressMonthFilter("ทั้งหมด");
@@ -263,7 +259,7 @@ export default function Home() {
     }
   };
 
-  // ✅ เพิ่มฟังก์ชันกรองสำหรับ Progress Board
+  // เพิ่มฟังก์ชันกรองสำหรับ Progress Board
   const filterJobsForProgress = (job) => {
     if (!job.delivery_date) return false;
     
@@ -291,7 +287,7 @@ export default function Home() {
     }
   };
 
-  // ✅ ฟังก์ชันใหม่: แปลงข้อมูลตามรอบการส่ง
+  // ฟังก์ชันใหม่: แปลงข้อมูลตามรอบการส่ง
 const expandJobsByDeliveryLogs = (jobs) => {
   return jobs.flatMap(job => {
     const deliveryLogs = job.delivery_logs || [];
@@ -313,7 +309,7 @@ const expandJobsByDeliveryLogs = (jobs) => {
   });
 };
 
-  // ✅ สำหรับ 📋 รายการงานทั้งหมด
+  // สำหรับ 📋 รายการงานทั้งหมด
   const filteredJobs = allData.filter((job) => {
     const po = job.po_number || "";
     const hasKG = po.includes("KG");
@@ -332,7 +328,7 @@ const expandJobsByDeliveryLogs = (jobs) => {
     return !hasSub;
   });
 
-// ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด - เพิ่มการกรองตามตัวกรองใหม่
+// สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด - เพิ่มการกรองตามตัวกรองใหม่
 const filteredJobsForProgress = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
@@ -372,15 +368,14 @@ const filteredJobsForProgress = allData.filter((job) => {
   // ถ้าไม่ผ่านการกรองพื้นฐาน ให้ return false
   if (!passBasicFilter) return false;
   
-  // ✅ เพิ่มการกรองตามตัวกรองใหม่
+  // เพิ่มการกรองตามตัวกรองใหม่
   return filterJobsForProgress(job);
 });
 
-  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
-// ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
+  // แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
 const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
 
-// ✅ เรียงลำดับตาม product_name หรือ product_name_with_quantity
+// เรียงลำดับตาม product_name หรือ product_name_with_quantity
 const sortedProgressJobs = [...expandedJobsForProgress].sort((a, b) => {
   // ใช้ product_name_with_quantity ถ้ามี (กรณีเป็น job ที่แยกจาก delivery_log)
   const nameA = a._isDeliveryLog ? a.product_name_with_quantity : a.product_name || "";
@@ -441,7 +436,7 @@ const progressJobs = sortedProgressJobs;
       else notStarted++;
     });
 
-    // ✅ เพิ่ม property 'total' สำหรับกราฟแนวนอน
+    // เพิ่ม property 'total' สำหรับกราฟแนวนอน
     return { name: step, notStarted, doing, done, total: notStarted + doing + done };
   });
 
@@ -454,7 +449,7 @@ const progressJobs = sortedProgressJobs;
     }
   };
 
-  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
+  // แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
 const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
   const getValue = (job, col) => {
@@ -466,7 +461,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
     if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
     if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
     if (col === "bn_pd") {
-        // ✅ แก้ไขตรงนี้: ใช้ job.batch_no ตรงๆ สำหรับการเรียง
+        // แก้ไขตรงนี้: ใช้ job.batch_no ตรงๆ สำหรับการเรียง
         const bnPdValue = job.batch_no || "";
         return bnPdValue; // ส่งคืนค่า string เพื่อให้เรียงแบบธรรมชาติ
     }
@@ -666,10 +661,10 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       padding: "20px",
       fontSize: "14px" 
     }}>
-      {/* ✅ ปรับขนาดหัวข้อให้เล็กลง */}
+      {/* Adjust heading size */}
       <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>🏠 หน้าแรก</h1>
 
-      {/* 📊 สรุปสถานะงานรายแผนก */}
+      {/* 📊 Departmental Job Status Summary */}
       <section>
         <h2>📊 สรุปสถานะงานรายแผนก</h2>
         <ResponsiveContainer width="100%" height={300}>
@@ -677,7 +672,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
           <BarChart data={summaryPerStep} layout="vertical">
             {/* Modify XAxis: type is number and dataKey is total */}
             <XAxis type="number" dataKey="total" />
-            {/* Modify YAxis: type is category, dataKey is name, and add padding */}
+            {/* Modify YAxis: type is category, dataKey is name, and set width */}
             <YAxis type="category" dataKey="name" width={120} /> {/* Removed padding, added width */}
             <Tooltip />
             {/* Reorder Bar components for colors: done (green), doing (yellow), notStarted (gray) */}
@@ -700,7 +695,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
           <h2>🔴 ความคืบหน้าของงานแต่ละชุด</h2>
           
-          {/* ✅ เพิ่มตัวกรองสำหรับ Progress Board */}
+          {/* Add filter for Progress Board */}
           <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
             <select 
               value={progressYearFilter} 
@@ -870,6 +865,13 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
                 >
                   PO {sortColumn === "po_number" && (sortDirection === "asc" ? "↑" : "↓")}
                 </th>
+                {/* ✅ เพิ่มคอลัมน์ Status กลับมา */}
+                <th 
+                  onClick={() => handleSort("currentStep")}
+                  className={sortColumn === "currentStep" ? "sorted" : ""}
+                >
+                  Status {sortColumn === "currentStep" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
                 {/* ✅ ย้าย Batch Numbers มาท้าย */}
                 <th 
                   onClick={() => handleSort("bn_pd")}
@@ -895,14 +897,8 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
                 >
                   BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "↑" : "↓")}
                 </th>
-                {/* ✅ ลบคอลัมน์ Status ออกแล้ว */}
-                <th 
-                  onClick={() => handleSort("last_update")}
-                  className={sortColumn === "last_update" ? "sorted" : ""}
-                >
-                  Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
-                {role === "admin" && <th>Actions</th>}
+                {/* ✅ ลบคอลัมน์ Last Update ออกแล้ว */}
+                {(role === "admin" || role === "sales") && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -928,13 +924,14 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
                       : job.po_number
                     }
                   </td>
+                  {/* ✅ แสดง Status ของงาน */}
+                  <td>{getThaiStatus(job)}</td>
                   <td>{job.batch_no}</td>
                   <td>{getBatchNoWH(job, 0)}</td>
                   <td>{getBatchNoWH(job, 1)}</td>
                   <td>{getBatchNoWH(job, 2)}</td>
-                  {/* ✅ ลบคอลัมน์ Status ออกแล้ว */}
-                  <td style={{ fontSize: "12px" }}>{renderLastUpdate(job)}</td>
-                  {role === "admin" && (
+                  {/* ✅ ลบคอลัมน์ Last Update ออกแล้ว */}
+                  {(role === "admin" || role === "sales") && ( // ✅ เงื่อนไข Admin และ Sales
                     <td>
                       <button 
                         onClick={(e) => {
@@ -978,24 +975,6 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
               <option value={filteredAndSearchedJobs.length}>ทั้งหมด ({filteredAndSearchedJobs.length})</option>
             </select>
             <span> รายการ (รวม {filteredAndSearchedJobs.length} รายการ)</span>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPageAllJobs(page)}
-                style={{
-                  margin: "0 2px",
-                  padding: "5px 10px",
-                  backgroundColor: currentPageAllJobs === page ? "#3b82f6" : "#f3f4f6",
-                  color: currentPageAllJobs === page ? "white" : "black",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
           </div>
           <div>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -1016,6 +995,8 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
               </button>
             ))}
           </div>
+        </div>
+      </section>
 
       {selectedJob && (
         <JobDetailModal
