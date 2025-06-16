@@ -31,29 +31,28 @@ export default function Home() {
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
 
-  // ✅ เพิ่ม State สำหรับตัวกรอง Progress Board
+  // เพิ่ม State สำหรับตัวกรอง Progress Board
   const [progressYearFilter, setProgressYearFilter] = useState("ทั้งหมด");
   const [progressMonthFilter, setProgressMonthFilter] = useState("ทั้งหมด");
   const [progressShowOnlyIncomplete, setProgressShowOnlyIncomplete] = useState(false);
 
-  // --- State และ Ref สำหรับการลาก (เพิ่มเข้ามา) ---
+  // State และ Ref สำหรับการลาก
   const tableWrapperRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftStart, setScrollLeftStart] = useState(0);
   const [wasDragging, setWasDragging] = useState(false);
-  // ------------------------------------------------
 
   const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
   const years = ["ทั้งหมด", "2025", "2026", "2027", "2028", "2029", "2030"];
   const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"]; // Removed COA as it's part of QC visually
 
-  // --- Handlers สำหรับการลาก (เพิ่มเข้ามา) ---
+  // Handlers สำหรับการลาก
   const handleMouseDown = (e) => {
     if (!tableWrapperRef.current) return;
 
-    setWasDragging(false); // รีเซ็ตทุกครั้งที่เริ่มกด
+    setWasDragging(false); // Reset every time a press starts
     setIsDragging(true);
     setStartX(e.pageX - tableWrapperRef.current.offsetLeft);
     setScrollLeftStart(tableWrapperRef.current.scrollLeft);
@@ -80,11 +79,10 @@ export default function Home() {
         tableWrapperRef.current.style.userSelect = 'auto';
     }
   }, [isDragging]);
-  // ------------------------------------------------
 
-  // --- useEffect จัดการ global listeners (เพิ่มเข้ามา) ---
+  // useEffect จัดการ global listeners
    useEffect(() => {
-    // ใช้ wrapper function เพื่อให้ useCallback ทำงานกับ event listener ได้ถูกต้อง
+    // Use wrapper function so useCallback can work correctly with event listener
     const handleGlobalMouseMove = (e) => handleMouseMove(e);
     const handleGlobalMouseUp = () => handleMouseUpOrLeave();
 
@@ -106,9 +104,7 @@ export default function Home() {
       }
     };
   }, [isDragging, handleMouseMove, handleMouseUpOrLeave]);
-  // -------------------------------------------------
 
-  // --- โค้ดส่วนที่เหลือ (เหมือนเดิมจากไฟล์ที่คุณอัปโหลด) ---
   const getStepStatus = (job, step) => {
     if (!job || !job.status) return "notStarted";
     const currentStep = job.currentStep;
@@ -128,7 +124,7 @@ export default function Home() {
       case "Production": {
         const pd = status.production;
         
-       // ✅ เพิ่มเงื่อนไขพิเศษ: กรณีมีของครบใน WH → ข้าม Production → ไป COA เลย
+       // เพิ่มเงื่อนไขพิเศษ: กรณีมีของครบใน WH -> ข้าม Production -> ไป COA เลย
           const skipProduction =
             Array.isArray(job.batch_no_warehouse) &&
             job.batch_no_warehouse.length > 0 &&
@@ -150,7 +146,7 @@ export default function Home() {
     if (["กำลังตรวจ", "กำลังตรวจ (Hold)", "กำลังตรวจ (รอปรับ)"].includes(qc)) return "doing";
     if (qc === "ตรวจผ่านแล้ว") return "done";
   
-    // ✅ กรณีข้ามไป COA แล้วเริ่มทำ
+    // กรณีข้ามไป COA แล้วเริ่มทำ
     if (["ยังไม่เตรียม", "กำลังเตรียม"].includes(coa)) return "doing";
     if (coa === "เตรียมพร้อมแล้ว") return "done";
   
@@ -165,7 +161,7 @@ export default function Home() {
       (sum, d) => sum + Number(d.quantity || 0), 0
     );
   
-    // ✅ แก้ไขหลัก: ถ้า currentStep ไปถึง Account หรือ Completed แล้ว 
+    // แก้ไขหลัก: ถ้า currentStep ไปถึง Account หรือ Completed แล้ว 
     // และมีการส่งมอบแล้ว (ไม่ว่าจะครบหรือไม่) ให้เป็น "done"
     if (["Account", "Completed"].includes(currentStep)) {
       // ถ้ามีการส่งมอบแล้วบางส่วนหรือครบถ้วน ให้เป็น done
@@ -185,12 +181,12 @@ export default function Home() {
         
   case "Account": {
     const ac = status.account;
-    if (ac === "Invoice ออกแล้ว") return "done";
-    if (ac === "Invoice ยังไม่ออก") return "doing";
-    return "notStarted";
+    if (ac === "Invoice ออกแล้ว") return "#4ade80"; // Invoice issued
+    if (ac === "Invoice ยังไม่ออก") return "#facc15"; // Invoice not yet issued
+    return "#e5e7eb"; // Default: not started
   }
 
-  default: return "notStarted";
+  default: return "#e5e7eb"; // Default color for not started
     }
   };
 
@@ -201,7 +197,7 @@ export default function Home() {
     id: doc.id,
     ...doc.data(),
   }));
-  setAllData(data); // ✅ สำคัญ
+  setAllData(data); // สำคัญ
 };
     fetchJobs();
   }, []);
@@ -216,20 +212,20 @@ export default function Home() {
     return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
   };
 
-    // Function to get current status in Thai
-    const getThaiStatus = (job) => {
-      if (!job || !job.currentStep) return "ไม่ระบุ";
-      switch (job.currentStep) {
-        case "Sales": return "ฝ่ายขาย";
-        case "Warehouse": return "คลังสินค้า";
-        case "Production": return "ฝ่ายผลิต";
-        case "QC": return "QC";
-        case "Logistics": return "ขนส่ง";
-        case "Account": return "บัญชี";
-        case "Completed": return "เสร็จสมบูรณ์";
-        default: return "ไม่ระบุ";
-      }
-    };
+  // Function to get current status in Thai
+  const getThaiStatus = (job) => {
+    if (!job || !job.currentStep) return "ไม่ระบุ";
+    switch (job.currentStep) {
+      case "Sales": return "ฝ่ายขาย";
+      case "Warehouse": return "คลังสินค้า";
+      case "Production": return "ฝ่ายผลิต";
+      case "QC": return "QC";
+      case "Logistics": return "ขนส่ง";
+      case "Account": return "บัญชี";
+      case "Completed": return "เสร็จสมบูรณ์";
+      default: return "ไม่ระบุ";
+    }
+  };
 
   const handleClearFilters = () => {
     setSelectedYear("ทั้งหมด");
@@ -238,7 +234,7 @@ export default function Home() {
     setSearchText("");
   };
 
-  // ✅ เพิ่มฟังก์ชันล้างตัวกรอง Progress Board
+  // เพิ่มฟังก์ชันล้างตัวกรอง Progress Board
   const handleClearProgressFilters = () => {
     setProgressYearFilter("ทั้งหมด");
     setProgressMonthFilter("ทั้งหมด");
@@ -275,7 +271,7 @@ export default function Home() {
     }
   };
 
-  // ✅ เพิ่มฟังก์ชันกรองสำหรับ Progress Board
+  // เพิ่มฟังก์ชันกรองสำหรับ Progress Board
   const filterJobsForProgress = (job) => {
     if (!job.delivery_date) return false;
     
@@ -303,7 +299,7 @@ export default function Home() {
     }
   };
 
-  // ✅ ฟังก์ชันใหม่: แปลงข้อมูลตามรอบการส่ง
+  // ฟังก์ชันใหม่: แปลงข้อมูลตามรอบการส่ง
 const expandJobsByDeliveryLogs = (jobs) => {
   return jobs.flatMap(job => {
     const deliveryLogs = job.delivery_logs || [];
@@ -325,7 +321,7 @@ const expandJobsByDeliveryLogs = (jobs) => {
   });
 };
 
-  // ✅ สำหรับ 📋 รายการงานทั้งหมด
+  // สำหรับ 📋 รายการงานทั้งหมด
   const filteredJobs = allData.filter((job) => {
     const po = job.po_number || "";
     const hasKG = po.includes("KG");
@@ -344,7 +340,7 @@ const expandJobsByDeliveryLogs = (jobs) => {
     return !hasSub;
   });
 
-// ✅ สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด - เพิ่มการกรองตามตัวกรองใหม่
+// สำหรับ 🔴 ความคืบหน้าของงานแต่ละชุด - เพิ่มการกรองตามตัวกรองใหม่
 const filteredJobsForProgress = allData.filter((job) => {
   const po = job.po_number || "";
   const hasKG = po.includes("KG");
@@ -384,15 +380,14 @@ const filteredJobsForProgress = allData.filter((job) => {
   // ถ้าไม่ผ่านการกรองพื้นฐาน ให้ return false
   if (!passBasicFilter) return false;
   
-  // ✅ เพิ่มการกรองตามตัวกรองใหม่
+  // เพิ่มการกรองตามตัวกรองใหม่
   return filterJobsForProgress(job);
 });
 
-  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
-// ✅ แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
+  // แปลงข้อมูลตามรอบการส่งสำหรับ Progress Board
 const expandedJobsForProgress = expandJobsByDeliveryLogs(filteredJobsForProgress);
 
-// ✅ เรียงลำดับตาม product_name หรือ product_name_with_quantity
+// เรียงลำดับตาม product_name หรือ product_name_with_quantity
 const sortedProgressJobs = [...expandedJobsForProgress].sort((a, b) => {
   // ใช้ product_name_with_quantity ถ้ามี (กรณีเป็น job ที่แยกจาก delivery_log)
   const nameA = a._isDeliveryLog ? a.product_name_with_quantity : a.product_name || "";
@@ -416,7 +411,7 @@ const sortedProgressJobs = [...expandedJobsForProgress].sort((a, b) => {
         const numA = parseInt(partA, 10);
         const numB = parseInt(partB, 10);
         if (numA !== numB) {
-          return numA - numB; // เรียงจากน้อยไปมากเสมอ
+          return numA - numB; // Sort ascending
         }
       } else {
         if (partA < partB) return -1;
@@ -431,13 +426,13 @@ const sortedProgressJobs = [...expandedJobsForProgress].sort((a, b) => {
     return 0;
   }
 
-  // กรณีไม่ใช่ string
+  // If not string
   if (nameA < nameB) return -1;
   if (nameA > nameB) return 1;
   return 0;
 });
 
-// ใช้ sortedProgressJobs แทน progressJobs
+// Use sortedProgressJobs instead of progressJobs
 const progressJobs = sortedProgressJobs;
 
 
@@ -453,7 +448,7 @@ const progressJobs = sortedProgressJobs;
       else notStarted++;
     });
 
-    // ✅ เพิ่ม property 'total' สำหรับกราฟแนวนอน
+    // Add 'total' property for horizontal graph
     return { name: step, notStarted, doing, done, total: notStarted + doing + done };
   });
 
@@ -466,7 +461,7 @@ const progressJobs = sortedProgressJobs;
     }
   };
 
-  // ✅ แปลงข้อมูลตามรอบการส่งสำหรับรายการงานทั้งหมด
+  // Convert data for all job listings
 const expandedJobs = expandJobsByDeliveryLogs(filteredJobs);
 const sortedJobs = [...expandedJobs].sort((a, b) => {
   const getValue = (job, col) => {
@@ -478,9 +473,9 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
     if (col === "bn_wh2") return job.batch_no_warehouse?.[1]?.toLowerCase() || "";
     if (col === "bn_wh3") return job.batch_no_warehouse?.[2]?.toLowerCase() || "";
     if (col === "bn_pd") {
-        // ✅ แก้ไขตรงนี้: ใช้ job.batch_no ตรงๆ สำหรับการเรียง
+        // Edit here: Use job.batch_no directly for sorting
         const bnPdValue = job.batch_no || "";
-        return bnPdValue; // ส่งคืนค่า string เพื่อให้เรียงแบบธรรมชาติ
+        return bnPdValue; // Return string for natural sorting
     }
     if (col === "currentStep") { // Add sorting for currentStep
       const order = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account", "Completed"];
@@ -565,7 +560,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
   const currentProgressJobs = progressJobs.slice(startIndexProgress, endIndexProgress);
 
   const handleDeleteJob = async (jobId) => {
-    // แทนที่ window.confirm ด้วย modal UI
+    // Replace window.confirm with modal UI
     const isConfirmed = await new Promise((resolve) => {
       const modal = document.createElement('div');
       modal.style.cssText = `
@@ -598,7 +593,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       try {
         await deleteDoc(doc(db, "production_workflow", jobId));
         setAllData((prev) => prev.filter((job) => job.id !== jobId));
-        // แทนที่ alert ด้วย modal UI
+        // Replace alert with modal UI
         const alertModal = document.createElement('div');
         alertModal.style.cssText = `
           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -618,7 +613,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
 
       } catch (error) {
         console.error("Error deleting job:", error);
-        // แทนที่ alert ด้วย modal UI
+        // Replace alert with modal UI
         const errorModal = document.createElement('div');
         errorModal.style.cssText = `
           position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -650,7 +645,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       "BN WH2": getBatchNoWH(job, 1),
       "BN WH3": getBatchNoWH(job, 2),
       "BN PD": job.batch_no || "",
-      "Status": getThaiStatus(job)
+      "Status": getThaiStatus(job), // Add Status to export
       "Last Update": renderLastUpdate(job),
     }));
 
@@ -677,10 +672,10 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       padding: "20px",
       fontSize: "14px" 
     }}>
-      {/* ✅ ปรับขนาดหัวข้อให้เล็กลง */}
+      {/* Adjust heading size */}
       <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>🏠 หน้าแรก</h1>
 
-      {/* 📊 สรุปสถานะงานรายแผนก */}
+      {/* 📊 Departmental Job Status Summary */}
       <section>
         <h2>📊 สรุปสถานะงานรายแผนก</h2>
         <ResponsiveContainer width="100%" height={300}>
@@ -688,7 +683,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
           <BarChart data={summaryPerStep} layout="vertical">
             {/* Modify XAxis: type is number and dataKey is total */}
             <XAxis type="number" dataKey="total" />
-            {/* Modify YAxis: type is category, dataKey is name, and add padding */}
+            {/* Modify YAxis: type is category, dataKey is name, and set width */}
             <YAxis type="category" dataKey="name" width={120} /> {/* Removed padding, added width */}
             <Tooltip />
             {/* Reorder Bar components for colors: done (green), doing (yellow), notStarted (gray) */}
@@ -711,7 +706,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
           <h2>🔴 ความคืบหน้าของงานแต่ละชุด</h2>
           
-          {/* ✅ เพิ่มตัวกรองสำหรับ Progress Board */}
+          {/* Add filter for Progress Board */}
           <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
             <select 
               value={progressYearFilter} 
@@ -880,6 +875,13 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
                   className={sortColumn === "po_number" ? "sorted" : ""}
                 >
                   PO {sortColumn === "po_number" && (sortDirection === "asc" ? "↑" : "↓")}
+                </th>
+                {/* ✅ เพิ่มคอลัมน์ Status กลับมา */}
+                <th 
+                  onClick={() => handleSort("currentStep")}
+                  className={sortColumn === "currentStep" ? "sorted" : ""}
+                >
+                  Status {sortColumn === "currentStep" && (sortDirection === "asc" ? "↑" : "↓")}
                 </th>
                 {/* ✅ ย้าย Batch Numbers มาท้าย */}
                 <th 
