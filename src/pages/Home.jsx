@@ -1016,8 +1016,6 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
               </button>
             ))}
           </div>
-        </div>
-      </section>
 
       {selectedJob && (
         <JobDetailModal
