@@ -216,6 +216,21 @@ export default function Home() {
     return `ผู้บันทึกล่าสุด : ${lastLog.step} : ${timeStr}`;
   };
 
+    // Function to get current status in Thai
+    const getThaiStatus = (job) => {
+      if (!job || !job.currentStep) return "ไม่ระบุ";
+      switch (job.currentStep) {
+        case "Sales": return "ฝ่ายขาย";
+        case "Warehouse": return "คลังสินค้า";
+        case "Production": return "ฝ่ายผลิต";
+        case "QC": return "QC";
+        case "Logistics": return "ขนส่ง";
+        case "Account": return "บัญชี";
+        case "Completed": return "เสร็จสมบูรณ์";
+        default: return "ไม่ระบุ";
+      }
+    };
+
   const handleClearFilters = () => {
     setSelectedYear("ทั้งหมด");
     setSelectedMonth("ทั้งหมด");
@@ -467,10 +482,9 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
         const bnPdValue = job.batch_no || "";
         return bnPdValue; // ส่งคืนค่า string เพื่อให้เรียงแบบธรรมชาติ
     }
-    if (col === "last_update") {
-        const timeA = new Date(job.audit_logs?.at(-1)?.timestamp || 0);
-        const timeB = new Date(b.audit_logs?.at(-1)?.timestamp || 0);
-        return isNaN(timeA.getTime()) ? (isNaN(timeB.getTime()) ? 0 : -1) : (isNaN(timeB.getTime()) ? 1 : timeA - timeB);
+    if (col === "currentStep") { // Add sorting for currentStep
+      const order = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account", "Completed"];
+      return order.indexOf(job.currentStep) - order.indexOf(b.currentStep);
     }
     if (col === "volume") {
       const num = Number(job.volume);
@@ -636,6 +650,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
       "BN WH2": getBatchNoWH(job, 1),
       "BN WH3": getBatchNoWH(job, 2),
       "BN PD": job.batch_no || "",
+      "Status": getThaiStatus(job)
       "Last Update": renderLastUpdate(job),
     }));
 
@@ -891,13 +906,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
                 >
                   BN WH3 {sortColumn === "bn_wh3" && (sortDirection === "asc" ? "↑" : "↓")}
                 </th>
-                {/* ✅ ลบคอลัมน์ Status ออกแล้ว */}
-                <th 
-                  onClick={() => handleSort("last_update")}
-                  className={sortColumn === "last_update" ? "sorted" : ""}
-                >
-                  Last Update {sortColumn === "last_update" && (sortDirection === "asc" ? "↑" : "↓")}
-                </th>
+                {/* ✅ ลบคอลัมน์ Last Update ออกแล้ว */}
                 {role === "admin" && <th>Actions</th>}
               </tr>
             </thead>
@@ -924,13 +933,14 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
                       : job.po_number
                     }
                   </td>
+                  {/* ✅ แสดง Status ของงาน */}
+                  <td>{getThaiStatus(job)}</td>
                   <td>{job.batch_no}</td>
                   <td>{getBatchNoWH(job, 0)}</td>
                   <td>{getBatchNoWH(job, 1)}</td>
                   <td>{getBatchNoWH(job, 2)}</td>
-                  {/* ✅ ลบคอลัมน์ Status ออกแล้ว */}
-                  <td style={{ fontSize: "12px" }}>{renderLastUpdate(job)}</td>
-                  {role === "admin" && (
+                  {/* ✅ ลบคอลัมน์ Last Update ออกแล้ว */}
+                  {(role === "admin" || role === "sales") && ( // ✅ เงื่อนไข Admin และ Sales
                     <td>
                       <button 
                         onClick={(e) => {
