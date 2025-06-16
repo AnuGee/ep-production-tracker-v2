@@ -30,6 +30,9 @@ export default function Home() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPageProgress, setCurrentPageProgress] = useState(1);
   const [itemsPerPageProgress, setItemsPerPageProgress] = useState(10);
+    // ✅ เพิ่ม state สำหรับ pagination ของรายการงานทั้งหมด
+  const [currentPageAllJobs, setCurrentPageAllJobs] = useState(1);
+  const [itemsPerPageAllJobs, setItemsPerPageAllJobs] = useState(10);
 
   // ✅ เพิ่ม State สำหรับตัวกรอง Progress Board
   const [progressYearFilter, setProgressYearFilter] = useState("ทั้งหมด");
@@ -539,11 +542,12 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
     );
   });
 
-  const totalPages = Math.ceil(filteredAndSearchedJobs.length / 10);
-  const currentPage = Math.min(Math.max(1, parseInt(new URLSearchParams(window.location.search).get("page")) || 1), totalPages);
-  const startIndex = (currentPage - 1) * 10;
-  const endIndex = startIndex + 10;
-  const currentJobs = filteredAndSearchedJobs.slice(startIndex, endIndex);
+  // ✅ เปลี่ยนการคำนวณ totalPages และ currentJobs ให้ใช้ itemsPerPageAllJobs
+  const totalPages = Math.ceil(filteredAndSearchedJobs.length / itemsPerPageAllJobs);
+  const currentJobs = filteredAndSearchedJobs.slice(
+    (currentPageAllJobs - 1) * itemsPerPageAllJobs,
+    currentPageAllJobs * itemsPerPageAllJobs
+  );
 
   const totalPagesProgress = Math.ceil(progressJobs.length / itemsPerPageProgress);
   const startIndexProgress = (currentPageProgress - 1) * itemsPerPageProgress;
@@ -956,25 +960,53 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
           </table>
         </div>
 
+        {/* ✅ เพิ่ม Dropdown สำหรับเลือกการแสดงผล และปรับปรุง Pagination */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
           <div>
-            แสดง {startIndex + 1}-{Math.min(endIndex, filteredAndSearchedJobs.length)} จาก {filteredAndSearchedJobs.length} รายการ
+            <label>แสดง: </label>
+            <select
+              value={itemsPerPageAllJobs}
+              onChange={(e) => {
+                setItemsPerPageAllJobs(Number(e.target.value));
+                setCurrentPageAllJobs(1); // รีเซ็ตหน้าเมื่อเปลี่ยนจำนวนรายการ
+              }}
+              style={{ padding: "5px", borderRadius: "4px", border: "1px solid #ccc" }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={filteredAndSearchedJobs.length}>ทั้งหมด ({filteredAndSearchedJobs.length})</option>
+            </select>
+            <span> รายการ (รวม {filteredAndSearchedJobs.length} รายการ)</span>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPageAllJobs(page)}
+                style={{
+                  margin: "0 2px",
+                  padding: "5px 10px",
+                  backgroundColor: currentPageAllJobs === page ? "#3b82f6" : "#f3f4f6",
+                  color: currentPageAllJobs === page ? "white" : "black",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
           </div>
           <div>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
-                onClick={() => {
-                  const url = new URL(window.location);
-                  url.searchParams.set("page", page);
-                  window.history.pushState({}, "", url);
-                  window.location.reload();
-                }}
+                onClick={() => setCurrentPageAllJobs(page)}
                 style={{
                   margin: "0 2px",
                   padding: "5px 10px",
-                  backgroundColor: currentPage === page ? "#3b82f6" : "#f3f4f6",
-                  color: currentPage === page ? "white" : "black",
+                  backgroundColor: currentPageAllJobs === page ? "#3b82f6" : "#f3f4f6",
+                  color: currentPageAllJobs === page ? "white" : "black",
                   border: "1px solid #ccc",
                   borderRadius: "4px",
                   cursor: "pointer",
