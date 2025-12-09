@@ -1,0 +1,25 @@
+/* src/pages/Reports.css */
+.reports-container {
+  padding: 40px 20px;
+  text-align: center;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.reports-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.reports-subtitle {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 16px;
+}
+
+.reports-table-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+}
