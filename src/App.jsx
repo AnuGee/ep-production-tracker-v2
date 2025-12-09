@@ -117,6 +117,14 @@ return (
             }
           />
           <Route
+            path="/reports"
+            element={
+              <ReportsGuard>
+                <Reports />
+              </ReportsGuard>
+            }
+          />
+          <Route
   path="/log"
   element={
     <ProtectedRoute allowedRoles={["Admin"]}>
