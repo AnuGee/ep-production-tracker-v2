@@ -1,3 +1,4 @@
+// src/pages/Reports.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "../firebase";
@@ -30,8 +31,8 @@ const F = {
 };
 
 const monthNamesTH = [
-  "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-  "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+  "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+  "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
 ];
 
 const VIEW = [
@@ -73,6 +74,7 @@ function SmallTable({ columns, rows }) {
             </td>
           </tr>
         )}
+
         {rows.map((r, i) => (
           <tr key={i}>
             {r.map((cell, j) => (
@@ -161,13 +163,16 @@ export default function Reports() {
 
         const currentStep = j?.[F.currentStep] || "Sales";
 
+        // lead time วัดจาก Sales → Account (ถ้ายังไม่ถึง Account ใช้ now)
         const leadStart = sales || now;
         const leadEnd = ac || now;
         const leadDays = sales ? msToDays(leadEnd - leadStart) : 0;
 
+        // aging ของงานที่ค้างอยู่ ณ step ปัจจุบัน
         const currentTs = getTs(j, currentStep);
         const agingDays = currentTs ? msToDays(now - currentTs) : 0;
 
+        // นิยามว่าจบงานเมื่อมี Logistics timestamp
         const isCompleted = Boolean(lg);
 
         return {
@@ -277,16 +282,20 @@ export default function Reports() {
     return out;
   }, [normalized, now]);
 
+  // =========================
+  // ✅ UI
+  // =========================
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
-      <h1 style={{ fontSize: 24, marginBottom: 6 }}>📈 Report Center</h1>
-      <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 16 }}>
+    <div className="reports-container">
+      <h2>📈 Report Center</h2>
+
+      <div className="reports-subtitle">
         หน้านี้อ่านข้อมูลจาก Firebase เพื่อสรุปงานค้าง/ความเร็วในแต่ละมุมมอง
         โดยไม่กระทบระบบเดิมของแต่ละแผนก
       </div>
 
       {/* Controls */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 18 }}>
+      <div className="reports-controls">
         <div>
           <label>มุมมอง: </label>
           <select value={view} onChange={(e) => setView(e.target.value)}>
@@ -311,7 +320,9 @@ export default function Reports() {
           <label>เดือน: </label>
           <select
             value={month === null ? "" : month}
-            onChange={(e) => setMonth(e.target.value === "" ? null : parseInt(e.target.value, 10))}
+            onChange={(e) =>
+              setMonth(e.target.value === "" ? null : parseInt(e.target.value, 10))
+            }
           >
             <option value="">ทั้งปี</option>
             {monthNamesTH.map((m, idx) => (
@@ -330,92 +341,89 @@ export default function Reports() {
         </label>
       </div>
 
-      {loading && <div>กำลังโหลดข้อมูลรายงาน...</div>}
+      {/* Content */}
+      <div className="reports-table-wrap">
+        {loading && <div>กำลังโหลดข้อมูลรายงาน...</div>}
 
-      {!loading && (
-        <>
-          {/* Department */}
-          {view === "department" && (
-            <>
-              <h2 style={{ fontSize: 20, margin: "18px 0 10px" }}>
-                🏢 รายแผนก (งานค้าง ณ ตอนนี้)
-              </h2>
-              <SmallTable
-                columns={["แผนก", "งานค้าง", "ค้างเฉลี่ย(วัน)", "ค้างนานสุด(วัน)"]}
-                rows={deptAgg.map((d) => [
-                  d.dept,
-                  d.pendingCount,
-                  d.avgAging.toFixed(1),
-                  d.maxAging.toFixed(1),
-                ])}
-              />
-            </>
-          )}
-
-          {/* Product */}
-          {view === "product" && (
-            <>
-              <h2 style={{ fontSize: 20, margin: "18px 0 10px" }}>
-                📦 รายสินค้า
-              </h2>
-              <SmallTable
-                columns={["สินค้า", "จำนวนงาน", "Lead เฉลี่ย(วัน)", "Lead นานสุด(วัน)", "งานค้าง"]}
-                rows={productAgg.map((p) => [
-                  p.product,
-                  p.count,
-                  p.avgLead.toFixed(1),
-                  p.maxLead.toFixed(1),
-                  p.pendingCount,
-                ])}
-              />
-            </>
-          )}
-
-          {/* Month */}
-          {view === "month" && (
-            <>
-              <h2 style={{ fontSize: 20, margin: "18px 0 10px" }}>
-                🗓️ รายเดือน
-              </h2>
-              <SmallTable
-                columns={["เดือน", "จำนวนงาน", "Lead เฉลี่ย(วัน)", "งานค้าง"]}
-                rows={monthAgg.map((m) => [
-                  `${m.year} ${monthNamesTH[m.month]}`,
-                  m.count,
-                  m.avgLead.toFixed(1),
-                  m.pendingCount,
-                ])}
-              />
-            </>
-          )}
-
-          {/* Backlog */}
-          {view === "backlog" && (
-            <>
-              <h2 style={{ fontSize: 20, margin: "18px 0 10px" }}>
-                🚧 งานค้างละเอียด (เรียงจากค้างนานสุด)
-              </h2>
-              <SmallTable
-                columns={["สินค้า", "ลูกค้า", "Step ปัจจุบัน", "Lead Time (วัน)", "ค้างมาแล้ว(วัน)"]}
-                rows={[...normalized]
-                  .filter((j) => !j.isCompleted)
-                  .sort((a, b) => b.agingDays - a.agingDays)
-                  .slice(0, 200)
-                  .map((j) => [
-                    j.product,
-                    j.customer,
-                    j.currentStep,
-                    j.leadDays.toFixed(1),
-                    j.agingDays.toFixed(1),
+        {!loading && (
+          <>
+            {/* Department */}
+            {view === "department" && (
+              <>
+                <h3 style={{ margin: "18px 0 10px" }}>🏢 รายแผนก (งานค้าง ณ ตอนนี้)</h3>
+                <SmallTable
+                  columns={["แผนก", "งานค้าง", "ค้างเฉลี่ย(วัน)", "ค้างนานสุด(วัน)"]}
+                  rows={deptAgg.map((d) => [
+                    d.dept,
+                    d.pendingCount,
+                    d.avgAging.toFixed(1),
+                    d.maxAging.toFixed(1),
                   ])}
-              />
-              <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
-                * แสดงสูงสุด 200 รายการเพื่อความลื่นไหล
-              </div>
-            </>
-          )}
-        </>
-      )}
+                />
+              </>
+            )}
+
+            {/* Product */}
+            {view === "product" && (
+              <>
+                <h3 style={{ margin: "18px 0 10px" }}>📦 รายสินค้า</h3>
+                <SmallTable
+                  columns={["สินค้า", "จำนวนงาน", "Lead เฉลี่ย(วัน)", "Lead นานสุด(วัน)", "งานค้าง"]}
+                  rows={productAgg.map((p) => [
+                    p.product,
+                    p.count,
+                    p.avgLead.toFixed(1),
+                    p.maxLead.toFixed(1),
+                    p.pendingCount,
+                  ])}
+                />
+              </>
+            )}
+
+            {/* Month */}
+            {view === "month" && (
+              <>
+                <h3 style={{ margin: "18px 0 10px" }}>🗓️ รายเดือน</h3>
+                <SmallTable
+                  columns={["เดือน", "จำนวนงาน", "Lead เฉลี่ย(วัน)", "งานค้าง"]}
+                  rows={monthAgg.map((m) => [
+                    `${m.year} ${monthNamesTH[m.month]}`,
+                    m.count,
+                    m.avgLead.toFixed(1),
+                    m.pendingCount,
+                  ])}
+                />
+              </>
+            )}
+
+            {/* Backlog */}
+            {view === "backlog" && (
+              <>
+                <h3 style={{ margin: "18px 0 10px" }}>
+                  🚧 งานค้างละเอียด (เรียงจากค้างนานสุด)
+                </h3>
+                <SmallTable
+                  columns={["สินค้า", "ลูกค้า", "Step ปัจจุบัน", "Lead Time (วัน)", "ค้างมาแล้ว(วัน)"]}
+                  rows={[...normalized]
+                    .filter((j) => !j.isCompleted)
+                    .sort((a, b) => b.agingDays - a.agingDays)
+                    .slice(0, 200)
+                    .map((j) => [
+                      j.product,
+                      j.customer,
+                      j.currentStep,
+                      j.leadDays.toFixed(1),
+                      j.agingDays.toFixed(1),
+                    ])}
+                />
+                <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+                  * แสดงสูงสุด 200 รายการเพื่อความลื่นไหล
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
