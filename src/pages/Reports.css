@@ -23,3 +23,22 @@
   max-width: 1000px;
   margin: 0 auto;
 }
+/* ===== Fix font color for Reports table (override globals) ===== */
+.reports-table-wrap table {
+  color: #111827 !important;
+}
+
+.reports-table-wrap thead th {
+  color: #111827 !important;
+  background: #f3f4f6 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.reports-table-wrap tbody td {
+  color: #111827 !important;
+}
+
+.reports-table-wrap h3,
+.reports-table-wrap h2 {
+  color: #111827 !important;
+}
