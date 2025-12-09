@@ -185,7 +185,6 @@ export default function Reports() {
         // aging ของงานที่ค้างอยู่ ณ step ปัจจุบัน
         const currentTs = getTs(j, currentStep) || getAuditTs(j, currentStep);
         const agingDays = currentTs ? msToDays(now - currentTs) : 0;
-        const agingDays = currentTs ? msToDays(now - currentTs) : 0;
 
         // นิยามว่าจบงานเมื่อมี Logistics timestamp
         const isCompleted = Boolean(lg);
