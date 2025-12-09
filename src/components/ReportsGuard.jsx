@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../AuthContext";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import "../firebase"; 
+// ✅ เรียกไฟล์ init firebase เพื่อให้ getAuth() ใช้ default app ได้แน่
 
 /**
- * รายชื่อผู้มีสิทธิ์เข้า Report
+ * ✅ รายชื่อผู้มีสิทธิ์เข้า Report
  */
 const ALLOWED = [
   {
@@ -29,9 +31,23 @@ const isAllowedUser = (user) => {
 };
 
 export default function ReportsGuard({ children }) {
-  const { user, loading } = useAuth();
   const location = useLocation();
 
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const auth = getAuth();
+
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u || null);
+      setLoading(false);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // 1) รอ Auth โหลดก่อน
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
@@ -40,6 +56,7 @@ export default function ReportsGuard({ children }) {
     );
   }
 
+  // 2) ยังไม่ login → ไปหน้า login
   if (!user) {
     return (
       <Navigate
@@ -50,6 +67,7 @@ export default function ReportsGuard({ children }) {
     );
   }
 
+  // 3) login แล้วแต่ไม่ใช่บัญชีที่อนุญาต
   if (!isAllowedUser(user)) {
     return (
       <div style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
@@ -77,5 +95,6 @@ export default function ReportsGuard({ children }) {
     );
   }
 
+  // 4) ผ่านสิทธิ์ → เข้าได้
   return children;
 }
