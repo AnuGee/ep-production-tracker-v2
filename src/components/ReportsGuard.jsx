@@ -1,11 +1,9 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext"; 
-// ✅ ปรับ path ถ้าโปรเจกต์คุณวาง AuthContext ไว้ที่อื่น
+import { useAuth } from "../AuthContext";
 
 /**
  * รายชื่อผู้มีสิทธิ์เข้า Report
- * อ้างอิงตามที่คุณให้มา
  */
 const ALLOWED = [
   {
@@ -34,7 +32,6 @@ export default function ReportsGuard({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  // 1) รอ Auth โหลดก่อน
   if (loading) {
     return (
       <div style={{ padding: 24 }}>
@@ -43,7 +40,6 @@ export default function ReportsGuard({ children }) {
     );
   }
 
-  // 2) ยังไม่ login → ไปหน้า login
   if (!user) {
     return (
       <Navigate
@@ -54,7 +50,6 @@ export default function ReportsGuard({ children }) {
     );
   }
 
-  // 3) login แล้วแต่ไม่ใช่บัญชีที่อนุญาต
   if (!isAllowedUser(user)) {
     return (
       <div style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
@@ -82,6 +77,5 @@ export default function ReportsGuard({ children }) {
     );
   }
 
-  // 4) ผ่านสิทธิ์ → เข้าได้
   return children;
 }
