@@ -151,6 +151,20 @@ export default function Reports() {
   // =========================
   const normalized = useMemo(() => {
     const getTs = (j, step) => toDateSafe(j?.[F.ts[step]]);
+    const getAuditTs = (j, step) => {
+  const logs = Array.isArray(j?.audit_logs) ? j.audit_logs : [];
+
+  const dates = logs
+    .filter(l => l?.step === step && typeof l?.timestamp === "string")
+    .map(l => new Date(l.timestamp))
+    .filter(d => !isNaN(d.getTime()));
+
+  if (!dates.length) return null;
+
+  dates.sort((a, b) => b - a); // เอาอันล่าสุด
+  return dates[0];
+};
+
 
     return jobs
       .map((j) => {
@@ -169,7 +183,7 @@ export default function Reports() {
         const leadDays = sales ? msToDays(leadEnd - leadStart) : 0;
 
         // aging ของงานที่ค้างอยู่ ณ step ปัจจุบัน
-        const currentTs = getTs(j, currentStep);
+        const currentTs = getTs(j, currentStep) || getAuditTs(j, currentStep);
         const agingDays = currentTs ? msToDays(now - currentTs) : 0;
 
         // นิยามว่าจบงานเมื่อมี Logistics timestamp
