@@ -19,6 +19,8 @@ import ProtectedRoute from "./components/ProtectedRoute"; // ✅ NEW
 import { AuthProvider } from "./context/AuthContext";
 import { useEffect } from "react";
 import "./styles/Responsive.css";
+import ReportsGuard from "./components/ReportsGuard";
+import Reports from "./pages/Reports";
 
 export default function App() {
   useEffect(() => {
