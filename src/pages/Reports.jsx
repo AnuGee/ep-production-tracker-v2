@@ -28,6 +28,8 @@ const F = {
     Account: "Timestamp_Account",
     Logistics: "Timestamp_Logistics",
   },
+
+  auditLogs: "audit_logs",
 };
 
 const monthNamesTH = [
@@ -35,31 +37,20 @@ const monthNamesTH = [
   "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
 ];
 
+// เปลี่ยนแนวคิดจาก "เลือกอย่างใดอย่างหนึ่ง"
+// เป็น "สรุปตามอะไร" + กรองได้หลายตัวแปร
 const VIEW = [
-  { key: "department", label: "🏢 รายแผนก" },
-  { key: "product", label: "📦 รายสินค้า" },
-  { key: "month", label: "🗓️ รายเดือน" },
+  { key: "department", label: "🏢 สรุปตามแผนก" },
+  { key: "product", label: "📦 สรุปตามสินค้า" },
+  { key: "wpq_product", label: "🚦 สินค้า × (WH/PD/QC)" },
+  { key: "month", label: "🗓️ สรุปตามเดือน" },
   { key: "backlog", label: "🚧 งานค้างละเอียด" },
 ];
 
+const STEPS = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
+
 // helpers
-const toDateSafe = (v) => {
-  if (!v) return null;
-
-  // Firestore Timestamp
-  if (typeof v?.toDate === "function") return v.toDate();
-
-  // JS Date
-  if (v instanceof Date) return v;
-
-  // ISO string จาก audit_logs
-  if (typeof v === "string") {
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  return null;
-};
+const toDateSafe = (v) => (v && typeof v.toDate === "function" ? v.toDate() : null);
 const msToDays = (ms) => ms / (1000 * 60 * 60 * 24);
 
 function SmallTable({ columns, rows }) {
@@ -117,12 +108,30 @@ export default function Reports() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ "สรุปตาม"
   const [view, setView] = useState("department");
+
+  // ✅ ตัวกรองช่วงเวลา
   const [year, setYear] = useState(2025);
   const [month, setMonth] = useState(null); // null = ทั้งปี
+
+  // ✅ ตัวกรองข้อมูล
   const [onlyPending, setOnlyPending] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(""); // "" = ทั้งหมด
+  const [selectedSteps, setSelectedSteps] = useState([]); // [] = ทั้งหมด
 
   const years = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
+
+  const toggleSelection = (arr, value, setter) => {
+    if (arr.includes(value)) setter(arr.filter((x) => x !== value));
+    else setter([...arr, value]);
+  };
+
+  const clearFilters = () => {
+    setSelectedProduct("");
+    setSelectedSteps([]);
+    setOnlyPending(false);
+  };
 
   // =========================
   // ✅ Fetch by year/month using Sales timestamp
@@ -163,114 +172,149 @@ export default function Reports() {
   }, [year, month]);
 
   // =========================
-  // ✅ Normalize
+  // ✅ Normalize + Fallback audit_logs
   // =========================
-const normalized = useMemo(() => {
+  const normalized = useMemo(() => {
+    const getAuditStepTs = (j, step) => {
+      const logs = Array.isArray(j?.[F.auditLogs]) ? j[F.auditLogs] : [];
+      const matches = logs.filter((l) => l?.step === step);
+      if (!matches.length) return null;
 
-  const getEntryTsFromAudit = (j, step) => {
-    const logs = Array.isArray(j?.audit_logs) ? j.audit_logs : [];
-    if (!logs.length) return null;
+      const last = matches[matches.length - 1];
+      const t = last?.timestamp;
 
-    // 1) หา log ที่บอกว่า "ย้าย step มาเป็น step นี้"
-    for (let i = logs.length - 1; i >= 0; i--) {
-      const field = logs[i]?.field || "";
-      const value = logs[i]?.value || "";
-      if (
-        (field === "currentStep" || field === "currentStep_change") &&
-        value === step
-      ) {
-        const d = toDateSafe(logs[i]?.timestamp);
-        if (d) return d;
+      if (t && typeof t.toDate === "function") return t.toDate();
+      if (typeof t === "string") {
+        const d = new Date(t);
+        return isNaN(d) ? null : d;
       }
-    }
+      return null;
+    };
 
-    // 2) fallback: หา log ล่าสุดที่ step ตรงกัน
-    for (let i = logs.length - 1; i >= 0; i--) {
-      if ((logs[i]?.step || "") === step) {
-        const d = toDateSafe(logs[i]?.timestamp);
-        if (d) return d;
-      }
-    }
+    const getStepTs = (j, step) =>
+      toDateSafe(j?.[F.ts[step]]) || getAuditStepTs(j, step);
 
-    return null;
-  };
-
-  const getTs = (j, step) =>
-    toDateSafe(j?.[F.ts[step]]) || getEntryTsFromAudit(j, step);
-
-  return jobs
-    .map((j) => {
-      const sales = getTs(j, "Sales");
-      const wh = getTs(j, "Warehouse");
-      const pd = getTs(j, "Production");
-      const qc = getTs(j, "QC");
-      const ac = getTs(j, "Account");
-      const lg = getTs(j, "Logistics");
+    return jobs.map((j) => {
+      const sales = getStepTs(j, "Sales");
+      const wh = getStepTs(j, "Warehouse");
+      const pd = getStepTs(j, "Production");
+      const qc = getStepTs(j, "QC");
+      const ac = getStepTs(j, "Account");
+      const lg = getStepTs(j, "Logistics");
 
       const currentStep = j?.[F.currentStep] || "Sales";
 
+      // lead time วัดจาก Sales → Account (ถ้ายังไม่ถึง Account ใช้ now)
       const leadStart = sales || now;
       const leadEnd = ac || now;
-      const leadDays = msToDays(leadEnd - leadStart);
+      const leadDays = sales ? msToDays(leadEnd - leadStart) : 0;
 
-      const currentTs = getTs(j, currentStep);
+      // aging ของงานที่ค้างอยู่ ณ step ปัจจุบัน
+      const currentTs = getStepTs(j, currentStep);
       const agingDays = currentTs ? msToDays(now - currentTs) : 0;
 
-      const isCompleted = Boolean(lg);
+      // นิยามว่าจบงานเมื่อมี Logistics timestamp หรือ currentStep = Completed
+      const isCompleted = Boolean(lg) || currentStep === "Completed";
 
       return {
         id: j.id,
+        raw: j,
+
         product: j?.[F.product] || "-",
         customer: j?.[F.customer] || "-",
-        volume: j?.[F.volume] ?? "",
+        volume: j?.[F.volume] || "",
+
         currentStep,
+
+        ts: { sales, wh, pd, qc, ac, lg },
+
         leadDays,
         agingDays,
         isCompleted,
-        ts: { sales, wh, pd, qc, ac, lg },
       };
-    })
-    .filter((x) => (onlyPending ? !x.isCompleted : true));
-}, [jobs, onlyPending, now]);
-
+    });
+  }, [jobs, now]);
 
   // =========================
-  // ✅ Department aggregation (งานค้าง ณ step ปัจจุบัน)
+  // ✅ Options: สินค้า
+  // =========================
+  const productOptions = useMemo(() => {
+    const set = new Set();
+    normalized.forEach((j) => {
+      if (j.product && j.product !== "-") set.add(j.product);
+    });
+    return Array.from(set).sort();
+  }, [normalized]);
+
+  // =========================
+  // ✅ Base filtered (ตามตัวกรอง)
+  // =========================
+  const working = useMemo(() => {
+    let arr = [...normalized];
+
+    if (selectedProduct) {
+      arr = arr.filter((j) => j.product === selectedProduct);
+    }
+
+    if (selectedSteps.length) {
+      arr = arr.filter((j) => selectedSteps.includes(j.currentStep));
+    }
+
+    if (onlyPending) {
+      arr = arr.filter((j) => !j.isCompleted);
+    }
+
+    return arr;
+  }, [normalized, selectedProduct, selectedSteps, onlyPending]);
+
+  // ใช้สำหรับ view คอขวด 3 แผนก (ไม่บังคับให้ติ๊ก step filter)
+  const baseForWPQ = useMemo(() => {
+    let arr = [...normalized];
+
+    if (selectedProduct) {
+      arr = arr.filter((j) => j.product === selectedProduct);
+    }
+
+    if (onlyPending) {
+      arr = arr.filter((j) => !j.isCompleted);
+    }
+
+    return arr;
+  }, [normalized, selectedProduct, onlyPending]);
+
+  // =========================
+  // ✅ Department aggregation (งานค้าง ณ ตอนนี้)
   // =========================
   const deptAgg = useMemo(() => {
-    const depts = ["Sales", "Warehouse", "Production", "QC", "Account", "Logistics"];
-    const map = {};
-    depts.forEach((d) => (map[d] = []));
-
-    normalized.forEach((j) => {
-      if (map[j.currentStep]) map[j.currentStep].push(j);
+    const map = new Map();
+    working.forEach((j) => {
+      const dept = j.currentStep || "Sales";
+      if (!map.has(dept)) map.set(dept, []);
+      map.get(dept).push(j);
     });
 
-    return depts.map((d) => {
-      const rows = map[d] || [];
-      const ages = rows.map((r) => r.agingDays);
-      const avgAging = ages.length ? ages.reduce((a, b) => a + b, 0) / ages.length : 0;
-      const maxAging = ages.length ? Math.max(...ages) : 0;
+    const out = [];
+    map.forEach((rows, dept) => {
+      const aging = rows.map((r) => r.agingDays);
+      const avgAging = aging.length ? aging.reduce((a, b) => a + b, 0) / aging.length : 0;
+      const maxAging = aging.length ? Math.max(...aging) : 0;
+      const pendingCount = rows.filter((r) => !r.isCompleted).length;
 
-      return {
-        dept: d,
-        pendingCount: rows.length,
-        avgAging,
-        maxAging,
-      };
+      out.push({ dept, pendingCount, avgAging, maxAging });
     });
-  }, [normalized]);
+
+    out.sort((a, b) => b.pendingCount - a.pendingCount);
+    return out;
+  }, [working]);
 
   // =========================
   // ✅ Product aggregation
   // =========================
   const productAgg = useMemo(() => {
     const map = new Map();
-
-    normalized.forEach((j) => {
-      const key = j.product;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(j);
+    working.forEach((j) => {
+      if (!map.has(j.product)) map.set(j.product, []);
+      map.get(j.product).push(j);
     });
 
     const out = [];
@@ -280,18 +324,56 @@ const normalized = useMemo(() => {
       const maxLead = leads.length ? Math.max(...leads) : 0;
       const pendingCount = rows.filter((r) => !r.isCompleted).length;
 
-      out.push({
-        product,
-        count: rows.length,
-        avgLead,
-        maxLead,
-        pendingCount,
-      });
+      out.push({ product, count: rows.length, avgLead, maxLead, pendingCount });
     });
 
-    out.sort((a, b) => b.avgLead - a.avgLead);
+    out.sort((a, b) => b.pendingCount - a.pendingCount);
     return out;
-  }, [normalized]);
+  }, [working]);
+
+  // =========================
+  // ✅ WH/PD/QC bottleneck by product
+  // =========================
+  const wpqByProduct = useMemo(() => {
+    const interested = ["Warehouse", "Production", "QC"];
+    const map = new Map();
+
+    baseForWPQ.forEach((j) => {
+      if (!map.has(j.product)) map.set(j.product, []);
+      map.get(j.product).push(j);
+    });
+
+    const out = [];
+    map.forEach((rows, product) => {
+      const rowForStep = (step) => rows.filter((r) => r.currentStep === step);
+
+      const makeStats = (step) => {
+        const sRows = rowForStep(step);
+        const aging = sRows.map((r) => r.agingDays);
+        const avg = aging.length ? aging.reduce((a, b) => a + b, 0) / aging.length : 0;
+        const max = aging.length ? Math.max(...aging) : 0;
+        return { count: sRows.length, avg, max };
+      };
+
+      const wh = makeStats("Warehouse");
+      const pd = makeStats("Production");
+      const qc = makeStats("QC");
+
+      const totalPendingIn3 = wh.count + pd.count + qc.count;
+
+      // แสดงเฉพาะสินค้าที่มีงานค้างใน 3 แผนกนี้ เพื่ออ่านง่าย
+      if (totalPendingIn3 > 0) {
+        out.push({
+          product,
+          wh, pd, qc,
+          totalPendingIn3,
+        });
+      }
+    });
+
+    out.sort((a, b) => b.totalPendingIn3 - a.totalPendingIn3);
+    return out;
+  }, [baseForWPQ]);
 
   // =========================
   // ✅ Month aggregation
@@ -299,7 +381,7 @@ const normalized = useMemo(() => {
   const monthAgg = useMemo(() => {
     const map = new Map();
 
-    normalized.forEach((j) => {
+    working.forEach((j) => {
       const d = j.ts.sales || now;
       const y = d.getFullYear();
       const m = d.getMonth();
@@ -324,7 +406,7 @@ const normalized = useMemo(() => {
 
     out.sort((a, b) => (a.year - b.year) || (a.month - b.month));
     return out;
-  }, [normalized, now]);
+  }, [working, now]);
 
   // =========================
   // ✅ UI
@@ -341,7 +423,7 @@ const normalized = useMemo(() => {
       {/* Controls */}
       <div className="reports-controls">
         <div>
-          <label>มุมมอง: </label>
+          <label>สรุปตาม: </label>
           <select value={view} onChange={(e) => setView(e.target.value)}>
             {VIEW.map((v) => (
               <option key={v.key} value={v.key}>
@@ -375,6 +457,19 @@ const normalized = useMemo(() => {
           </select>
         </div>
 
+        <div>
+          <label>สินค้า: </label>
+          <select
+            value={selectedProduct}
+            onChange={(e) => setSelectedProduct(e.target.value)}
+          >
+            <option value="">ทั้งหมด</option>
+            {productOptions.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+
         <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <input
             type="checkbox"
@@ -383,6 +478,40 @@ const normalized = useMemo(() => {
           />
           เฉพาะงานค้าง
         </label>
+
+        <button
+          type="button"
+          onClick={clearFilters}
+          style={{
+            padding: "6px 10px",
+            borderRadius: 8,
+            border: "1px solid #ddd",
+            background: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          ล้างตัวกรอง
+        </button>
+      </div>
+
+      {/* Step filter row (multi) */}
+      <div className="reports-controls" style={{ marginTop: -6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12, opacity: 0.7 }}>กรองงานที่ค้างอยู่ในแผนก:</span>
+          {STEPS.map((s) => (
+            <label key={s} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <input
+                type="checkbox"
+                checked={selectedSteps.includes(s)}
+                onChange={() => toggleSelection(selectedSteps, s, setSelectedSteps)}
+              />
+              {s}
+            </label>
+          ))}
+          <span style={{ fontSize: 11, opacity: 0.5 }}>
+            (ไม่ติ๊ก = ทั้งหมด)
+          </span>
+        </div>
       </div>
 
       {/* Content */}
@@ -394,7 +523,9 @@ const normalized = useMemo(() => {
             {/* Department */}
             {view === "department" && (
               <>
-                <h3 style={{ margin: "18px 0 10px" }}>🏢 รายแผนก (งานค้าง ณ ตอนนี้)</h3>
+                <h3 style={{ margin: "18px 0 10px" }}>
+                  🏢 รายแผนก (งานค้าง ณ ตอนนี้)
+                </h3>
                 <SmallTable
                   columns={["แผนก", "งานค้าง", "ค้างเฉลี่ย(วัน)", "ค้างนานสุด(วัน)"]}
                   rows={deptAgg.map((d) => [
@@ -424,6 +555,41 @@ const normalized = useMemo(() => {
               </>
             )}
 
+            {/* WPQ by product */}
+            {view === "wpq_product" && (
+              <>
+                <h3 style={{ margin: "18px 0 10px" }}>
+                  🚦 สินค้า × งานค้าง (Warehouse / Production / QC)
+                </h3>
+                <SmallTable
+                  columns={[
+                    "สินค้า",
+                    "WH ค้าง(งาน)",
+                    "WH เฉลี่ย(วัน)",
+                    "WH นานสุด(วัน)",
+                    "PD ค้าง(งาน)",
+                    "PD เฉลี่ย(วัน)",
+                    "PD นานสุด(วัน)",
+                    "QC ค้าง(งาน)",
+                    "QC เฉลี่ย(วัน)",
+                    "QC นานสุด(วัน)",
+                  ]}
+                  rows={wpqByProduct.map((x) => [
+                    x.product,
+                    x.wh.count,
+                    x.wh.avg.toFixed(1),
+                    x.wh.max.toFixed(1),
+                    x.pd.count,
+                    x.pd.avg.toFixed(1),
+                    x.pd.max.toFixed(1),
+                    x.qc.count,
+                    x.qc.avg.toFixed(1),
+                    x.qc.max.toFixed(1),
+                  ])}
+                />
+              </>
+            )}
+
             {/* Month */}
             {view === "month" && (
               <>
@@ -448,7 +614,7 @@ const normalized = useMemo(() => {
                 </h3>
                 <SmallTable
                   columns={["สินค้า", "ลูกค้า", "Step ปัจจุบัน", "Lead Time (วัน)", "ค้างมาแล้ว(วัน)"]}
-                  rows={[...normalized]
+                  rows={[...working]
                     .filter((j) => !j.isCompleted)
                     .sort((a, b) => b.agingDays - a.agingDays)
                     .slice(0, 200)
@@ -460,9 +626,6 @@ const normalized = useMemo(() => {
                       j.agingDays.toFixed(1),
                     ])}
                 />
-                <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
-                  * แสดงสูงสุด 200 รายการเพื่อความลื่นไหล
-                </div>
               </>
             )}
           </>
