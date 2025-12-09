@@ -43,7 +43,23 @@ const VIEW = [
 ];
 
 // helpers
-const toDateSafe = (v) => (v && v.toDate ? v.toDate() : null);
+const toDateSafe = (v) => {
+  if (!v) return null;
+
+  // Firestore Timestamp
+  if (typeof v?.toDate === "function") return v.toDate();
+
+  // JS Date
+  if (v instanceof Date) return v;
+
+  // ISO string จาก audit_logs
+  if (typeof v === "string") {
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  return null;
+};
 const msToDays = (ms) => ms / (1000 * 60 * 60 * 24);
 
 function SmallTable({ columns, rows }) {
@@ -149,60 +165,74 @@ export default function Reports() {
   // =========================
   // ✅ Normalize
   // =========================
-  const normalized = useMemo(() => {
-    const getTs = (j, step) => toDateSafe(j?.[F.ts[step]]);
-    const getAuditTs = (j, step) => {
-  const logs = Array.isArray(j?.audit_logs) ? j.audit_logs : [];
+const normalized = useMemo(() => {
 
-  const dates = logs
-    .filter(l => l?.step === step && typeof l?.timestamp === "string")
-    .map(l => new Date(l.timestamp))
-    .filter(d => !isNaN(d.getTime()));
+  const getEntryTsFromAudit = (j, step) => {
+    const logs = Array.isArray(j?.audit_logs) ? j.audit_logs : [];
+    if (!logs.length) return null;
 
-  if (!dates.length) return null;
+    // 1) หา log ที่บอกว่า "ย้าย step มาเป็น step นี้"
+    for (let i = logs.length - 1; i >= 0; i--) {
+      const field = logs[i]?.field || "";
+      const value = logs[i]?.value || "";
+      if (
+        (field === "currentStep" || field === "currentStep_change") &&
+        value === step
+      ) {
+        const d = toDateSafe(logs[i]?.timestamp);
+        if (d) return d;
+      }
+    }
 
-  dates.sort((a, b) => b - a); // เอาอันล่าสุด
-  return dates[0];
-};
+    // 2) fallback: หา log ล่าสุดที่ step ตรงกัน
+    for (let i = logs.length - 1; i >= 0; i--) {
+      if ((logs[i]?.step || "") === step) {
+        const d = toDateSafe(logs[i]?.timestamp);
+        if (d) return d;
+      }
+    }
 
+    return null;
+  };
 
-    return jobs
-      .map((j) => {
-        const sales = getTs(j, "Sales");
-        const wh = getTs(j, "Warehouse");
-        const pd = getTs(j, "Production");
-        const qc = getTs(j, "QC");
-        const ac = getTs(j, "Account");
-        const lg = getTs(j, "Logistics");
+  const getTs = (j, step) =>
+    toDateSafe(j?.[F.ts[step]]) || getEntryTsFromAudit(j, step);
 
-        const currentStep = j?.[F.currentStep] || "Sales";
+  return jobs
+    .map((j) => {
+      const sales = getTs(j, "Sales");
+      const wh = getTs(j, "Warehouse");
+      const pd = getTs(j, "Production");
+      const qc = getTs(j, "QC");
+      const ac = getTs(j, "Account");
+      const lg = getTs(j, "Logistics");
 
-        // lead time วัดจาก Sales → Account (ถ้ายังไม่ถึง Account ใช้ now)
-        const leadStart = sales || now;
-        const leadEnd = ac || now;
-        const leadDays = sales ? msToDays(leadEnd - leadStart) : 0;
+      const currentStep = j?.[F.currentStep] || "Sales";
 
-        // aging ของงานที่ค้างอยู่ ณ step ปัจจุบัน
-        const currentTs = getTs(j, currentStep) || getAuditTs(j, currentStep);
-        const agingDays = currentTs ? msToDays(now - currentTs) : 0;
+      const leadStart = sales || now;
+      const leadEnd = ac || now;
+      const leadDays = msToDays(leadEnd - leadStart);
 
-        // นิยามว่าจบงานเมื่อมี Logistics timestamp
-        const isCompleted = Boolean(lg);
+      const currentTs = getTs(j, currentStep);
+      const agingDays = currentTs ? msToDays(now - currentTs) : 0;
 
-        return {
-          id: j.id,
-          product: j?.[F.product] || "-",
-          customer: j?.[F.customer] || "-",
-          volume: j?.[F.volume] ?? "",
-          currentStep,
-          leadDays,
-          agingDays,
-          isCompleted,
-          ts: { sales, wh, pd, qc, ac, lg },
-        };
-      })
-      .filter((x) => (onlyPending ? !x.isCompleted : true));
-  }, [jobs, onlyPending, now]);
+      const isCompleted = Boolean(lg);
+
+      return {
+        id: j.id,
+        product: j?.[F.product] || "-",
+        customer: j?.[F.customer] || "-",
+        volume: j?.[F.volume] ?? "",
+        currentStep,
+        leadDays,
+        agingDays,
+        isCompleted,
+        ts: { sales, wh, pd, qc, ac, lg },
+      };
+    })
+    .filter((x) => (onlyPending ? !x.isCompleted : true));
+}, [jobs, onlyPending, now]);
+
 
   // =========================
   // ✅ Department aggregation (งานค้าง ณ step ปัจจุบัน)
