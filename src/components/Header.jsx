@@ -18,11 +18,6 @@ export default function Header() {
   const menus = [
     { label: "🏠 Home", path: "/" },
     { label: "📊 Dashboard", path: "/dashboard" },
-
-    // ✅ เพิ่มเมนู Report ให้แสดงตลอดตาม requirement
-    // สิทธิ์เข้าหน้าจริงถูกคุมโดย ReportsGuard แล้ว
-    { label: "📈 Report", path: "/reports" },
-
     { label: "📄 Sales", path: "/sales" },
     { label: "🏭 Warehouse", path: "/warehouse" },
     { label: "🧪 Production", path: "/production" },
@@ -30,42 +25,23 @@ export default function Header() {
     { label: "🚚 Logistics", path: "/logistics" },
     { label: "💰 Account", path: "/account" },
   ];
-
+  
   const allowSearch = ["Admin", "Sales"].includes(role);
   if (allowSearch) {
     menus.push({ label: "🔍 Search", path: "/search" });
   }
-
   if (role === "Admin" || user?.email === "hemmarin@ecopaint.co.th") {
-    menus.push({ label: "📝 Log", path: "/log" });
-  }
+  menus.push({ label: "📝 Log", path: "/log" });
+}
 
   return (
-    <div
-      className="header-container"
-      style={{ maxWidth: "1200px", margin: "auto", padding: "1rem" }}
-    >
+    <div className="header-container" style={{ maxWidth: "1200px", margin: "auto", padding: "1rem" }}>
       {/* Logo + System Name */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         <img src="/logo_ep.png" alt="Logo" style={{ height: 50 }} />
-        <strong
-          className="header-title"
-          style={{
-            color: "#1f2937",
-            fontSize: "22px",
-            fontWeight: "bold",
-          }}
-        >
-          ระบบติดตามสถานะงาน
-        </strong>
+<strong className="header-title" style={{ color: "#1f2937", fontSize: "22px", fontWeight: "bold" }}>
+  ระบบติดตามสถานะงาน
+</strong>
       </div>
 
       {/* Menu Buttons */}
@@ -74,7 +50,7 @@ export default function Header() {
         style={{
           marginTop: "1rem",
           display: "flex",
-          flexWrap: "wrap",
+          flexWrap: "wrap", // <<< เพิ่มตรงนี้
           justifyContent: "center",
           gap: "8px",
         }}
@@ -92,7 +68,7 @@ export default function Header() {
               border: "none",
               borderRadius: "6px",
               cursor: "pointer",
-              flexShrink: 0,
+              flexShrink: 0, // <<< ป้องกันปุ่มหด
             }}
           >
             {menu.label}
@@ -101,27 +77,12 @@ export default function Header() {
       </div>
 
       {/* User Info + Auth Buttons */}
-      <div
-        style={{
-          marginTop: "1rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
+      <div style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
         {user ? (
           <>
-            <span
-              style={{
-                fontWeight: "bold",
-                textAlign: "center",
-                color: "#1f2937",
-              }}
-            >
-              👤 เข้าสู่ระบบในชื่อ: {user.email} (สิทธิ์: {role})
-            </span>
+            <span style={{ fontWeight: "bold", textAlign: "center", color: "#1f2937" }}>
+  👤 เข้าสู่ระบบในชื่อ: {user.email} (สิทธิ์: {role})
+</span>
             <button
               onClick={handleLogout}
               style={{
