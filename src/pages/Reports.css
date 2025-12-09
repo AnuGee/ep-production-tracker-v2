@@ -42,3 +42,14 @@
 .reports-table-wrap h2 {
   color: #111827 !important;
 }
+
+/* optional polish */
+.reports-controls label {
+  font-size: 13px;
+}
+
+.reports-controls select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+}
