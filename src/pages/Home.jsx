@@ -655,6 +655,67 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
     setSelectedJob(job);
   };
 
+  const renderPagination = (currentPage, totalPages, onPageChange) => {
+    const pageNumbers = [];
+    
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pageNumbers.push(1, 2, 3, 4, 5, "...", totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pageNumbers.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pageNumbers.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      }
+    }
+
+    return (
+      <div style={{ display: "flex", gap: "5px", alignItems: "center", flexWrap: "wrap" }}>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={{
+            padding: "5px 10px", backgroundColor: "#fff", border: "1px solid #ccc",
+            borderRadius: "4px", cursor: currentPage === 1 ? "not-allowed" : "pointer",
+            color: currentPage === 1 ? "#ccc" : "#000"
+          }}
+        >
+          &lt;
+        </button>
+
+        {pageNumbers.map((number, index) => (
+          <button
+            key={index}
+            onClick={() => number !== "..." ? onPageChange(number) : null}
+            disabled={number === "..."}
+            style={{
+              padding: "5px 10px",
+              backgroundColor: currentPage === number ? "#3b82f6" : "#f3f4f6",
+              color: currentPage === number ? "white" : "black",
+              border: "1px solid #ccc", borderRadius: "4px",
+              cursor: number === "..." ? "default" : "pointer",
+            }}
+          >
+            {number}
+          </button>
+        ))}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          style={{
+            padding: "5px 10px", backgroundColor: "#fff", border: "1px solid #ccc",
+            borderRadius: "4px", cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+            color: currentPage === totalPages ? "#ccc" : "#000"
+          }}
+        >
+          &gt;
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="home-container" style={{ 
       maxWidth: "1400px", 
@@ -762,23 +823,7 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
           </div>
           
           <div>
-            {Array.from({ length: totalPagesProgress }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => setCurrentPageProgress(page)}
-                style={{
-                  margin: "0 2px",
-                  padding: "5px 10px",
-                  backgroundColor: currentPageProgress === page ? "#3b82f6" : "#f3f4f6",
-                  color: currentPageProgress === page ? "white" : "black",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                {page}
-              </button>
-            ))}
+             {renderPagination(currentPageProgress, totalPagesProgress, (page) => setCurrentPageProgress(page))}
           </div>
         </div>
       </section>
@@ -961,28 +1006,12 @@ const sortedJobs = [...expandedJobs].sort((a, b) => {
             แสดง {startIndex + 1}-{Math.min(endIndex, filteredAndSearchedJobs.length)} จาก {filteredAndSearchedJobs.length} รายการ
           </div>
           <div>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => {
-                  const url = new URL(window.location);
-                  url.searchParams.set("page", page);
-                  window.history.pushState({}, "", url);
-                  window.location.reload();
-                }}
-                style={{
-                  margin: "0 2px",
-                  padding: "5px 10px",
-                  backgroundColor: currentPage === page ? "#3b82f6" : "#f3f4f6",
-                  color: currentPage === page ? "white" : "black",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                {page}
-              </button>
-            ))}
+            {renderPagination(currentPage, totalPages, (page) => {
+               const url = new URL(window.location);
+               url.searchParams.set("page", page);
+               window.history.pushState({}, "", url);
+               window.location.reload();
+            })}
           </div>
         </div>
       </section>
