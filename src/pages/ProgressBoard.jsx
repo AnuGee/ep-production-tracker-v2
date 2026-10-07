@@ -4,9 +4,32 @@ import "../styles/Responsive.css";
 export default function ProgressBoard({ jobs }) {
   const steps = ["Sales", "Warehouse", "Production", "QC", "Logistics", "Account"];
   
-  // ✅ เพิ่ม State สำหรับ Tooltip
   const [hoveredJob, setHoveredJob] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  const getLastUpdate = (job) => {
+    const logs = job.audit_logs || [];
+
+    if (logs.length === 0) {
+      return {
+        step: "-",
+        time: "-",
+      };
+    }
+
+    const lastLog = logs[logs.length - 1];
+    const date = new Date(lastLog.timestamp);
+
+    return {
+      step: lastLog.step || "-",
+      time: isNaN(date.getTime())
+        ? "-"
+        : date.toLocaleString("th-TH", {
+            dateStyle: "short",
+            timeStyle: "short",
+          }),
+    };
+  };
 
   const getStatusColor = (step, job) => {
     if (!job.status) return "#e5e7eb";
@@ -313,6 +336,8 @@ export default function ProgressBoard({ jobs }) {
                 0
               );
 
+              const lastUpdate = getLastUpdate(job);
+
               return (
                 <tr key={`${job.id || job.docId}${job._isDeliveryLog ? `-${job._deliveryQuantity}` : ''}`}>
                   <td>
@@ -341,6 +366,18 @@ export default function ProgressBoard({ jobs }) {
                           : (hasKG ? po : (delivered > 0 ? `${job.product_name}-${delivered}KG` : job.product_name))
                       }
                     </span>
+
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      color: "#6b7280",
+                      marginTop: "3px",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    🕒 {lastUpdate.step} · {lastUpdate.time}
+                  </div>
+                    
                   </td>
                   {steps.map((step) => (
                     <td key={step}>
