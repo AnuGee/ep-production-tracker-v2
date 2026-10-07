@@ -348,7 +348,7 @@ export default function ProgressBoard({ jobs }) {
                       onMouseLeave={handleMouseLeave}
                       style={{
                         cursor: "help",
-                        padding: "4px 8px",
+                        padding: "4px 8px 2px 8px",
                         borderRadius: "4px",
                         transition: "background-color 0.2s ease",
                         display: "inline-block"
@@ -367,16 +367,18 @@ export default function ProgressBoard({ jobs }) {
                       }
                     </span>
 
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "#6b7280",
-                      marginTop: "3px",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    🕒 {lastUpdate.step} · {lastUpdate.time}
-                  </div>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "#6b7280",
+                        marginTop: "-2px",
+                        marginLeft: "8px",
+                        lineHeight: "1.1",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      🕒 {lastUpdate.step} · {lastUpdate.time}
+                    </div>
                     
                   </td>
                   {steps.map((step) => (
