@@ -345,6 +345,7 @@ const handleFinalBatchCoaSubmit = async () => {
       fontWeight: "bold",
       fontSize: "16px",
       marginBottom: "1rem",
+      color: "#111827",
     }}
   >
     ☑ อัปเดต COA หลายรายการ (Batch Update)
