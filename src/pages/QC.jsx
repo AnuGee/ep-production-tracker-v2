@@ -8,7 +8,6 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  writeBatch,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
 import "../styles/Responsive.css";
@@ -23,10 +22,6 @@ export default function QC() {
   const [coaRemark, setCoaRemark] = useState("");
   const [showConfirmInspection, setShowConfirmInspection] = useState(false);
   const [showConfirmCoa, setShowConfirmCoa] = useState(false);
-  const [selectedBatchCoaJobIds, setSelectedBatchCoaJobIds] = useState([]);
-  const [batchCoaStatus, setBatchCoaStatus] = useState("");
-  const [batchCoaRemark, setBatchCoaRemark] = useState("");
-  const [showConfirmBatchCoa, setShowConfirmBatchCoa] = useState(false);
 
   useEffect(() => {
     fetchJobs();
@@ -188,97 +183,6 @@ const handleFinalCoaSubmit = async () => {
       (job.status.qc_inspection === "skip" || job.status.production === "ผลิตเสร็จ")
   );
 
-  const toggleBatchCoaJob = (jobId) => {
-  setSelectedBatchCoaJobIds((prev) =>
-    prev.includes(jobId)
-      ? prev.filter((id) => id !== jobId)
-      : [...prev, jobId]
-  );
-};
-
-const handleSelectAllBatchCoa = () => {
-  const allIds = coaJobs.map((job) => job.id);
-  const isAllSelected =
-    allIds.length > 0 &&
-    allIds.every((id) => selectedBatchCoaJobIds.includes(id));
-
-  setSelectedBatchCoaJobIds(isAllSelected ? [] : allIds);
-};
-
-const handleBatchCoaSubmit = (e) => {
-  e.preventDefault();
-
-  if (selectedBatchCoaJobIds.length === 0 || !batchCoaStatus) {
-    toast.error("❌ กรุณาเลือกรายการและสถานะ COA");
-    return;
-  }
-
-  setShowConfirmBatchCoa(true);
-};
-
-const handleFinalBatchCoaSubmit = async () => {
-  const batch = writeBatch(db);
-  const timestamp = new Date().toISOString();
-
-  selectedBatchCoaJobIds.forEach((jobId) => {
-    const job = jobs.find((j) => j.id === jobId);
-
-    if (!job) return;
-
-    const nextStep =
-      batchCoaStatus === "เตรียมพร้อมแล้ว"
-        ? "Logistics"
-        : "QC";
-
-    const jobRef = doc(db, "production_workflow", jobId);
-
-    batch.update(jobRef, {
-      "status.qc_coa": batchCoaStatus,
-      "remarks.qc_coa": batchCoaRemark,
-      currentStep: nextStep,
-      Timestamp_QC: serverTimestamp(),
-
-      audit_logs: [
-        ...(job.audit_logs || []),
-
-        {
-          step: "QC",
-          field: "qc_coa",
-          value: batchCoaStatus,
-          remark: batchCoaRemark,
-          timestamp,
-        },
-
-        {
-          step: "QC",
-          field: "currentStep_change",
-          value: nextStep,
-          remark: `workflow changed to ${nextStep}`,
-          timestamp,
-        },
-      ],
-    });
-  });
-
-  try {
-    await batch.commit();
-
-    toast.success(
-      `✅ บันทึกสถานะ COA ${selectedBatchCoaJobIds.length} รายการเรียบร้อยแล้ว`
-    );
-
-    setSelectedBatchCoaJobIds([]);
-    setBatchCoaStatus("");
-    setBatchCoaRemark("");
-    setShowConfirmBatchCoa(false);
-
-    fetchJobs();
-  } catch (error) {
-    console.error("❌ Error ในการ Batch Update COA:", error);
-    toast.error("❌ เกิดข้อผิดพลาดในการบันทึก COA หลายรายการ");
-  }
-};
-
   return (
     <div className="page-container">
       <h2>🧬 QC - ตรวจสอบสินค้าและเอกสาร COA</h2>
@@ -337,135 +241,6 @@ const handleFinalBatchCoaSubmit = async () => {
         </button>
         <hr style={{ margin: "2rem 0", border: "1px solid #ccc" }} />
       </form>
-
-      <details style={{ marginTop: "1.5rem" }}>
-  <summary
-    style={{
-      cursor: "pointer",
-      fontWeight: "bold",
-      fontSize: "16px",
-      marginBottom: "1rem",
-      color: "#111827",
-    }}
-  >
-    ☑ อัปเดต COA หลายรายการ (Batch Update)
-  </summary>
-
-  <form onSubmit={handleBatchCoaSubmit} className="form-grid">
-    <div className="form-group full-span">
-      <label>📋 เลือกรายการ</label>
-
-      <div
-        style={{
-          border: "1px solid #d1d5db",
-          borderRadius: "8px",
-          padding: "10px",
-          maxHeight: "300px",
-          overflowY: "auto",
-        }}
-      >
-        <label
-          style={{
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            paddingBottom: "8px",
-            marginBottom: "8px",
-            borderBottom: "1px solid #d1d5db",
-            fontWeight: "bold",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={
-              coaJobs.length > 0 &&
-              coaJobs.every((job) =>
-                selectedBatchCoaJobIds.includes(job.id)
-              )
-            }
-            onChange={handleSelectAllBatchCoa}
-          />
-
-          เลือกทั้งหมด ({coaJobs.length} รายการ)
-        </label>
-
-        {coaJobs
-          .slice()
-          .sort((a, b) => {
-            const keyA =
-              `${a.customer || ""}-${a.po_number || ""}-${a.product_name || ""}-${a.volume || ""}`;
-
-            const keyB =
-              `${b.customer || ""}-${b.po_number || ""}-${b.product_name || ""}-${b.volume || ""}`;
-
-            return keyA.localeCompare(keyB);
-          })
-          .map((job) => (
-            <label
-              key={job.id}
-              style={{
-                display: "flex",
-                gap: "8px",
-                alignItems: "flex-start",
-                padding: "7px 0",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedBatchCoaJobIds.includes(job.id)}
-                onChange={() => toggleBatchCoaJob(job.id)}
-              />
-
-              <span>
-                {`CU: ${job.customer || "-"} | PO: ${
-                  job.po_number || "-"
-                } | PN: ${job.product_name || "-"} | VO: ${
-                  job.volume || "-"
-                } | DD: ${job.delivery_date || "-"}`}
-              </span>
-            </label>
-          ))}
-      </div>
-
-      <div style={{ marginTop: "8px" }}>
-        เลือกแล้ว:{" "}
-        <strong>{selectedBatchCoaJobIds.length}</strong> รายการ
-      </div>
-    </div>
-
-    <div className="form-group full-span">
-      <label>📄 สถานะ COA สำหรับรายการที่เลือกทั้งหมด</label>
-
-      <select
-        value={batchCoaStatus}
-        onChange={(e) => setBatchCoaStatus(e.target.value)}
-        className="input-box"
-      >
-        <option value="">-- เลือกสถานะ --</option>
-        <option value="ยังไม่เตรียม">ยังไม่เตรียม</option>
-        <option value="กำลังเตรียม">กำลังเตรียม</option>
-        <option value="เตรียมพร้อมแล้ว">เตรียมพร้อมแล้ว</option>
-      </select>
-    </div>
-
-    <div className="form-group full-span">
-      <label>📝 หมายเหตุเดียวกันสำหรับรายการที่เลือก</label>
-
-      <input
-        type="text"
-        value={batchCoaRemark}
-        onChange={(e) => setBatchCoaRemark(e.target.value)}
-        className="input-box"
-        placeholder="ระบุหมายเหตุหากมี"
-      />
-    </div>
-
-    <button type="submit" className="submit-btn full-span">
-      ✅ บันทึก COA {selectedBatchCoaJobIds.length} รายการ
-    </button>
-  </form>
-</details>
 
 <form onSubmit={handleCoaSubmit} className="form-grid">
   <fieldset
@@ -567,63 +342,6 @@ const handleFinalBatchCoaSubmit = async () => {
           ✅ ยืนยันการบันทึก
         </button>
         <button className="cancel-btn" onClick={() => setShowConfirmCoa(false)}>
-          ❌ ยกเลิก
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-      {/* ✅ MODAL ยืนยัน Batch Update COA */}
-{showConfirmBatchCoa && (
-  <div
-    className="modal-overlay"
-    onClick={() => setShowConfirmBatchCoa(false)}
-  >
-    <div
-      className="modal"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <h3>📋 ยืนยันการอัปเดต COA หลายรายการ</h3>
-
-      <ul style={{ textAlign: "left", marginTop: "1rem" }}>
-        <li>
-          <strong>จำนวน:</strong>{" "}
-          {selectedBatchCoaJobIds.length} รายการ
-        </li>
-
-        <li>
-          <strong>สถานะ COA:</strong>{" "}
-          {batchCoaStatus}
-        </li>
-
-        <li>
-          <strong>ปลายทาง:</strong>{" "}
-          {batchCoaStatus === "เตรียมพร้อมแล้ว"
-            ? "Logistics"
-            : "QC"}
-        </li>
-
-        {batchCoaRemark && (
-          <li>
-            <strong>หมายเหตุ:</strong>{" "}
-            {batchCoaRemark}
-          </li>
-        )}
-      </ul>
-
-      <div className="button-row">
-        <button
-          className="submit-btn"
-          onClick={handleFinalBatchCoaSubmit}
-        >
-          ✅ ยืนยัน {selectedBatchCoaJobIds.length} รายการ
-        </button>
-
-        <button
-          className="cancel-btn"
-          onClick={() => setShowConfirmBatchCoa(false)}
-        >
           ❌ ยกเลิก
         </button>
       </div>
