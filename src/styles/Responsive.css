@@ -469,3 +469,8 @@ input::placeholder {
   align-items: center;
   justify-content: center;
 }
+
+/* ✅ Progress Board - ให้หัวตารางมองเห็นทั้ง Light / Dark Mode */
+.progress-table th {
+  color: #111827 !important;
+}
